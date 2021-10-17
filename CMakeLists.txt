@@ -30,7 +30,7 @@ FetchContent_Declare(
   googletest
   UPDATE_DISCONNECTED 0
   GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG        release-1.10.0
+  GIT_TAG        release-1.11.0
 )
 
 # google tests do not build cleanly.  Disable some warnings.
