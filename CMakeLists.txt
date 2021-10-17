@@ -1,15 +1,20 @@
 cmake_minimum_required (VERSION 3.20.3)
-project (MyLU)
+project (Illuminate)
+
+option(ASAN "Build linking the address sanitizer" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# set(CMAKE_BUILD_TYPE "Debug")
-# set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-# set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-
+# useful for sanitize debugging
+if (ASAN)
+  set(CMAKE_BUILD_TYPE "Debug")
+  set(ASAN_ARGS "-fno-omit-frame-pointer -fsanitize=address")
+  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${ASAN_ARGS}")
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${ASAN_ARGS}")
+  set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} ${ASAN_ARGS}")
+endif()
 
 # for clangd and other clang tools
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -40,6 +45,16 @@ set_property(
     PROPERTY COMPILE_OPTIONS -Wno-undef -Wno-maybe-uninitialized
 )
 
+macro(package_add_test TESTNAME)
+    # create an exectuable in which the tests will be stored
+    add_executable(${TESTNAME} ${ARGN})
+    target_link_libraries(${TESTNAME} gtest gmock gtest_main)
+    gtest_discover_tests(${TESTNAME}
+        WORKING_DIRECTORY ${PROJECT_DIR}
+        PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_DIR}"
+    )
+    set_target_properties(${TESTNAME} PROPERTIES FOLDER test)
+endmacro()
 FetchContent_MakeAvailable(googletest)
 
 add_subdirectory (olc)

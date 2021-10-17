@@ -30,16 +30,22 @@ public:
 
   BoardModel(StateChangeHandler * handler);
 
+  // general sequence of events:
+  // 1) reset_game()    -- initialize a new empty board with given dimensions
+  // 2) <LEVEL SETUP>   -- add walls to setup level
+  // 3) START_GAME()    -- add marker to separate level setup from player moves
+  //                       esp. to protect UNDO from going back too far
+  // 4) <PLAYER MOVES>  -- sequence of add/remove calls
+  // These are all appeneded to the vector of moves.  (For purposes of undo,
+  // even "remove" is added, so it can be undone to return to previous state.)
   void reset_game(int height, int width);
-
-  // not initialization, but "we are done calling "add" to create the level and
-  // can begin playing". Mainly, the marker is a way to stop "undo" from
-  // removing pieces from an empty level.
   void start_game();
-  void undo();
-
   void add(CellState, int row, int col);
   void remove(int row, int col);
+
+  // This actually removes entries from the moves vector, but cannot go past
+  // the start-of-game marker.
+  void undo();
 
   CellState
   get_cell(int row, int col) const {
@@ -95,6 +101,7 @@ private:
   row_from_idx(int idx) const {
     return idx / width_;
   }
+
   int
   col_from_idx(int idx) const {
     return idx % width_;
