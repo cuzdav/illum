@@ -7,8 +7,8 @@
 namespace model::test {
 
 using namespace ::testing;
-using enum BoardModel::CellState;
-using enum BoardModel::Action;
+using enum CellState;
+using enum Action;
 
 TEST(BM, construct) {
   TestStateChangeHandler handler;
@@ -27,7 +27,7 @@ TEST(BM, reset_game) {
   model.reset_game(3, 5);
   ASSERT_EQ(3, model.height());
   ASSERT_EQ(5, model.width());
-  ASSERT_EQ(0, model.num_moves());
+  ASSERT_EQ(1, model.num_moves()); // reset_game is the first move (always)
   ASSERT_FALSE(model.started());
 
   auto const & moves = handler.cur().moves_;
@@ -78,9 +78,9 @@ TEST(BM, start_game) {
   BoardModel             model(&handler);
 
   LevelCreator creator(&model);
-  creator("*****");
-  creator("*  1*");
-  creator("*****");
+  creator("00000");
+  creator("0  10");
+  creator("00000");
   creator.finished();
 
   ASSERT_EQ(Wall0, model.get_cell(0, 0));

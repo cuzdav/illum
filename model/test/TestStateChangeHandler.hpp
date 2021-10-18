@@ -1,5 +1,6 @@
 #include "BoardModel.hpp"
 #include <fmt/core.h>
+#include <iostream> // debug
 #include <stdexcept>
 #include <vector>
 
@@ -9,16 +10,9 @@ namespace model::test {
 // announced state. Clearing the board pushes a new board rather than
 // forgetting the old.
 
-class TestStateChangeHandler : public BoardModel::StateChangeHandler {
+class TestStateChangeHandler : public ::model::StateChangeHandler {
 public:
-  struct Move {
-    BoardModel::Action    action_;
-    BoardModel::CellState state_;
-    int                   row_;
-    int                   col_;
-  };
-
-  using Col  = BoardModel::CellState;
+  using Col  = CellState;
   using Row  = std::vector<Col>;
   using Rows = std::vector<Row>;
 
@@ -42,10 +36,9 @@ public:
   }
 
   void
-  onStateChange(BoardModel::Action action, BoardModel::CellState state, int row,
-                int col) override {
-    using enum model::BoardModel::Action;
-    using enum model::BoardModel::CellState;
+  onStateChange(Action action, CellState state, int row, int col) override {
+    using enum model::Action;
+    using enum model::CellState;
 
     switch (action) {
 
@@ -79,7 +72,7 @@ public:
       break;
     }
 
-    case StartGame: break;
+    case StartGame: cur().moves_.push_back({action, state, row, col}); break;
 
     default: throw std::runtime_error("Unknown State");
     }

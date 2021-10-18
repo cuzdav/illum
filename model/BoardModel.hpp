@@ -1,5 +1,8 @@
 #pragma once
-#include <stack>
+#include "Action.hpp"
+#include "CellState.hpp"
+#include <iosfwd>
+#include <string_view>
 #include <vector>
 
 namespace model {
@@ -16,24 +19,38 @@ namespace model {
 // also why player requests to remove a piece is still added as a move, which is
 // distinctly different from an undo, which makes the "moves" list smaller.
 
+class StateChangeHandler {
+public:
+  virtual ~StateChangeHandler() = default;
+
+  virtual void onStateChange(Action, CellState, int row, int col) = 0;
+};
+
+struct Move {
+  Action    action_;
+  CellState state_;
+  int       row_;
+  int       col_;
+
+  bool                  operator==(Move const &) const = default;
+  friend std::ostream & operator<<(std::ostream &, Move const &);
+};
+
 class BoardModel {
 public:
-  enum class CellState { Empty, Wall0, Wall1, Wall2, Wall3, Wall4, Bulb, Mark };
-  enum class Action { Add, Remove, ResetGame, StartGame };
-
-  class StateChangeHandler {
-  public:
-    virtual ~StateChangeHandler() = default;
-
-    virtual void onStateChange(Action, CellState, int row, int col) = 0;
-  };
-
   BoardModel(StateChangeHandler * handler);
+
+  BoardModel(BoardModel const &) = delete;
+  BoardModel & operator=(BoardModel const &) = delete;
+
+  bool                  operator==(BoardModel const &) const;
+  friend std::ostream & operator<<(std::ostream &, BoardModel const &);
 
   // general sequence of events:
   // 1) reset_game()    -- initialize a new empty board with given dimensions
   // 2) <LEVEL SETUP>   -- add walls to setup level
-  // 3) START_GAME()    -- add marker to separate level setup from player moves
+  // 3) START_GAME()    -- add marker to separate level setup from player
+  // moves
   //                       esp. to protect UNDO from going back too far
   // 4) <PLAYER MOVES>  -- sequence of add/remove calls
   // These are all appeneded to the vector of moves.  (For purposes of undo,
@@ -108,13 +125,6 @@ private:
   }
 
   void apply_move(Action, CellState, int row, int col);
-
-  struct Move {
-    Action    action_;
-    CellState state_;
-    int       row_;
-    int       col_;
-  };
 
 private:
   StateChangeHandler *   handler_;

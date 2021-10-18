@@ -27,14 +27,14 @@ public:
   finished() {
     model_->reset_game(size(unparsed_rows_), width_);
 
-    using enum BoardModel::CellState;
+    using enum CellState;
     int rownum = 0;
     for (auto const & row : unparsed_rows_) {
       int colnum = 0;
       for (char c : row) {
-        BoardModel::CellState cell;
+        CellState cell;
         switch (c) {
-        case '*': cell = Wall0; break;
+        case '0': cell = Wall0; break;
         case '1': cell = Wall1; break;
         case '2': cell = Wall2; break;
         case '3': cell = Wall3; break;

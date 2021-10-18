@@ -57,6 +57,14 @@ macro(package_add_test TESTNAME)
 endmacro()
 FetchContent_MakeAvailable(googletest)
 
+
+set(BOOST_REQUESTED_VERSION 1.71)
+
+find_package(Boost)
+
+
+#FetchContent_MakeAvailable(property_tree)
+
 add_subdirectory (olc)
 add_subdirectory (model)
 

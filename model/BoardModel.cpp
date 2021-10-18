@@ -1,13 +1,56 @@
 #include "BoardModel.hpp"
+#include "Serialize.hpp"
+#include <algorithm>
+#include <iostream>
 #include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utility>
 
 namespace model {
 
-BoardModel::BoardModel(BoardModel::StateChangeHandler * handler)
-  : handler_(handler) {
+std::ostream &
+operator<<(std::ostream & os, Move const & move) {
+  return os << "Move<" << to_string(move.action_) << ", "
+            << to_string(move.state_) << "(" << move.row_ << ", " << move.col_
+            << ")>";
+}
+
+BoardModel::BoardModel(StateChangeHandler * handler) : handler_(handler) {
   if (handler_ == nullptr) {
     throw std::runtime_error("Invalid BoardModel state change handler");
   }
+}
+
+bool
+BoardModel::operator==(BoardModel const & other) const {
+  return started_ == other.started_ && height_ == other.height_ &&
+         width_ == other.width_ && cells_ == other.cells_ &&
+         moves_ == other.moves_;
+}
+
+std::ostream &
+operator<<(std::ostream & os, BoardModel const & model) {
+  os << "BoardModel<" << (model.handler_ ? "<*>" : "<NULL>")
+     << ", started: " << std::boolalpha << model.started_
+     << ", height: " << model.height_ << ", width: " << model.width_
+     << ", moves: [";
+
+  for (Move const & m : model.moves_) {
+    os << "\n\t" << m;
+  }
+  os << "], cells:\n\t";
+  int i = model.width_;
+
+  for (CellState state : model.cells_) {
+    os << to_char(state);
+    if (--i == 0) {
+      os << "\n\t";
+      i = model.width_;
+    }
+  }
+  os << "]";
+  return os;
 }
 
 void
@@ -36,7 +79,8 @@ BoardModel::get_idx(int row, int col) const {
   if (int idx = row * width_ + col; idx < size(cells_)) {
     return idx;
   }
-  throw std::range_error("invalid row+col combination");
+  throw std::range_error("invalid row+col combination" + std::to_string(row) +
+                         ':' + std::to_string(col));
 }
 
 void
@@ -75,6 +119,7 @@ BoardModel::reset_game(int height, int width) {
   cells_.resize(height * width, CellState::Empty);
   height_ = height;
   width_  = width;
+  moves_.push_back({Action::ResetGame, CellState::Empty, height, width});
   handler_->onStateChange(Action::ResetGame, CellState::Empty, height, width);
 }
 
