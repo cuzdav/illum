@@ -79,7 +79,7 @@ TEST(BM, start_game) {
 
   LevelCreator creator(&model);
   creator("00000");
-  creator("0  10");
+  creator("0..10");
   creator("00000");
   creator.finished();
 

@@ -23,7 +23,7 @@ TEST(Serializer, to_ptree) {
 
   ::model::test::LevelCreator creator(&model);
   creator("00010");
-  creator("0   1");
+  creator("0...1");
   creator("00010");
   creator.finished();
 
@@ -60,10 +60,10 @@ TEST(Serializer, to_from_json) {
 
   ::model::test::LevelCreator creator(&model);
   creator("0100010");
-  creator("1  0  1");
-  creator("010 010");
-  creator("0  0  0");
-  creator("1  0  1");
+  creator("1..0..1");
+  creator("010.010");
+  creator("0..0..0");
+  creator("1..0..1");
   creator("0000000");
   creator.finished();
 

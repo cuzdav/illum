@@ -1,4 +1,5 @@
 #include "BoardModel.hpp"
+#include "CellState.hpp"
 #include <array>
 #include <stdexcept>
 #include <string>
@@ -6,11 +7,16 @@
 
 namespace model::test {
 
+// I'd like to just chain calls together to create the level row-wise, but it
+// does not look good in clang-format and I don't want to have to disable
+// formatting to get a nice look. So one row per statement makes for vertical
+// alignment without messing up the rest of the formatting rules. :)
+
 class LevelCreator {
 public:
   LevelCreator(BoardModel * model) : model_(model) {}
 
-  LevelCreator &
+  void
   operator()(std::string const & row) {
     if (unparsed_rows_.empty()) {
       width_ = row.size();
@@ -20,7 +26,6 @@ public:
                               std::to_string(width_));
     }
     unparsed_rows_.push_back(row);
-    return *this;
   }
 
   void
@@ -34,12 +39,14 @@ public:
       for (char c : row) {
         CellState cell;
         switch (c) {
-        case '0': cell = Wall0; break;
-        case '1': cell = Wall1; break;
-        case '2': cell = Wall2; break;
-        case '3': cell = Wall3; break;
-        case '4': cell = Wall4; break;
-        case ' ': cell = Empty; break;
+        case chr::Wall0: cell = Wall0; break;
+        case chr::Wall1: cell = Wall1; break;
+        case chr::Wall2: cell = Wall2; break;
+        case chr::Wall3: cell = Wall3; break;
+        case chr::Wall4: cell = Wall4; break;
+        case chr::Empty: cell = Empty; break;
+        case chr::Bulb: cell = Bulb; break;
+        case chr::Mark: cell = Mark; break;
         default:
           throw std::runtime_error(
               (std::string("Unknown cell char: ") + c).c_str());
