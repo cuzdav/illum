@@ -60,6 +60,8 @@ public:
     return cells_[get_idx(row, col)];
   }
 
+  CellState get_cell_from_flat_idx(int idx) const;
+
   bool
   started() const {
     return started_;

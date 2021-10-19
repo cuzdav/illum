@@ -67,13 +67,21 @@ BoardModel::undo() {
   }
 }
 
+CellState
+BoardModel::get_cell_from_flat_idx(int idx) const {
+  if (idx >= 0 && idx < size(cells_)) {
+    return cells_[idx];
+  }
+  throw std::range_error("idx out of bounds: " + std::to_string(idx));
+}
+
 int
 BoardModel::get_idx(int row, int col) const {
   if (int idx = row * width_ + col; idx < size(cells_)) {
     return idx;
   }
-  throw std::range_error("invalid row+col combination" + std::to_string(row) +
-                         ':' + std::to_string(col));
+  throw std::range_error("invalid row + col combination (out of bounds)" +
+                         std::to_string(row) + ':' + std::to_string(col));
 }
 
 void

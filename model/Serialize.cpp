@@ -47,21 +47,21 @@ setup_model_from_ptree(pt::ptree & moves, BoardModel & model) {
 }
 
 void
-setup_model_from_json_file(std::string const & filename, BoardModel & model) {
+setup_model_from_json_stream(std::istream & istr, BoardModel & model) {
   pt::ptree tree;
-  pt::read_json(filename, tree);
+  pt::read_json(istr, tree);
   setup_model_from_ptree(tree, model);
 }
 
 void
-to_json_file(std::string const & filename, pt::ptree & tree) {
-  pt::write_json(filename, tree);
+to_json_stream(std::ostream & ostr, pt::ptree const & tree) {
+  pt::write_json(ostr, tree);
 }
 
 void
-to_json_file(std::string const & filename, BoardModel const & model) {
+to_json_stream(std::ostream & ostr, BoardModel const & model) {
   auto tree = to_ptree(model);
-  to_json_file(filename, tree);
+  to_json_stream(ostr, tree);
 }
 
 } // namespace model::serialize
