@@ -1,6 +1,7 @@
 #pragma once
 #include "Action.hpp"
 #include "CellState.hpp"
+#include "SingleMove.hpp"
 #include <iosfwd>
 #include <string_view>
 #include <vector>
@@ -24,16 +25,6 @@ public:
   virtual ~StateChangeHandler() = default;
 
   virtual void onStateChange(Action, CellState, int row, int col) = 0;
-};
-
-struct Move {
-  Action    action_;
-  CellState state_;
-  int       row_;
-  int       col_;
-
-  bool                  operator==(Move const &) const = default;
-  friend std::ostream & operator<<(std::ostream &, Move const &);
 };
 
 class BoardModel {
@@ -127,12 +118,12 @@ private:
   void apply_move(Action, CellState, int row, int col);
 
 private:
-  StateChangeHandler *   handler_;
-  bool                   started_ = false;
-  int                    height_  = 0;
-  int                    width_   = 0;
-  std::vector<CellState> cells_;
-  std::vector<Move>      moves_;
+  StateChangeHandler *    handler_;
+  bool                    started_ = false;
+  int                     height_  = 0;
+  int                     width_   = 0;
+  std::vector<CellState>  cells_;
+  std::vector<SingleMove> moves_;
 };
 
 } // namespace model

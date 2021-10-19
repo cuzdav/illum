@@ -1,4 +1,5 @@
 #include "BoardModel.hpp"
+#include "SingleMove.hpp"
 #include <fmt/core.h>
 #include <iostream> // debug
 #include <stdexcept>
@@ -19,10 +20,10 @@ public:
   // Kept such that a reset can "clear" data but we don't lose the state of
   // the game before it.  A vector of GameStates just grows.
   struct GameState {
-    int               height_;
-    int               width_;
-    Rows              rows_of_cells_;
-    std::vector<Move> moves_;
+    int                     height_;
+    int                     width_;
+    Rows                    rows_of_cells_;
+    std::vector<SingleMove> moves_;
   };
 
   GameState &
@@ -68,7 +69,7 @@ public:
       games_.emplace_back(row,
                           col,
                           std::move(rows),
-                          std::vector<Move>{{action, state, row, col}});
+                          std::vector<SingleMove>{{action, state, row, col}});
       break;
     }
 

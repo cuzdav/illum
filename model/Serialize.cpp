@@ -1,8 +1,7 @@
 #include "Serialize.hpp"
 #include "BoardModel.hpp"
+#include "SingleMove.hpp"
 #include <boost/property_tree/json_parser.hpp>
-#include <fmt/core.h>
-#include <iostream>
 #include <string>
 #include <string_view>
 
@@ -13,50 +12,12 @@ using namespace std::literals;
 using enum Action;
 using enum CellState;
 
-std::string
-to_string(model::Move const & move) {
-  return fmt::format("{},{},{},{}",
-                     to_string(move.action_),
-                     to_string(move.state_),
-                     move.row_,
-                     move.col_);
-}
-
-// expecting a 4-tuple string "<action>,<state>,<row>,<col>"
-model::Move
-get_move_from_string(std::string const & str) {
-  if (not str.empty()) {
-
-    auto tok = [&str, view = std::string_view{str}]() mutable {
-      auto off = view.find(',');
-      if (off == std::string_view::npos) {
-        return view;
-      }
-      std::string_view result(view.begin(), view.begin() + off);
-      view.remove_prefix(off + 1);
-      return result;
-    };
-
-    auto action = tok();
-    auto state  = tok();
-    auto row    = tok();
-    auto col    = tok();
-
-    return Move{get_action_from_string(action),
-                get_state_from_string(state),
-                std::atoi(row.data()),
-                std::atoi(col.data())};
-  }
-  throw std::runtime_error("invalid move string: " +
-                           std::string(str.data(), str.size()));
-}
-
 // convert a given model to json
 pt::ptree
 to_ptree(BoardModel const & model) {
   pt::ptree tree;
   pt::ptree children;
-  model.for_each_move([&](int, Move const & move) {
+  model.for_each_move([&](int, SingleMove const & move) {
     children.push_back(std::pair("", pt::ptree(to_string(move))));
   });
   tree.add_child("moves", children);

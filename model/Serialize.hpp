@@ -9,10 +9,6 @@ namespace model::serialize {
 
 namespace pt = boost::property_tree;
 
-Move get_move_from_string(std::string_view str);
-
-std::string to_string(model::Move const & move);
-
 // save a game state (level only, or in-progress game) as property tree
 pt::ptree to_ptree(BoardModel const & model);
 

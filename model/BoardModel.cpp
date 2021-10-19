@@ -9,13 +9,6 @@
 
 namespace model {
 
-std::ostream &
-operator<<(std::ostream & os, Move const & move) {
-  return os << "Move<" << to_string(move.action_) << ", "
-            << to_string(move.state_) << "(" << move.row_ << ", " << move.col_
-            << ")>";
-}
-
 BoardModel::BoardModel(StateChangeHandler * handler) : handler_(handler) {
   if (handler_ == nullptr) {
     throw std::runtime_error("Invalid BoardModel state change handler");
@@ -36,7 +29,7 @@ operator<<(std::ostream & os, BoardModel const & model) {
      << ", height: " << model.height_ << ", width: " << model.width_
      << ", moves: [";
 
-  for (Move const & m : model.moves_) {
+  for (SingleMove const & m : model.moves_) {
     os << "\n\t" << m;
   }
   os << "], cells:\n\t";
