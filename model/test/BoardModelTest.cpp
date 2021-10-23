@@ -9,10 +9,11 @@ namespace model::test {
 using namespace ::testing;
 using enum CellState;
 using enum Action;
+using model::test::TestStateChangeHandler;
 
 TEST(BM, construct) {
-  TestStateChangeHandler handler;
-  BoardModel             model(&handler);
+  BoardModel   model(std::make_unique<TestStateChangeHandler>());
+  auto const & handler = *model.get_handler();
 
   ASSERT_EQ(0, model.height());
   ASSERT_EQ(0, model.width());
@@ -21,8 +22,9 @@ TEST(BM, construct) {
 }
 
 TEST(BM, reset_game) {
-  TestStateChangeHandler handler;
-  BoardModel             model(&handler);
+  BoardModel   model(std::make_unique<TestStateChangeHandler>());
+  auto const & handler =
+      *dynamic_cast<TestStateChangeHandler const *>(model.get_handler());
 
   model.reset_game(3, 5);
   ASSERT_EQ(3, model.height());
@@ -39,8 +41,8 @@ TEST(BM, reset_game) {
 }
 
 TEST(BM, cannot_add_pieces_before_resetting_game) {
-  TestStateChangeHandler handler;
-  BoardModel             model(&handler);
+  BoardModel   model(std::make_unique<TestStateChangeHandler>());
+  auto const & handler = *model.get_handler();
 
   // must not add/remove before calling reset()
   ASSERT_THROW(model.add(Wall0, 0, 0), std::runtime_error);
@@ -48,8 +50,9 @@ TEST(BM, cannot_add_pieces_before_resetting_game) {
 }
 
 TEST(BM, reset_game_again) {
-  TestStateChangeHandler handler;
-  BoardModel             model(&handler);
+  BoardModel   model(std::make_unique<TestStateChangeHandler>());
+  auto const & handler =
+      *dynamic_cast<TestStateChangeHandler const *>(model.get_handler());
 
   ASSERT_EQ(0, handler.num_games());
 
@@ -74,8 +77,7 @@ TEST(BM, reset_game_again) {
 }
 
 TEST(BM, start_game) {
-  TestStateChangeHandler handler;
-  BoardModel             model(&handler);
+  BoardModel model(std::make_unique<TestStateChangeHandler>());
 
   LevelCreator creator(&model);
   creator("00000");

@@ -26,6 +26,11 @@ public:
     std::vector<SingleMove> moves_;
   };
 
+  GameState const &
+  cur() const {
+    return games_.back();
+  }
+
   GameState &
   cur() {
     return games_.back();
@@ -37,7 +42,7 @@ public:
   }
 
   void
-  onStateChange(Action action, CellState state, int row, int col) override {
+  on_state_change(Action action, CellState state, int row, int col) override {
     using enum model::Action;
     using enum model::CellState;
 

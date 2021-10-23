@@ -3,6 +3,7 @@
 #include "CellState.hpp"
 #include "SingleMove.hpp"
 #include <iosfwd>
+#include <memory>
 #include <string_view>
 #include <vector>
 
@@ -24,12 +25,12 @@ class StateChangeHandler {
 public:
   virtual ~StateChangeHandler() = default;
 
-  virtual void onStateChange(Action, CellState, int row, int col) = 0;
+  virtual void on_state_change(Action, CellState, int row, int col) = 0;
 };
 
 class BoardModel {
 public:
-  BoardModel(StateChangeHandler * handler);
+  BoardModel(std::unique_ptr<StateChangeHandler> handler);
 
   BoardModel(BoardModel const &) = delete;
   BoardModel & operator=(BoardModel const &) = delete;
@@ -99,9 +100,9 @@ public:
     }
   }
 
-  StateChangeHandler *
+  StateChangeHandler const *
   get_handler() const {
-    return handler_;
+    return handler_.get();
   }
 
 private:
@@ -119,13 +120,15 @@ private:
 
   void apply_move(Action, CellState, int row, int col);
 
+  void on_state_change(Action, CellState, int row, int col);
+
 private:
-  StateChangeHandler *    handler_;
-  bool                    started_ = false;
-  int                     height_  = 0;
-  int                     width_   = 0;
-  std::vector<CellState>  cells_;
-  std::vector<SingleMove> moves_;
+  std::unique_ptr<StateChangeHandler> handler_;
+  bool                                started_ = false;
+  int                                 height_  = 0;
+  int                                 width_   = 0;
+  std::vector<CellState>              cells_;
+  std::vector<SingleMove>             moves_;
 };
 
 } // namespace model

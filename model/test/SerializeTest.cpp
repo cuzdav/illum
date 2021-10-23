@@ -18,8 +18,8 @@ using namespace std::literals;
 
 TEST(Serializer, to_ptree) {
 
-  TestStateChangeHandler handler;
-  BoardModel             model(&handler);
+  BoardModel   model(std::make_unique<TestStateChangeHandler>());
+  auto const & handler = *model.get_handler();
 
   ::model::test::LevelCreator creator(&model);
   creator("00010");
@@ -29,8 +29,8 @@ TEST(Serializer, to_ptree) {
 
   auto serialized = ::model::serialize::to_ptree(model);
 
-  TestStateChangeHandler handler2;
-  BoardModel             model2(&handler2);
+  BoardModel   model2(std::make_unique<TestStateChangeHandler>());
+  auto const & handler2 = *model.get_handler();
 
   ASSERT_NE(model, model2);
   ASSERT_NE(model.width(), model2.width());
@@ -55,8 +55,8 @@ TEST(Serializer, to_ptree) {
 
 TEST(Serializer, to_from_json) {
 
-  TestStateChangeHandler handler;
-  BoardModel             model(&handler);
+  BoardModel   model(std::make_unique<TestStateChangeHandler>());
+  auto const & handler = *model.get_handler();
 
   ::model::test::LevelCreator creator(&model);
   creator("0100010");
@@ -74,8 +74,8 @@ TEST(Serializer, to_from_json) {
 
   std::istringstream iss(streamed);
 
-  TestStateChangeHandler handler2;
-  BoardModel             model2(&handler2);
+  BoardModel   model2(std::make_unique<TestStateChangeHandler>());
+  auto const & handler2 = *model.get_handler();
 
   serialize::setup_model_from_json_stream(iss, model2);
 

@@ -9,11 +9,8 @@
 
 namespace model {
 
-BoardModel::BoardModel(StateChangeHandler * handler) : handler_(handler) {
-  if (handler_ == nullptr) {
-    throw std::runtime_error("Invalid BoardModel state change handler");
-  }
-}
+BoardModel::BoardModel(std::unique_ptr<StateChangeHandler> handler)
+    : handler_(std::move(handler)) {}
 
 bool
 BoardModel::operator==(BoardModel const & other) const {
@@ -53,7 +50,7 @@ BoardModel::start_game() {
     // Adds a marker into game histroy separating the level setup from
     // the player's moves.
     moves_.push_back({Action::StartGame, CellState::Empty, -1, -1});
-    handler_->onStateChange(Action::StartGame, CellState::Empty, -1, -1);
+    on_state_change(Action::StartGame, CellState::Empty, -1, -1);
   }
 }
 
@@ -63,7 +60,7 @@ BoardModel::undo() {
     auto last = moves_.back();
     moves_.pop_back();
     Action action = last.action_ == Action::Add ? Action::Remove : Action::Add;
-    handler_->onStateChange(action, last.state_, last.row_, last.col_);
+    on_state_change(action, last.state_, last.row_, last.col_);
   }
 }
 
@@ -90,7 +87,7 @@ BoardModel::apply_move(Action action, CellState state, int row, int col) {
     throw std::runtime_error("Board uninitialized");
   }
   moves_.push_back({action, state, row, col});
-  handler_->onStateChange(action, state, row, col);
+  on_state_change(action, state, row, col);
 }
 
 void
@@ -121,7 +118,14 @@ BoardModel::reset_game(int height, int width) {
   height_ = height;
   width_  = width;
   moves_.push_back({Action::ResetGame, CellState::Empty, height, width});
-  handler_->onStateChange(Action::ResetGame, CellState::Empty, height, width);
+  on_state_change(Action::ResetGame, CellState::Empty, height, width);
+}
+
+void
+BoardModel::on_state_change(Action action, CellState state, int row, int col) {
+  if (handler_) {
+    handler_->on_state_change(action, state, row, col);
+  }
 }
 
 } // namespace model
