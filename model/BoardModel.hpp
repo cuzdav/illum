@@ -44,6 +44,7 @@ public:
   // These are all appeneded to the vector of moves.  (For purposes of undo,
   // even "remove" is added, so it can be undone to return to previous state.)
   void reset_game(int height, int width);
+  void reset_game(BasicBoard const & initial_board);
   void start_game();
   void add(CellState, int row, int col);
   void remove(int row, int col);

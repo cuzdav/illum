@@ -66,6 +66,9 @@ BoardModel::add(CellState state, int row, int col) {
 
 void
 BoardModel::remove(int row, int col) {
+  if (not started_) {
+    throw std::runtime_error("Cannot remove cells before game has started");
+  }
   CellState orig_cell = board_.get_cell(row, col);
   if (orig_cell == CellState::Bulb or orig_cell == CellState::Mark) {
     board_.set_cell(row, col, CellState::Empty);
@@ -80,6 +83,23 @@ BoardModel::reset_game(int height, int width) {
   board_.reset(height, width);
   moves_.push_back({Action::ResetGame, CellState::Empty, height, width});
   on_state_change(Action::ResetGame, CellState::Empty, height, width);
+}
+
+void
+BoardModel::reset_game(BasicBoard const & initial_board) {
+  started_ = false;
+  moves_.clear();
+  int height = initial_board.height();
+  int width  = initial_board.width();
+  moves_.push_back({Action::ResetGame, CellState::Empty, height, width});
+  on_state_change(Action::ResetGame, CellState::Empty, height, width);
+
+  board_ = initial_board;
+  board_.visit_cells([this](int row, int col, CellState cell) {
+    if (cell != CellState::Empty) {
+      moves_.push_back({Action::Add, cell, row, col});
+    }
+  });
 }
 
 void

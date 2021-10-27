@@ -79,11 +79,14 @@ TEST(BM, reset_game_again) {
 TEST(BM, start_game) {
   BoardModel model(std::make_unique<TestStateChangeHandler>());
 
-  LevelCreator creator(&model);
+  LevelCreator creator;
   creator("00000");
   creator("0..10");
   creator("00000");
-  creator.finished();
+  creator.finished(&model);
+
+  ASSERT_EQ(3, model.height());
+  ASSERT_EQ(5, model.width());
 
   ASSERT_EQ(Wall0, model.get_cell(0, 0));
   ASSERT_EQ(Wall0, model.get_cell(0, 1));
@@ -102,6 +105,43 @@ TEST(BM, start_game) {
   ASSERT_EQ(Empty, model.get_cell(1, 2));
 
   ASSERT_EQ(Wall1, model.get_cell(1, 3));
+}
+
+TEST(BM, reset_from_board) {
+  BoardModel   model(std::make_unique<TestStateChangeHandler>());
+  LevelCreator creator;
+  creator("00000");
+  creator("0..10");
+  creator("00000");
+  creator.finished(&model);
+
+  ASSERT_EQ(3, model.height());
+  ASSERT_EQ(5, model.width());
+
+  BasicBoard   board;
+  BoardModel   model2(std::make_unique<TestStateChangeHandler>());
+  LevelCreator creator2;
+  creator2("1**.");
+  creator2("*2*.");
+  creator2("**3.");
+  creator2.finished(&board);
+  creator2.finished(&model2);
+
+  ASSERT_EQ(3, board.height());
+  ASSERT_EQ(4, board.width());
+
+  ASSERT_EQ(3, model2.height());
+  ASSERT_EQ(4, model2.width());
+
+  model.reset_game(board);
+  // (test) LevelCreator starts the game automatically, so we must do so too
+  // before we compare them.
+  model.start_game();
+
+  ASSERT_EQ(3, model.height());
+  ASSERT_EQ(4, model.width());
+
+  ASSERT_EQ(model, model2);
 }
 
 } // namespace model::test

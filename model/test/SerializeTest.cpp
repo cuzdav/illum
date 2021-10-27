@@ -21,11 +21,11 @@ TEST(Serializer, to_ptree) {
   BoardModel   model(std::make_unique<TestStateChangeHandler>());
   auto const & handler = *model.get_handler();
 
-  ::model::test::LevelCreator creator(&model);
+  ::model::test::LevelCreator creator;
   creator("00010");
   creator("0...1");
   creator("00010");
-  creator.finished();
+  creator.finished(&model);
 
   auto serialized = ::model::serialize::to_ptree(model);
 
@@ -59,14 +59,14 @@ TEST(Serializer, to_from_json) {
   BoardModel   model(std::make_unique<TestStateChangeHandler>());
   auto const & handler = *model.get_handler();
 
-  ::model::test::LevelCreator creator(&model);
+  ::model::test::LevelCreator creator;
   creator("0100010");
   creator("1..0..1");
   creator("010.010");
   creator("0..0..0");
   creator("1..0..1");
   creator("0000000");
-  creator.finished();
+  creator.finished(&model);
 
   std::ostringstream oss;
   serialize::to_json_stream(oss, model);

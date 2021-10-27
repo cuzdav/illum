@@ -14,8 +14,6 @@ namespace model::test {
 
 class LevelCreator {
 public:
-  LevelCreator(BoardModel * model) : model_(model) {}
-
   void
   operator()(std::string const & row) {
     if (unparsed_rows_.empty()) {
@@ -29,38 +27,42 @@ public:
   }
 
   void
-  finished() {
-    model_->reset_game(size(unparsed_rows_), width_);
+  finished(BoardModel * model) {
+    model->reset_game(size(unparsed_rows_), width_);
+    finished_impl([model](CellState cell, int row, int col) {
+      if (cell != CellState::Empty) {
+        model->add(cell, row, col);
+      }
+    });
+    model->start_game();
+  }
 
-    using enum CellState;
+  void
+  finished(BasicBoard * board) {
+    board->reset(size(unparsed_rows_), width_);
+    finished_impl([board](CellState cell, int row, int col) {
+      if (cell != CellState::Empty) {
+        board->set_cell(row, col, cell);
+      }
+    });
+  }
+
+private:
+  void
+  finished_impl(auto && cell_handler) {
     int rownum = 0;
     for (auto const & row : unparsed_rows_) {
       int colnum = 0;
       for (char c : row) {
-        CellState cell;
-        switch (c) {
-        case chr::Wall0: cell = Wall0; break;
-        case chr::Wall1: cell = Wall1; break;
-        case chr::Wall2: cell = Wall2; break;
-        case chr::Wall3: cell = Wall3; break;
-        case chr::Wall4: cell = Wall4; break;
-        case chr::Empty: cell = Empty; break;
-        case chr::Bulb: cell = Bulb; break;
-        case chr::Mark: cell = Mark; break;
-        default:
-          throw std::runtime_error(
-              (std::string("Unknown cell char: ") + c).c_str());
-        }
-        model_->add(cell, rownum, colnum++);
+        CellState cell = get_state_from_char(c);
+        cell_handler(cell, rownum, colnum++);
       }
       rownum++;
     }
-    model_->start_game();
   }
 
 private:
   int                      width_ = 0;
-  BoardModel *             model_ = nullptr;
   std::vector<std::string> unparsed_rows_;
 };
 

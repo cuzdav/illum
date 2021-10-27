@@ -115,7 +115,7 @@ template <typename VisitorT>
 void
 BasicBoard::visit_cells(VisitorT && visitor) const {
   for (int r = 0, c = 0, i = 0; r < height_; ++i) {
-    visitor.accept(r, c, cells_[i]);
+    visitor(r, c, cells_[i]);
     if (++c == width_) {
       c = 0;
       ++r;
@@ -126,12 +126,13 @@ BasicBoard::visit_cells(VisitorT && visitor) const {
 inline std::ostream &
 operator<<(std::ostream & os, BasicBoard const & board) {
   os << "Board: [\n\t";
-  int i = board.width_;
-  for (CellState state : board.cells_) {
+
+  for (int i = 0, r = board.width_, e = r * board.height_; i < e; ++i) {
+    auto state = board.cells_[i];
     os << to_char(state);
-    if (--i == 0) {
+    if (--r == 0) {
       os << "\n\t";
-      i = board.width_;
+      r = board.width_;
     }
   }
   os << "]";
