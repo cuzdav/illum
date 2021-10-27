@@ -1,7 +1,9 @@
 #pragma once
 #include "Action.hpp"
+#include "BasicBoard.hpp"
 #include "CellState.hpp"
 #include "SingleMove.hpp"
+#include "StateChangeHandler.hpp"
 #include <iosfwd>
 #include <memory>
 #include <string_view>
@@ -21,16 +23,10 @@ namespace model {
 // also why player requests to remove a piece is still added as a move, which is
 // distinctly different from an undo, which makes the "moves" list smaller.
 
-class StateChangeHandler {
-public:
-  virtual ~StateChangeHandler() = default;
-
-  virtual void on_state_change(Action, CellState, int row, int col) = 0;
-};
-
 class BoardModel {
 public:
   BoardModel(std::unique_ptr<StateChangeHandler> handler);
+  ~BoardModel() = default;
 
   BoardModel(BoardModel const &) = delete;
   BoardModel & operator=(BoardModel const &) = delete;
@@ -56,41 +52,6 @@ public:
   // the start-of-game marker.
   void undo();
 
-  CellState
-  get_cell(int row, int col) const {
-    return cells_[get_idx(row, col)];
-  }
-
-  CellState get_cell_from_flat_idx(int idx) const;
-
-  bool
-  started() const {
-    return started_;
-  }
-
-  int
-  width() const {
-    return width_;
-  }
-
-  int
-  height() const {
-    return height_;
-  }
-
-  int
-  num_moves() const {
-    return moves_.size();
-  }
-
-  template <typename VisitorT>
-  void
-  visit_cells(VisitorT && visitor) const {
-    for (int i = 0; i < size(cells_); ++i) {
-      visitor.accept(row_from_idx(i), col_from_idx(i), cells_[i]);
-    }
-  }
-
   template <typename MoveHandlerT>
   void
   for_each_move(MoveHandlerT && handler) const {
@@ -105,30 +66,48 @@ public:
     return handler_.get();
   }
 
+  int
+  num_moves() const {
+    return moves_.size();
+  }
+
+  bool
+  started() const {
+    return started_;
+  }
+
+  // basic_board interface pass-through
+
+  CellState
+  get_cell(int row, int col) const {
+    return board_.get_cell(row, col);
+  }
+
+  int
+  width() const {
+    return board_.width();
+  }
+
+  int
+  height() const {
+    return board_.height();
+  }
+
+  template <typename VisitorT>
+  void
+  visit_cells(VisitorT && visitor) const {
+    board_.visit_cells(std::forward<VisitorT>(visitor));
+  }
+
 private:
-  int get_idx(int row, int col) const;
-
-  int
-  row_from_idx(int idx) const {
-    return idx / width_;
-  }
-
-  int
-  col_from_idx(int idx) const {
-    return idx % width_;
-  }
-
   void apply_move(Action, CellState, int row, int col);
-
   void on_state_change(Action, CellState, int row, int col);
 
 private:
-  std::unique_ptr<StateChangeHandler> handler_;
   bool                                started_ = false;
-  int                                 height_  = 0;
-  int                                 width_   = 0;
-  std::vector<CellState>              cells_;
+  std::unique_ptr<StateChangeHandler> handler_;
   std::vector<SingleMove>             moves_;
+  BasicBoard                          board_;
 };
 
 } // namespace model

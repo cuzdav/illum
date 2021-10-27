@@ -1,5 +1,8 @@
-#include "BoardModel.hpp"
+
+#include "Action.hpp"
+#include "CellState.hpp"
 #include "SingleMove.hpp"
+#include "StateChangeHandler.hpp"
 #include <fmt/core.h>
 #include <iostream> // debug
 #include <stdexcept>

@@ -47,9 +47,10 @@ TEST(Serializer, to_ptree) {
   ASSERT_EQ(model.started(), model2.started());
   ASSERT_EQ(model.num_moves(), model2.num_moves());
 
-  for (int i = 0, e = model.width() * model.height(); i < e; ++i) {
-    ASSERT_EQ(model.get_cell_from_flat_idx(i),
-              model2.get_cell_from_flat_idx(i));
+  for (int r = 0; r < model.height(); ++r) {
+    for (int c = 0; c < model.width(); ++c) {
+      ASSERT_EQ(model.get_cell(r, c), model2.get_cell(r, c));
+    }
   }
 }
 
