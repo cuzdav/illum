@@ -119,9 +119,9 @@ TEST(BM, reset_from_board) {
   BasicBoard   board;
   BoardModel   model2;
   LevelCreator creator2;
-  creator2("1**.");
-  creator2("*2*.");
-  creator2("**3.");
+  creator2("1...");
+  creator2(".2..");
+  creator2("..3.");
   creator2.finished(&board);
   creator2.finished(&model2);
 
@@ -142,7 +142,7 @@ TEST(BM, reset_from_board) {
   ASSERT_EQ(model, model2);
 }
 
-TEST(BM, visit_cells) {
+TEST(BM, visit_board) {
   BoardModel   model;
   LevelCreator creator;
   creator("00000");
@@ -151,7 +151,7 @@ TEST(BM, visit_cells) {
   creator.finished(&model);
 
   int count = 0;
-  model.visit_cells([&](int r, int c, CellState cell) {
+  model.visit_board([&](int r, int c, CellState cell) {
     ++count;
     ASSERT_EQ(model.get_cell(r, c), cell);
   });

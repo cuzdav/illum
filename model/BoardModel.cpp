@@ -100,8 +100,13 @@ BoardModel::reset_game(BasicBoard const & initial_board) {
   on_state_change(Action::ResetGame, CellState::Empty, height, width);
 
   board_ = initial_board;
-  board_.visit_cells([this](int row, int col, CellState cell) {
+  board_.visit_board([this](int row, int col, CellState cell) {
     if (cell != CellState::Empty) {
+      if (cell == CellState::Illum || cell == CellState::Bulb) {
+        // TODO: give this situation more thought.
+        throw std::runtime_error(
+            "Are you sure you want to  reset from an in-progress game?");
+      }
       moves_.push_back({Action::Add, cell, row, col});
     }
   });

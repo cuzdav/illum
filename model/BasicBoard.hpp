@@ -32,13 +32,20 @@ public:
   // visitor may return void or bool:
   //   void == visit all cells
   //   bool == true:keep-going, false:stop
-  template <CellVisitor T>
-  void visit_cells(T && visitor) const;
+  void visit_board(CellVisitor auto && visitor) const;
+  void visit_row_left_of(int row, int col, CellVisitor auto && visitor) const;
+  void visit_row_right_of(int row, int col, CellVisitor auto && visitor) const;
+  void visit_col_above(int row, int col, CellVisitor auto && visitor) const;
+  void visit_col_below(int row, int col, CellVisitor auto && visitor) const;
+  void visit_adjacent(int row, int col, CellVisitor auto && visitor) const;
 
   friend std::ostream & operator<<(std::ostream &, BasicBoard const &);
 
 private:
-  int get_flat_idx(int row, int col) const;
+  int  get_flat_idx(int row, int col) const;
+  int  get_flat_idx_unchecked(int row, int col) const;
+  bool visit_cell(int r, int c, int i, CellVisitorSome auto && visitor) const;
+  bool visit_cell(int r, int c, int i, CellVisitorAll auto && visitor) const;
 
 private:
   int                              height_ = 0;
@@ -112,9 +119,14 @@ BasicBoard::set_cell_if(int row, int col, CellState state, PredT pred) {
 }
 
 inline int
+BasicBoard::get_flat_idx_unchecked(int row, int col) const {
+  return row * width_ + col;
+}
+
+inline int
 BasicBoard::get_flat_idx(int row, int col) const {
-  if (int idx = row * width_ + col; row < height_ && col < width_ && idx >= 0) {
-    return idx;
+  if (row < height_ && col < width_ && row >= 0 && col >= 0) {
+    return get_flat_idx_unchecked(row, col);
   }
   return -1;
 }
@@ -129,25 +141,108 @@ BasicBoard::height() const {
   return height_;
 }
 
-template <CellVisitor VisitorT>
-void
-BasicBoard::visit_cells(VisitorT && visitor) const {
+inline bool
+BasicBoard::visit_cell(int r, int c, int i,
+                       CellVisitorSome auto && visitor) const {
+  return visitor(r, c, cells_[i]);
+}
+
+inline bool
+BasicBoard::visit_cell(int r, int c, int i,
+                       CellVisitorAll auto && visitor) const {
+  visitor(r, c, cells_[i]);
+  return true;
+}
+
+inline void
+BasicBoard::visit_board(CellVisitor auto && visitor) const {
   for (int r = 0, c = 0, i = 0; r < height_; ++i) {
-
-    if constexpr (CellVisitorSome<VisitorT>) {
-      if (not visitor(r, c, cells_[i])) {
-        return;
-      }
+    if (not visit_cell(r, c, i, visitor)) {
+      return;
     }
-    else {
-      visitor(r, c, cells_[i]);
-    }
-
     if (++c == width_) {
       c = 0;
       ++r;
     }
   }
+}
+
+inline void
+BasicBoard::visit_row_left_of(int row, int col,
+                              CellVisitor auto && visitor) const {
+  int idx = get_flat_idx(row, --col);
+  if (idx == -1) {
+    return;
+  }
+  while (col >= 0) {
+    if (not visit_cell(row, col, idx, visitor)) {
+      return;
+    }
+    --col;
+    --idx;
+  }
+}
+
+inline void
+BasicBoard::visit_row_right_of(int row, int col,
+                               CellVisitor auto && visitor) const {
+  int idx = get_flat_idx(row, ++col);
+  if (idx == -1) {
+    return;
+  }
+  while (col < width_) {
+    if (not visit_cell(row, col, idx, visitor)) {
+      return;
+    }
+    ++col;
+    ++idx;
+  }
+}
+
+inline void
+BasicBoard::visit_col_above(int row, int col,
+                            CellVisitor auto && visitor) const {
+  int idx = get_flat_idx(--row, col);
+  if (idx == -1) {
+    return;
+  }
+  while (row >= 0) {
+    if (not visit_cell(row, col, idx, visitor)) {
+      return;
+    }
+    --row;
+    idx -= width_;
+  }
+}
+
+inline void
+BasicBoard::visit_col_below(int row, int col,
+                            CellVisitor auto && visitor) const {
+  int idx = get_flat_idx(++row, col);
+  if (idx == -1) {
+    return;
+  }
+  while (row < height_) {
+    if (not visit_cell(row, col, idx, visitor)) {
+      return;
+    }
+    ++row;
+    idx += width_;
+  }
+}
+
+inline void
+BasicBoard::visit_adjacent(int row, int col,
+                           CellVisitor auto && visitor) const {
+  auto visit = [&](int r, int c) {
+    if (int idx = get_flat_idx(r, c); idx != -1) {
+      return visit_cell(r, c, idx, visitor);
+    }
+    return true;
+  };
+
+  visit(row + 1, col) && visit(row - 1, col) && visit(row, col - 1) &&
+      visit(row, col + 1);
 }
 
 inline std::ostream &

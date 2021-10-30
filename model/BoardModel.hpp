@@ -69,7 +69,7 @@ public:
   int                width() const;
   int                height() const;
 
-  void visit_cells(CellVisitor auto && visitor) const;
+  void visit_board(CellVisitor auto && visitor) const;
 
 private:
   void apply_move(Action, CellState, int row, int col);
@@ -127,8 +127,8 @@ BoardModel::height() const {
 }
 
 inline void
-BoardModel::visit_cells(CellVisitor auto && visitor) const {
-  board_.visit_cells(std::forward<decltype(visitor)>(visitor));
+BoardModel::visit_board(CellVisitor auto && visitor) const {
+  board_.visit_board(std::forward<decltype(visitor)>(visitor));
 }
 
 } // namespace model

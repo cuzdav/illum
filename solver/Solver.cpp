@@ -10,9 +10,13 @@ namespace solver {
 
 constexpr int MAX_SOLVE_STEPS = 10000;
 
+bool
+visit_row_from(model::BasicBoard const & board, int row, int col, int dx) {}
+
 std::optional<model::SingleMove>
 find_isolated_empty_cell(model::BasicBoard const & board) {
-  board.visit_cells([&](int row, int col, model::CellState state) {
+
+  board.visit_board([&](int row, int col, model::CellState state) {
 
   });
   return {};
