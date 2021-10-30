@@ -12,7 +12,7 @@ using namespace std::literals;
 using enum Action;
 using enum CellState;
 
-// convert a given model to json
+// convert a given model's moves to json
 pt::ptree
 to_ptree(BoardModel const & model) {
   pt::ptree tree;

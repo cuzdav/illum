@@ -9,6 +9,8 @@ namespace model {
 BoardModel::BoardModel(std::unique_ptr<StateChangeHandler> handler)
     : handler_(std::move(handler)) {}
 
+BoardModel::BoardModel() : BoardModel(nullptr) {}
+
 bool
 BoardModel::operator==(BoardModel const & other) const {
   return started_ == other.started_ && board_ == other.board_ &&

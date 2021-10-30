@@ -6,10 +6,21 @@
 
 namespace model {
 
-enum class CellState { Wall0, Wall1, Wall2, Wall3, Wall4, Empty, Bulb, Mark };
+enum class CellState {
+  Wall0,
+  Wall1,
+  Wall2,
+  Wall3,
+  Wall4,
+  Empty,
+  Bulb,
+  Mark,
+  Illum,
+};
 
 namespace chr {
 constexpr char Bulb  = '*';
+constexpr char Illum = '+';
 constexpr char Empty = '.';
 constexpr char Wall0 = '0';
 constexpr char Wall1 = '1';
@@ -22,6 +33,7 @@ constexpr char Mark  = 'X';
 namespace str {
 constexpr char const * Bulb  = "Bulb";
 constexpr char const * Empty = "Empty";
+constexpr char const * Illum = "Illum";
 constexpr char const * Wall0 = "Wall0";
 constexpr char const * Wall1 = "Wall1";
 constexpr char const * Wall2 = "Wall2";
@@ -31,9 +43,10 @@ constexpr char const * Mark  = "Mark";
 
 } // namespace str
 
-// keep names/values sorted and in "pairwise lockstep"
+// keep sorted and in "pairwise lockstep" with CellStateValues
 constexpr std::string_view CellStateNames[] = {str::Bulb,
                                                str::Empty,
+                                               str::Illum,
                                                str::Mark,
                                                str::Wall0,
                                                str::Wall1,
@@ -41,8 +54,10 @@ constexpr std::string_view CellStateNames[] = {str::Bulb,
                                                str::Wall3,
                                                str::Wall4};
 
+// keep sorted and in "pairwise lockstep" with CellStateNames
 constexpr CellState CellStateValues[] = {CellState::Bulb,
                                          CellState::Empty,
+                                         CellState::Illum,
                                          CellState::Mark,
                                          CellState::Wall0,
                                          CellState::Wall1,
@@ -55,6 +70,7 @@ to_char(CellState state) {
   using enum CellState;
   switch (state) {
   case Empty: return chr::Empty;
+  case Illum: return chr::Illum;
   case Wall0: return chr::Wall0;
   case Wall1: return chr::Wall1;
   case Wall2: return chr::Wall2;
@@ -75,6 +91,7 @@ get_state_from_char(char state) {
   using enum CellState;
   switch (state) {
   case chr::Empty: return Empty;
+  case chr::Illum: return Illum;
   case chr::Wall0: return Wall0;
   case chr::Wall1: return Wall1;
   case chr::Wall2: return Wall2;
@@ -94,6 +111,7 @@ to_string(CellState state) {
   using enum CellState;
   switch (state) {
   case Empty: return str::Empty;
+  case Illum: return str::Illum;
   case Wall0: return str::Wall0;
   case Wall1: return str::Wall1;
   case Wall2: return str::Wall2;

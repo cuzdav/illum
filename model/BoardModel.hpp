@@ -25,10 +25,14 @@ namespace model {
 
 class BoardModel {
 public:
+  BoardModel();
   BoardModel(std::unique_ptr<StateChangeHandler> handler);
 
   BoardModel(BoardModel const &) = delete;
   BoardModel & operator=(BoardModel const &) = delete;
+
+  BoardModel(BoardModel &&) = default;
+  BoardModel & operator=(BoardModel &&) = default;
 
   bool                  operator==(BoardModel const &) const;
   friend std::ostream & operator<<(std::ostream &, BoardModel const &);

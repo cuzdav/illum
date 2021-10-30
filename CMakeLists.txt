@@ -65,5 +65,6 @@ find_package(Boost)
 add_subdirectory (olc)
 add_subdirectory (model)
 add_subdirectory (levels)
+add_subdirectory (solver)
 
 
