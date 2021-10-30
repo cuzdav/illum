@@ -134,8 +134,8 @@ TEST(BM, reset_from_board) {
   ASSERT_EQ(4, model2.width());
 
   model.reset_game(board);
-  // (test) LevelCreator starts the game automatically, so we must do so too
-  // before we compare them.
+  // (test) LevelCreator "starts" game automatically so we must too, before
+  // we can compare them.
   model.start_game();
 
   ASSERT_EQ(3, model.height());
