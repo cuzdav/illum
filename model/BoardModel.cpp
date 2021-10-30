@@ -64,6 +64,9 @@ BoardModel::add(CellState state, int row, int col) {
   if (board_.set_cell(row, col, state)) {
     apply_move(Action::Add, state, row, col);
   }
+  else {
+    throw std::runtime_error("Unable to add state to board at that location");
+  }
 }
 
 void

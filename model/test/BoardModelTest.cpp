@@ -12,8 +12,7 @@ using enum Action;
 using model::test::TestStateChangeHandler;
 
 TEST(BM, construct) {
-  BoardModel   model(std::make_unique<TestStateChangeHandler>());
-  auto const & handler = *model.get_handler();
+  BoardModel model;
 
   ASSERT_EQ(0, model.height());
   ASSERT_EQ(0, model.width());
@@ -41,8 +40,7 @@ TEST(BM, reset_game) {
 }
 
 TEST(BM, cannot_add_pieces_before_resetting_game) {
-  BoardModel   model(std::make_unique<TestStateChangeHandler>());
-  auto const & handler = *model.get_handler();
+  BoardModel model;
 
   // must not add/remove before calling reset()
   ASSERT_THROW(model.add(Wall0, 0, 0), std::runtime_error);
@@ -77,7 +75,7 @@ TEST(BM, reset_game_again) {
 }
 
 TEST(BM, start_game) {
-  BoardModel model(std::make_unique<TestStateChangeHandler>());
+  BoardModel model;
 
   LevelCreator creator;
   creator("00000");
@@ -108,7 +106,7 @@ TEST(BM, start_game) {
 }
 
 TEST(BM, reset_from_board) {
-  BoardModel   model(std::make_unique<TestStateChangeHandler>());
+  BoardModel   model;
   LevelCreator creator;
   creator("00000");
   creator("0..10");
@@ -119,7 +117,7 @@ TEST(BM, reset_from_board) {
   ASSERT_EQ(5, model.width());
 
   BasicBoard   board;
-  BoardModel   model2(std::make_unique<TestStateChangeHandler>());
+  BoardModel   model2;
   LevelCreator creator2;
   creator2("1**.");
   creator2("*2*.");

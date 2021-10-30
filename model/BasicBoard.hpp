@@ -3,6 +3,7 @@
 #include "CellVisitorConcepts.hpp"
 #include <array>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 
 namespace model {
@@ -16,7 +17,8 @@ public:
   void reset(int height, int width);
   bool is_initialized() const;
 
-  CellState get_cell(int row, int col) const;
+  CellState                get_cell(int row, int col) const;
+  std::optional<CellState> get_opt_cell(int row, int col) const;
 
   bool set_cell(int row, int col, CellState state);
 
@@ -76,7 +78,18 @@ BasicBoard::is_initialized() const {
 
 inline CellState
 BasicBoard::get_cell(int row, int col) const {
-  return cells_[get_flat_idx(row, col)];
+  if (int idx = get_flat_idx(row, col); idx != -1) {
+    return cells_[idx];
+  }
+  throw std::range_error("Out of bounds");
+}
+
+inline std::optional<CellState>
+BasicBoard::get_opt_cell(int row, int col) const {
+  if (int idx = get_flat_idx(row, col); idx != -1) {
+    return cells_[idx];
+  }
+  return std::nullopt;
 }
 
 inline bool
@@ -100,10 +113,10 @@ BasicBoard::set_cell_if(int row, int col, CellState state, PredT pred) {
 
 inline int
 BasicBoard::get_flat_idx(int row, int col) const {
-  if (int idx = row * width_ + col; idx < cells_.size() && idx >= 0) {
+  if (int idx = row * width_ + col; row < height_ && col < width_ && idx >= 0) {
     return idx;
   }
-  throw std::range_error("Out of bounds");
+  return -1;
 }
 
 inline int

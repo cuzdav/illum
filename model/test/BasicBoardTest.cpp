@@ -41,6 +41,17 @@ TEST(BasicBoardTest, cell_accessors) {
   ASSERT_EQ(CellState::Wall3, b.get_cell(2, 3));
   ASSERT_EQ(CellState::Mark, b.get_cell(4, 4));
 
+  ASSERT_TRUE(b.get_opt_cell(0, 0).has_value());
+  ASSERT_TRUE(b.get_opt_cell(0, 1).has_value());
+  ASSERT_TRUE(b.get_opt_cell(1, 2).has_value());
+  ASSERT_TRUE(b.get_opt_cell(2, 3).has_value());
+  ASSERT_TRUE(b.get_opt_cell(4, 4).has_value());
+  ASSERT_EQ(CellState::Wall0, *b.get_opt_cell(0, 0));
+  ASSERT_EQ(CellState::Wall1, *b.get_opt_cell(0, 1));
+  ASSERT_EQ(CellState::Wall2, *b.get_opt_cell(1, 2));
+  ASSERT_EQ(CellState::Wall3, *b.get_opt_cell(2, 3));
+  ASSERT_EQ(CellState::Mark, *b.get_opt_cell(4, 4));
+
   auto not_wall1_or_wall2 = [](CellState cell) {
     return cell != CellState::Wall1 && cell != CellState::Wall2;
   };
@@ -55,6 +66,21 @@ TEST(BasicBoardTest, cell_accessors) {
   ASSERT_EQ(CellState::Wall2, b.get_cell(1, 2));
   ASSERT_EQ(CellState::Empty, b.get_cell(2, 3));
   ASSERT_EQ(CellState::Empty, b.get_cell(4, 4));
+}
+
+TEST(BasicBoardTest, bad_cell_access) {
+  BasicBoard b;
+  b.reset(5, 6);
+
+  ASSERT_THROW(b.get_cell(-1, 0), std::range_error);
+  ASSERT_THROW(b.get_cell(0, -1), std::range_error);
+  ASSERT_THROW(b.get_cell(0, -1), std::range_error);
+  ASSERT_THROW(b.get_cell(0, 6), std::range_error);
+
+  ASSERT_EQ(std::nullopt, b.get_opt_cell(-1, 0));
+  ASSERT_EQ(std::nullopt, b.get_opt_cell(0, -1));
+  ASSERT_EQ(std::nullopt, b.get_opt_cell(0, -1));
+  ASSERT_EQ(std::nullopt, b.get_opt_cell(0, 6));
 }
 
 TEST(BasicBoardTest, equality) {
