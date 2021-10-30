@@ -1,5 +1,6 @@
 #pragma once
 #include "CellState.hpp"
+#include "CellVisitorConcepts.hpp"
 #include <array>
 #include <iostream>
 #include <stdexcept>
@@ -25,8 +26,12 @@ public:
   int width() const;
   int height() const;
 
-  template <typename VisitorT>
-  void visit_cells(VisitorT && visitor) const;
+  // visitor is invoked for each cell with (row, col, cellstate)
+  // visitor may return void or bool:
+  //   void == visit all cells
+  //   bool == true:keep-going, false:stop
+  template <CellVisitor T>
+  void visit_cells(T && visitor) const;
 
   friend std::ostream & operator<<(std::ostream &, BasicBoard const &);
 
@@ -111,11 +116,20 @@ BasicBoard::height() const {
   return height_;
 }
 
-template <typename VisitorT>
+template <CellVisitor VisitorT>
 void
 BasicBoard::visit_cells(VisitorT && visitor) const {
   for (int r = 0, c = 0, i = 0; r < height_; ++i) {
-    visitor(r, c, cells_[i]);
+
+    if constexpr (CellVisitorSome<VisitorT>) {
+      if (not visitor(r, c, cells_[i])) {
+        return;
+      }
+    }
+    else {
+      visitor(r, c, cells_[i]);
+    }
+
     if (++c == width_) {
       c = 0;
       ++r;

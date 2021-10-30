@@ -144,4 +144,20 @@ TEST(BM, reset_from_board) {
   ASSERT_EQ(model, model2);
 }
 
+TEST(BM, visit_cells) {
+  BoardModel   model;
+  LevelCreator creator;
+  creator("00000");
+  creator("0..10");
+  creator("00000");
+  creator.finished(&model);
+
+  int count = 0;
+  model.visit_cells([&](int r, int c, CellState cell) {
+    ++count;
+    ASSERT_EQ(model.get_cell(r, c), cell);
+  });
+  ASSERT_EQ(model.width() * model.height(), count);
+}
+
 } // namespace model::test

@@ -91,4 +91,56 @@ TEST(BasicBoardTest, equality) {
   ASSERT_EQ(board1, board2);
 }
 
+TEST(BasicBoardTest, visit_all) {
+  BasicBoard   board;
+  LevelCreator creator;
+  creator("..*");
+  creator("123");
+  creator("0X4");
+  creator.finished(&board);
+
+  BasicBoard board2;
+  board2.reset(board.height(), board.width());
+
+  int count = 0;
+  board.visit_cells([&](int r, int c, CellState cell) {
+    ++count;
+    board2.set_cell(r, c, cell);
+  });
+  ASSERT_EQ(9, count);
+  ASSERT_EQ(board, board2);
+}
+
+TEST(BasicBoardTest, visit_some) {
+  BasicBoard board;
+  {
+    LevelCreator creator;
+    creator("..*");
+    creator("123");
+    creator("0X4");
+    creator.finished(&board);
+  }
+
+  BasicBoard board2;
+  board2.reset(board.height(), board.width());
+
+  int count = 0;
+  board.visit_cells([&](int r, int c, CellState cell) {
+    ++count;
+    board2.set_cell(r, c, cell);
+    return cell != CellState::Wall2;
+  });
+  ASSERT_EQ(5, count);
+
+  BasicBoard expected;
+  {
+    LevelCreator creator;
+    creator("..*");
+    creator("12.");
+    creator("...");
+    creator.finished(&expected);
+  }
+  ASSERT_EQ(expected, board2);
+}
+
 } // namespace model::test
