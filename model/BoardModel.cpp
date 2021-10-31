@@ -71,6 +71,16 @@ BoardModel::add(CellState state, int row, int col) {
 }
 
 void
+BoardModel::apply(SingleMove move) {
+  if (board_.set_cell(move.row_, move.col_, move.state_)) {
+    apply_move(move.action_, move.state_, move.row_, move.col_);
+  }
+  else {
+    throw std::runtime_error("Unable to apply move to board at that location");
+  }
+}
+
+void
 BoardModel::remove(int row, int col) {
   if (not started_) {
     throw std::runtime_error("Cannot remove cells before game has started");

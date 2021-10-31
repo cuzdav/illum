@@ -51,6 +51,7 @@ public:
   void reset_game(BasicBoard const & initial_board); // copy of board
   void start_game();
   void add(CellState, int row, int col);
+  void apply(SingleMove move);
   void remove(int row, int col);
 
   // This actually removes entries from the moves vector, but cannot go past

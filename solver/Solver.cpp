@@ -42,20 +42,18 @@ find_isolated_empty_cell(model::BasicBoard const & board) {
   return result;
 }
 
-void
-play_bulb(model::SingleMove const & move, Solution & solution) {
-  solution.model_.add(model::CellState::Bulb, move.row_, move.col_);
-}
-
 std::optional<model::SingleMove>
 find_wall_with_deps_equalling_open_faces(model::BasicBoard const & board) {
   std::optional<model::SingleMove> result;
   board.visit_board([&](int row, int col, model::CellState cell) {
     if (int deps = num_wall_deps(cell)) {
       int empty_count = 0;
-      board.visit_adjacent(
-          row, col, [&](int, int, auto cell) { empty_count += cell == Empty; });
-      if (empty_count == deps) {
+      int bulb_count  = 0;
+      board.visit_adjacent(row, col, [&](int, int, auto cell) {
+        empty_count += cell == Empty;
+        bulb_count += cell == Bulb;
+      });
+      if (empty_count == deps - bulb_count) {
         board.visit_adjacent(row, col, [&](int, int, auto cell) {
           if (cell == Empty) {
             result.emplace(
@@ -70,21 +68,54 @@ find_wall_with_deps_equalling_open_faces(model::BasicBoard const & board) {
   return result;
 }
 
+std::optional<model::SingleMove>
+find_wall_with_satisfied_deps_and_open_faces(model::BasicBoard const & board) {
+  std::optional<model::SingleMove> result;
+  board.visit_board([&](int row, int col, model::CellState cell) {
+    if (int deps = num_wall_deps(cell)) {
+      int bulb_count  = 0;
+      int empty_count = 0;
+      board.visit_adjacent(row, col, [&](int, int, auto cell) {
+        empty_count += cell == Empty;
+        bulb_count += cell == Bulb;
+      });
+      if (bulb_count == deps && empty_count > 0) {
+        board.visit_adjacent(row, col, [&](int row, int col, auto cell) {
+          if (cell == Empty) {
+            result.emplace(
+                model::Action::Add, model::CellState::Mark, row, col);
+            return false;
+          };
+          return true;
+        });
+      }
+    }
+  });
+  return result;
+}
+
 bool
-play_trivial_bulb(Solution & solution) {
-  // trivial bulbs are played in 1 of 2 situations.  The square is empty
+play_trivial_move(Solution & solution) {
+  // trivial moves are played in 1 of 3 situations.  The square is empty
   // and...
 
-  // 1) it cannot be illuminated by any other square
+  // 1) it cannot be illuminated by any other square, must be a bulb
   // 2) It is adjacent to wall that requires N adjacent bulbs and also has
-  // exactly N empty adjacent squares.
+  // exactly N empty adjacent squares.  Each adjacent square must be a bulb.
+  // 3) A wall with N deps has N bulbs next to it, and M open faces.  Each of
+  // those M faces must be marked.
   auto & board = solution.model_.get_underlying_board();
   if (auto opt_move = find_isolated_empty_cell(board)) {
-    play_bulb(*opt_move, solution);
+    solution.model_.apply(*opt_move);
     return true;
   }
   else if (auto opt_move = find_wall_with_deps_equalling_open_faces(board)) {
-    play_bulb(*opt_move, solution);
+    solution.model_.apply(*opt_move);
+    return true;
+  }
+  else if (auto opt_move =
+               find_wall_with_satisfied_deps_and_open_faces(board)) {
+    solution.model_.apply(*opt_move);
     return true;
   }
 
@@ -94,10 +125,9 @@ play_trivial_bulb(Solution & solution) {
 void
 play_move(Solution & solution) {
   ++solution.step_count_;
-  if (play_trivial_bulb(solution)) {
+  if (play_trivial_move(solution)) {
     return;
   }
-
   solution.status_ = SolutionStatus::FailedFindingMove;
 }
 
@@ -160,6 +190,16 @@ check_solved(model::BasicBoard const & board) {
   return solved;
 }
 
+void
+play_single_move(Solution & solution) {
+  if (check_solved(solution.model_.get_underlying_board())) {
+    solution.status_ = SolutionStatus::Solved;
+  }
+  else {
+    play_move(solution);
+  }
+}
+
 Solution
 solve(model::BasicBoard const & board) {
   Solution solution;
@@ -167,11 +207,7 @@ solve(model::BasicBoard const & board) {
   solution.status_ = SolutionStatus::Progressing;
 
   do {
-    if (check_solved(solution.model_.get_underlying_board())) {
-      solution.status_ = SolutionStatus::Solved;
-      break;
-    }
-    play_move(solution);
+    play_single_move(solution);
   } while (solution.status_ == SolutionStatus::Progressing &&
            solution.step_count_ < MAX_SOLVE_STEPS);
 
