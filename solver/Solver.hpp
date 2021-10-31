@@ -2,8 +2,12 @@
 
 #include "BasicBoard.hpp"
 #include "Solution.hpp"
+#include <functional>
+#include <vector>
 
 namespace solver {
+
+using SinglePlay = std::function<bool(Solution &)>;
 
 Solution solve(model::BasicBoard const & board);
 

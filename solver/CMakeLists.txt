@@ -1,5 +1,6 @@
 add_library(solver
     Solver.cpp
+    trivial/trivial_moves.cpp
 )
 target_include_directories(solver PUBLIC .)
 target_link_libraries(solver model fmt)
