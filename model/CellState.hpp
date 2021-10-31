@@ -3,20 +3,41 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace model {
 
 enum class CellState {
-  Wall0,
-  Wall1,
-  Wall2,
-  Wall3,
-  Wall4,
-  Empty,
-  Bulb,
-  Mark,
-  Illum,
+  Wall0 = (1 << 0),
+  Wall1 = (1 << 1),
+  Wall2 = (1 << 2),
+  Wall3 = (1 << 3),
+  Wall4 = (1 << 4),
+  Empty = (1 << 5),
+  Bulb  = (1 << 6),
+  Mark  = (1 << 7),
+  Illum = (1 << 8),
 };
+
+constexpr auto
+operator+(CellState cell) {
+  using T = std::underlying_type_t<CellState>;
+  return static_cast<T>(cell);
+}
+
+constexpr CellState
+operator|(CellState lhs, CellState rhs) {
+  return CellState(+lhs | +rhs);
+}
+
+constexpr CellState
+operator&(CellState lhs, CellState rhs) {
+  return CellState(+lhs & +rhs);
+}
+
+constexpr CellState any_wall = CellState::Wall0 | CellState::Wall1 |
+                               CellState::Wall2 | CellState::Wall3 |
+                               CellState::Wall4;
 
 namespace chr {
 constexpr char Bulb  = '*';

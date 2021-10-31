@@ -56,6 +56,7 @@ BoardModel::apply_move(Action action, CellState state, int row, int col) {
     throw std::runtime_error("Board uninitialized");
   }
   moves_.push_back({action, state, row, col});
+  board_.set_cell(row, col, state);
   on_state_change(action, state, row, col);
 }
 

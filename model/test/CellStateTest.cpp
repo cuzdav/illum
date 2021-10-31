@@ -27,4 +27,12 @@ TEST(CellStateTest, to_from_string) {
   ASSERT_EQ(Mark, model::get_state_from_string(to_string(Mark)));
 }
 
+TEST(CellStateTest, bitwise) {
+  CellState stateSet = Empty | Wall0 | Mark;
+  EXPECT_EQ(Empty, stateSet & Empty);
+  EXPECT_EQ(Mark, stateSet & Mark);
+  EXPECT_EQ(Wall0, stateSet & Wall0);
+  EXPECT_EQ(CellState{}, stateSet & Wall3);
+}
+
 } // namespace model::test
