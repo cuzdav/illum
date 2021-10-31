@@ -14,12 +14,63 @@ TEST(SolverTest, isolated_empty) {
   creator("0.0");
   model::BasicBoard board;
   creator.finished(&board);
-
   auto solution = solver::solve(board);
-
-  std::cout << solution.model_.get_underlying_board() << std::endl;
-
   ASSERT_TRUE(check_solved(solution.model_.get_underlying_board()));
+}
+
+TEST(SolverTest, isolated_empty2) {
+  model::test::LevelCreator creator;
+  creator("*++");
+  creator("+.0");
+  creator("+00");
+  model::BasicBoard board;
+  creator.finished(&board);
+  auto solution = solver::solve(board);
+  ASSERT_TRUE(check_solved(solution.model_.get_underlying_board()));
+}
+
+TEST(SolverTest, isolated_empty3_no_solution) {
+  model::test::LevelCreator creator;
+  creator("*++");
+  creator("+..");
+  creator("+00");
+  model::BasicBoard board;
+  creator.finished(&board);
+  auto solution = solver::solve(board);
+  ASSERT_FALSE(check_solved(solution.model_.get_underlying_board()));
+}
+
+TEST(SolverTest, wall_with_deps_equal_to_open_faces1) {
+  model::test::LevelCreator creator;
+  creator("0.0");
+  creator(".4.");
+  creator("0.0");
+  model::BasicBoard board;
+  creator.finished(&board);
+  auto solution = solver::solve(board);
+  ASSERT_TRUE(check_solved(solution.model_.get_underlying_board()));
+}
+
+TEST(SolverTest, wall_with_deps_equal_to_open_faces2) {
+  model::test::LevelCreator creator;
+  creator("2.0");
+  creator(".0.");
+  creator("0.2");
+  model::BasicBoard board;
+  creator.finished(&board);
+  auto solution = solver::solve(board);
+  ASSERT_TRUE(check_solved(solution.model_.get_underlying_board()));
+}
+
+TEST(SolverTest, wall_with_deps_equal_to_open_faces3) {
+  model::test::LevelCreator creator;
+  creator("2.");
+  creator(".3");
+  creator("2.");
+  model::BasicBoard board;
+  creator.finished(&board);
+  auto solution = solver::solve(board);
+  EXPECT_TRUE(check_solved(solution.model_.get_underlying_board()));
 }
 
 } // namespace solver::test

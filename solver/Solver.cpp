@@ -28,7 +28,6 @@ is_isolated_empty_cell(int row, int col, model::BasicBoard const & board) {
 std::optional<model::SingleMove>
 find_isolated_empty_cell(model::BasicBoard const & board) {
   std::optional<model::SingleMove> result;
-
   board.visit_board([&](int row, int col, model::CellState cell) {
     if (cell == Empty) {
       // can it be lit from any direction? If not, we found an isolated empty
@@ -48,6 +47,29 @@ play_bulb(model::SingleMove const & move, Solution & solution) {
   solution.model_.add(model::CellState::Bulb, move.row_, move.col_);
 }
 
+std::optional<model::SingleMove>
+find_wall_with_deps_equalling_open_faces(model::BasicBoard const & board) {
+  std::optional<model::SingleMove> result;
+  board.visit_board([&](int row, int col, model::CellState cell) {
+    if (int deps = num_wall_deps(cell)) {
+      int empty_count = 0;
+      board.visit_adjacent(
+          row, col, [&](int, int, auto cell) { empty_count += cell == Empty; });
+      if (empty_count == deps) {
+        board.visit_adjacent(row, col, [&](int, int, auto cell) {
+          if (cell == Empty) {
+            result.emplace(
+                model::Action::Add, model::CellState::Bulb, row, col);
+            return false;
+          };
+          return true;
+        });
+      }
+    }
+  });
+  return result;
+}
+
 bool
 play_trivial_bulb(Solution & solution) {
   // trivial bulbs are played in 1 of 2 situations.  The square is empty
@@ -56,9 +78,12 @@ play_trivial_bulb(Solution & solution) {
   // 1) it cannot be illuminated by any other square
   // 2) It is adjacent to wall that requires N adjacent bulbs and also has
   // exactly N empty adjacent squares.
-
-  if (auto opt_move =
-          find_isolated_empty_cell(solution.model_.get_underlying_board())) {
+  auto & board = solution.model_.get_underlying_board();
+  if (auto opt_move = find_isolated_empty_cell(board)) {
+    play_bulb(*opt_move, solution);
+    return true;
+  }
+  else if (auto opt_move = find_wall_with_deps_equalling_open_faces(board)) {
     play_bulb(*opt_move, solution);
     return true;
   }

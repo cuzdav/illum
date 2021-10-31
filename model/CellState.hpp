@@ -39,6 +39,17 @@ constexpr CellState any_wall = CellState::Wall0 | CellState::Wall1 |
                                CellState::Wall2 | CellState::Wall3 |
                                CellState::Wall4;
 
+constexpr int
+num_wall_deps(CellState cell) {
+  switch (cell) {
+  case CellState::Wall1: return 1;
+  case CellState::Wall2: return 2;
+  case CellState::Wall3: return 3;
+  case CellState::Wall4: return 4;
+  default: return 0;
+  }
+}
+
 namespace chr {
 constexpr char Bulb  = '*';
 constexpr char Illum = '+';
