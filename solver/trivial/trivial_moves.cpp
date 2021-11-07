@@ -1,35 +1,36 @@
 #include "trivial_moves.hpp"
 #include "CellState.hpp"
+#include "Coord.hpp"
 #include "SingleMove.hpp"
 #include "Solution.hpp"
 
 namespace solver {
 
 using enum model::CellState;
+using model::Coord;
 
 bool
-is_isolated_empty_cell(int row, int col, model::BasicBoard const & board) {
+is_isolated_empty_cell(Coord coord, model::BasicBoard const & board) {
   bool can_be_lit = false;
-  board.visit_rows_cols_outward(
-      row, col, [&](int r, int c, model::CellState cell) {
-        if ((cell & model::any_wall) == cell) {
-          return false;
-        }
-        can_be_lit |= (cell & (Empty | Bulb)) == cell;
-        return not can_be_lit;
-      });
+  board.visit_rows_cols_outward(coord, [&](Coord, model::CellState cell) {
+    if ((cell & model::any_wall) == cell) {
+      return false;
+    }
+    can_be_lit |= (cell & (Empty | Bulb)) == cell;
+    return not can_be_lit;
+  });
   return not can_be_lit;
 }
 
 std::optional<model::SingleMove>
 find_isolated_empty_cell(model::BasicBoard const & board) {
   std::optional<model::SingleMove> result;
-  board.visit_board([&](int row, int col, model::CellState cell) {
+  board.visit_board([&](Coord coord, model::CellState cell) {
     if (cell == Empty) {
       // can it be lit from any direction? If not, we found an isolated empty
       // cell that needs a bulb.
-      if (is_isolated_empty_cell(row, col, board)) {
-        result.emplace(model::Action::Add, model::CellState::Bulb, row, col);
+      if (is_isolated_empty_cell(coord, board)) {
+        result.emplace(model::Action::Add, model::CellState::Bulb, coord);
         return false;
       }
     }
@@ -41,19 +42,18 @@ find_isolated_empty_cell(model::BasicBoard const & board) {
 std::optional<model::SingleMove>
 find_wall_with_deps_equalling_open_faces(model::BasicBoard const & board) {
   std::optional<model::SingleMove> result;
-  board.visit_board([&](int row, int col, model::CellState cell) {
+  board.visit_board([&](Coord coord, model::CellState cell) {
     if (int deps = num_wall_deps(cell)) {
       int empty_count = 0;
       int bulb_count  = 0;
-      board.visit_adjacent(row, col, [&](int, int, auto cell) {
+      board.visit_adjacent(coord, [&](Coord, auto cell) {
         empty_count += cell == Empty;
         bulb_count += cell == Bulb;
       });
       if (empty_count == deps - bulb_count) {
-        board.visit_adjacent(row, col, [&](int, int, auto cell) {
+        board.visit_adjacent(coord, [&](Coord coord, auto cell) {
           if (cell == Empty) {
-            result.emplace(
-                model::Action::Add, model::CellState::Bulb, row, col);
+            result.emplace(model::Action::Add, model::CellState::Bulb, coord);
             return false;
           };
           return true;
@@ -67,19 +67,18 @@ find_wall_with_deps_equalling_open_faces(model::BasicBoard const & board) {
 std::optional<model::SingleMove>
 find_wall_with_satisfied_deps_and_open_faces(model::BasicBoard const & board) {
   std::optional<model::SingleMove> result;
-  board.visit_board([&](int row, int col, model::CellState cell) {
+  board.visit_board([&](Coord coord, model::CellState cell) {
     if (int deps = num_wall_deps(cell)) {
       int bulb_count  = 0;
       int empty_count = 0;
-      board.visit_adjacent(row, col, [&](int, int, auto cell) {
+      board.visit_adjacent(coord, [&](Coord, auto cell) {
         empty_count += cell == Empty;
         bulb_count += cell == Bulb;
       });
       if (bulb_count == deps && empty_count > 0) {
-        board.visit_adjacent(row, col, [&](int row, int col, auto cell) {
+        board.visit_adjacent(coord, [&](Coord coord, auto cell) {
           if (cell == Empty) {
-            result.emplace(
-                model::Action::Add, model::CellState::Mark, row, col);
+            result.emplace(model::Action::Add, model::CellState::Mark, coord);
             return false;
           };
           return true;

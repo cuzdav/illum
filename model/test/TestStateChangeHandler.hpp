@@ -1,6 +1,7 @@
 
 #include "Action.hpp"
 #include "CellState.hpp"
+#include "Coord.hpp"
 #include "SingleMove.hpp"
 #include "StateChangeHandler.hpp"
 #include <fmt/core.h>
@@ -45,7 +46,8 @@ public:
   }
 
   void
-  on_state_change(Action action, CellState state, int row, int col) override {
+  on_state_change(Action action, CellState prev_state, CellState to_state,
+                  Coord coord) override {
     using enum model::Action;
     using enum model::CellState;
 
@@ -57,31 +59,33 @@ public:
         throw std::runtime_error("Add/Remove without reset called first");
       }
       auto & game = cur();
-      if (row < 0 || col < 0 || row >= game.height_ || col >= game.width_) {
+      if (not coord.in_range(game.height_, game.width_)) {
         throw std::out_of_range(
             fmt::format("({},{}) out of bounds: Allowed range is ({},{})",
-                        row,
-                        col,
+                        coord.row_,
+                        coord.col_,
                         game.height_,
                         game.width_));
       }
-      game.moves_.push_back({action, state, row, col});
+      game.moves_.push_back({action, to_state, coord});
       break;
     }
 
     case ResetGame: {
-      Rows rows(row);
+      Rows rows(coord.row_);
       for (auto & r : rows) {
-        r.resize(col);
+        r.resize(coord.col_);
       }
-      games_.emplace_back(row,
-                          col,
+
+      auto [height, width] = coord;
+      games_.emplace_back(height,
+                          width,
                           std::move(rows),
-                          std::vector<SingleMove>{{action, state, row, col}});
+                          std::vector<SingleMove>{{action, to_state, coord}});
       break;
     }
 
-    case StartGame: cur().moves_.push_back({action, state, row, col}); break;
+    case StartGame: cur().moves_.push_back({action, to_state, coord}); break;
 
     default: throw std::runtime_error("Unknown State");
     }

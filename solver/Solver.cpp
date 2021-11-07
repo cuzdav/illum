@@ -9,6 +9,7 @@
 
 namespace solver {
 using enum model::CellState;
+using model::Coord;
 
 constexpr int MAX_SOLVE_STEPS = 10000;
 
@@ -26,7 +27,7 @@ bool
 check_solved(model::BasicBoard const & board) {
   using enum model::CellState;
   bool solved = true;
-  board.visit_board([&](int row, int col, model::CellState cell) {
+  board.visit_board([&](Coord coord, model::CellState cell) {
     int requires_adjacent = 0;
 
     switch (cell) {
@@ -41,7 +42,7 @@ check_solved(model::BasicBoard const & board) {
     case Wall2: ++requires_adjacent; [[fallthrough]];
     case Wall1:
       ++requires_adjacent;
-      board.visit_adjacent(row, col, [&](int, int, model::CellState adj_cell) {
+      board.visit_adjacent(coord, [&](Coord, model::CellState adj_cell) {
         requires_adjacent -= adj_cell == Bulb;
       });
       if (requires_adjacent != 0) {
@@ -51,7 +52,9 @@ check_solved(model::BasicBoard const & board) {
 
     case Bulb: {
       bool sees_other_bulb = false;
-      auto can_see_bulb    = [&](int r, int c, auto cell) {
+
+      // return true/false to keep visiting or to stop
+      auto can_see_bulb = [&](Coord coord, auto cell) {
         if ((cell & model::any_wall) == cell) {
           // done scanning in this direction
           return false;
@@ -63,11 +66,11 @@ check_solved(model::BasicBoard const & board) {
         return true;
       };
 
-      board.visit_row_left_of(row, col, can_see_bulb);
-      not sees_other_bulb && board.visit_row_left_of(row, col, can_see_bulb);
-      not sees_other_bulb && board.visit_row_right_of(row, col, can_see_bulb);
-      not sees_other_bulb && board.visit_col_above(row, col, can_see_bulb);
-      not sees_other_bulb && board.visit_col_below(row, col, can_see_bulb);
+      board.visit_row_left_of(coord, can_see_bulb);
+      not sees_other_bulb && board.visit_row_left_of(coord, can_see_bulb);
+      not sees_other_bulb && board.visit_row_right_of(coord, can_see_bulb);
+      not sees_other_bulb && board.visit_col_above(coord, can_see_bulb);
+      not sees_other_bulb && board.visit_col_below(coord, can_see_bulb);
 
       if (sees_other_bulb) {
         solved = false;

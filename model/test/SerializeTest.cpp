@@ -49,7 +49,7 @@ TEST(Serializer, to_ptree) {
 
   for (int r = 0; r < model.height(); ++r) {
     for (int c = 0; c < model.width(); ++c) {
-      ASSERT_EQ(model.get_cell(r, c), model2.get_cell(r, c));
+      ASSERT_EQ(model.get_cell({r, c}), model2.get_cell({r, c}));
     }
   }
 }

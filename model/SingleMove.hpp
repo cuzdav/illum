@@ -2,6 +2,7 @@
 
 #include "Action.hpp"
 #include "CellState.hpp"
+#include "Coord.hpp"
 #include <iosfwd>
 #include <string>
 #include <string_view>
@@ -11,8 +12,7 @@ namespace model {
 struct SingleMove {
   Action    action_;
   CellState state_;
-  int       row_;
-  int       col_;
+  Coord     coord_;
 
   bool operator==(SingleMove const &) const = default;
 

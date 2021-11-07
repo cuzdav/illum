@@ -2,6 +2,7 @@
 #include "Action.hpp"
 #include "BasicBoard.hpp"
 #include "CellState.hpp"
+#include "Coord.hpp"
 #include "SingleMove.hpp"
 #include "StateChangeHandler.hpp"
 #include <iosfwd>
@@ -50,9 +51,9 @@ public:
   void reset_game(int height, int width);            // empty
   void reset_game(BasicBoard const & initial_board); // copy of board
   void start_game();
-  void add(CellState, int row, int col);
+  void add(CellState, Coord coord);
   void apply(SingleMove move);
-  void remove(int row, int col);
+  void remove(Coord coord);
 
   // This actually removes entries from the moves vector, but cannot go past
   // the start-of-game marker.
@@ -66,15 +67,15 @@ public:
   bool                       started() const;
 
   BasicBoard const & get_underlying_board() const;
-  CellState          get_cell(int row, int col) const;
+  CellState          get_cell(Coord coord) const;
   int                width() const;
   int                height() const;
 
   void visit_board(CellVisitor auto && visitor) const;
 
 private:
-  void apply_move(Action, CellState, int row, int col);
-  void on_state_change(Action, CellState, int row, int col);
+  void apply_move(Action, CellState to_state, Coord coord);
+  void on_state_change(Action, CellState from, CellState to, Coord coord);
 
 private:
   bool                                started_ = false;
@@ -113,8 +114,8 @@ BoardModel::get_underlying_board() const {
 }
 
 inline CellState
-BoardModel::get_cell(int row, int col) const {
-  return board_.get_cell(row, col);
+BoardModel::get_cell(Coord coord) const {
+  return board_.get_cell(coord);
 }
 
 inline int

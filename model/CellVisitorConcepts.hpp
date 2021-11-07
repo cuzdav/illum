@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CellState.hpp"
+#include "Coord.hpp"
 #include <concepts>
 
 namespace model {
@@ -10,7 +11,7 @@ namespace model {
 //
 template <typename T>
 concept CellVisitorAll = requires(T visitor) {
-  { visitor(0, 0, CellState::Empty) } -> std::same_as<void>;
+  { visitor(Coord{0, 0}, CellState::Empty) } -> std::same_as<void>;
 };
 
 //
@@ -18,7 +19,7 @@ concept CellVisitorAll = requires(T visitor) {
 //
 template <typename T>
 concept CellVisitorSome = requires(T visitor) {
-  { visitor(0, 0, CellState::Empty) } -> std::same_as<bool>;
+  { visitor(Coord{0, 0}, CellState::Empty) } -> std::same_as<bool>;
 };
 
 template <typename T>

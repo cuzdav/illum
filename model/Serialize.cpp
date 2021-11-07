@@ -32,15 +32,17 @@ setup_model_from_ptree(pt::ptree & moves, BoardModel & model) {
   for (auto & move : moves.get_child("moves")) {
     std::string move_str = move.second.get<std::string>("");
 
-    auto [action, state, row, col] = get_move_from_string(move_str);
+    auto [action, state, coord] = get_move_from_string(move_str);
 
     switch (action) {
-    case Add: model.add(state, row, col); break;
-    case Remove: model.remove(row, col); break;
+    case Add: model.add(state, coord); break;
+    case Remove: model.remove(coord); break;
     case StartGame: model.start_game(); break;
-    case ResetGame:
-      model.reset_game(row, col); // height, width
+    case ResetGame: {
+      auto [height, width] = coord;
+      model.reset_game(height, width);
       break;
+    }
     default: throw "Invalid action in from_json";
     }
   }

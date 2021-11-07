@@ -1,4 +1,5 @@
 #include "SingleMove.hpp"
+#include "Coord.hpp"
 #include <fmt/core.h>
 #include <iostream>
 
@@ -7,8 +8,7 @@ namespace model {
 std::ostream &
 operator<<(std::ostream & os, SingleMove const & move) {
   return os << "SingleMove<" << to_string(move.action_) << ", "
-            << to_string(move.state_) << "(" << move.row_ << ", " << move.col_
-            << ")>";
+            << to_string(move.state_) << "(" << move.coord_ << ")>";
 }
 
 std::string
@@ -16,8 +16,8 @@ to_string(SingleMove const & move) {
   return fmt::format("{},{},{},{}",
                      to_string(move.action_),
                      to_string(move.state_),
-                     move.row_,
-                     move.col_);
+                     move.coord_.row_,
+                     move.coord_.col_);
 }
 
 // expecting a 4-tuple string "<action>,<state>,<row>,<col>"
@@ -42,8 +42,7 @@ get_move_from_string(std::string_view str) {
 
     return SingleMove{get_action_from_string(action),
                       get_state_from_string(state),
-                      std::atoi(row.data()),
-                      std::atoi(col.data())};
+                      Coord{std::atoi(row.data()), std::atoi(col.data())}};
   }
   throw std::runtime_error("invalid move string: " +
                            std::string(str.data(), str.size()));

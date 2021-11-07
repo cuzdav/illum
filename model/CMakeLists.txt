@@ -1,5 +1,6 @@
 add_library(model
     BoardModel.cpp
+    Coord.cpp
     Serialize.cpp
     SingleMove.cpp
 )

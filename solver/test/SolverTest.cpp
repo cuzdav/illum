@@ -83,7 +83,7 @@ TEST(SolverTest, wall_with_deps_and_open_face_gets_mark) {
   creator.finished(&board);
   auto solution = solver::solve(board);
   EXPECT_FALSE(check_solved(solution.model_.get_underlying_board()));
-  EXPECT_EQ(model::CellState::Mark, solution.model_.get_cell(1, 0));
+  EXPECT_EQ(model::CellState::Mark, solution.model_.get_cell({1, 0}));
 }
 
 } // namespace solver::test

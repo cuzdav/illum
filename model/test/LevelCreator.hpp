@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include <iostream>
+
 namespace model::test {
 
 // I'd like to just chain calls together to create the level row-wise, but it
@@ -29,9 +31,9 @@ public:
   void
   finished(BoardModel * model) {
     model->reset_game(size(unparsed_rows_), width_);
-    finished_impl([model](CellState cell, int row, int col) {
+    finished_impl([model](CellState cell, Coord coord) {
       if (cell != CellState::Empty) {
-        model->add(cell, row, col);
+        model->add(cell, coord);
       }
     });
     model->start_game();
@@ -40,9 +42,9 @@ public:
   void
   finished(BasicBoard * board) {
     board->reset(size(unparsed_rows_), width_);
-    finished_impl([board](CellState cell, int row, int col) {
+    finished_impl([board](CellState cell, Coord coord) {
       if (cell != CellState::Empty) {
-        board->set_cell(row, col, cell);
+        board->set_cell(coord, cell);
       }
     });
   }
@@ -55,7 +57,7 @@ private:
       int colnum = 0;
       for (char c : row) {
         CellState cell = get_state_from_char(c);
-        cell_handler(cell, rownum, colnum++);
+        cell_handler(cell, Coord{rownum, colnum++});
       }
       rownum++;
     }
