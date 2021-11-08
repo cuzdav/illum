@@ -160,4 +160,16 @@ TEST(BM, visit_board) {
   ASSERT_EQ(model.width() * model.height(), count);
 }
 
+TEST(BM, undo) {
+  BoardModel   model(std::make_unique<TestStateChangeHandler>());
+  auto const & handler =
+      *dynamic_cast<TestStateChangeHandler const *>(model.get_handler());
+
+  ASCIILevelCreator creator;
+  creator("0.00.");
+  creator("0..1.");
+  creator("1....");
+  creator.finished(&model, ASCII_LevelCreator::DONT_START);
+}
+
 } // namespace model::test
