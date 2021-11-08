@@ -14,7 +14,7 @@ namespace model::test {
 // formatting to get a nice look. So one row per statement makes for vertical
 // alignment without messing up the rest of the formatting rules. :)
 
-class LevelCreator {
+class ASCIILevelCreator {
 public:
   void
   operator()(std::string const & row) {

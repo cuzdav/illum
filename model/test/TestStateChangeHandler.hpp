@@ -13,7 +13,7 @@ namespace model::test {
 
 // Tracks whatever was emitted, and tries to keep a local state mimicing the
 // announced state. Clearing the board pushes a new board rather than
-// forgetting the old.
+// forgetting the old.  So we end up with a sequence of gamestates.
 
 class TestStateChangeHandler : public ::model::StateChangeHandler {
 public:

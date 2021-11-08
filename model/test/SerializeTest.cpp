@@ -1,6 +1,6 @@
 #include "Serialize.hpp"
+#include "ASCIILevelCreator.hpp"
 #include "BoardModel.hpp"
-#include "LevelCreator.hpp"
 #include "TestStateChangeHandler.hpp"
 #include "gtest/gtest.h"
 #include <sstream>
@@ -16,12 +16,12 @@ using namespace ::model::test;
 
 using namespace std::literals;
 
-TEST(Serializer, to_ptree) {
+TEST(SerializeTest, to_ptree) {
 
   BoardModel   model(std::make_unique<TestStateChangeHandler>());
   auto const & handler = *model.get_handler();
 
-  ::model::test::LevelCreator creator;
+  ::model::test::ASCIILevelCreator creator;
   creator("00010");
   creator("0...1");
   creator("00010");
@@ -54,12 +54,12 @@ TEST(Serializer, to_ptree) {
   }
 }
 
-TEST(Serializer, to_from_json) {
+TEST(SerializeTest, to_from_json) {
 
   BoardModel   model(std::make_unique<TestStateChangeHandler>());
   auto const & handler = *model.get_handler();
 
-  ::model::test::LevelCreator creator;
+  ::model::test::ASCIILevelCreator creator;
   creator("0100010");
   creator("1..0..1");
   creator("010.010");

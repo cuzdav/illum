@@ -1,5 +1,5 @@
 #include "BasicBoard.hpp"
-#include "LevelCreator.hpp"
+#include "ASCIILevelCreator.hpp"
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
@@ -87,8 +87,8 @@ TEST(BasicBoardTest, bad_cell_access) {
 }
 
 TEST(BasicBoardTest, equality) {
-  BasicBoard   board1, board2;
-  LevelCreator creator;
+  BasicBoard        board1, board2;
+  ASCIILevelCreator creator;
   creator("..*");
   creator("123");
   creator("0X4");
@@ -121,8 +121,8 @@ TEST(BasicBoardTest, equality) {
 }
 
 TEST(BasicBoardTest, visit_all) {
-  BasicBoard   board;
-  LevelCreator creator;
+  BasicBoard        board;
+  ASCIILevelCreator creator;
   creator("..*");
   creator("123");
   creator("0X4");
@@ -143,7 +143,7 @@ TEST(BasicBoardTest, visit_all) {
 TEST(BasicBoardTest, visit_some) {
   BasicBoard board;
   {
-    LevelCreator creator;
+    ASCIILevelCreator creator;
     creator("..*");
     creator("123");
     creator("0X4");
@@ -163,7 +163,7 @@ TEST(BasicBoardTest, visit_some) {
 
   BasicBoard expected;
   {
-    LevelCreator creator;
+    ASCIILevelCreator creator;
     creator("..*");
     creator("12.");
     creator("...");
@@ -194,8 +194,8 @@ mk_move(Coord coord, CellState cell) {
 
 auto
 make_board() {
-  BasicBoard   board;
-  LevelCreator creator;
+  BasicBoard        board;
+  ASCIILevelCreator creator;
   creator("..*..");
   creator("12.00");
   creator("...X3");
@@ -278,8 +278,8 @@ TEST(BasicBoardTest, visit_right_row_all) {
 }
 
 TEST(BasicBoardTest, visit_above_col_some) {
-  BasicBoard   board;
-  LevelCreator creator;
+  BasicBoard        board;
+  ASCIILevelCreator creator;
   creator("..*..");
   creator("12.00");
   creator("...X+");
@@ -299,8 +299,8 @@ TEST(BasicBoardTest, visit_above_col_some) {
 }
 
 TEST(BasicBoardTest, visit_above_col_all) {
-  BasicBoard   board;
-  LevelCreator creator;
+  BasicBoard        board;
+  ASCIILevelCreator creator;
   creator("..*..");
   creator("12.00");
   creator("...X+");
@@ -321,8 +321,8 @@ TEST(BasicBoardTest, visit_above_col_all) {
 }
 
 TEST(BasicBoardTest, visit_below_col_some) {
-  BasicBoard   board;
-  LevelCreator creator;
+  BasicBoard        board;
+  ASCIILevelCreator creator;
   creator("..*..");
   creator("12.00");
   creator("...X+");
@@ -342,8 +342,8 @@ TEST(BasicBoardTest, visit_below_col_some) {
 }
 
 TEST(BasicBoardTest, visit_below_col_all) {
-  BasicBoard   board;
-  LevelCreator creator;
+  BasicBoard        board;
+  ASCIILevelCreator creator;
   creator("..*..");
   creator("12.00");
   creator("...X+");
@@ -363,9 +363,9 @@ TEST(BasicBoardTest, visit_below_col_all) {
             moves);
 }
 
-TEST(BasicBoardTest, visit_adjacent_some) {
-  BasicBoard   board;
-  LevelCreator creator;
+TEST(BasicBoardTest, visit_adjacent_all) {
+  BasicBoard        board;
+  ASCIILevelCreator creator;
   creator("012");
   creator("34*");
   creator("X+.");
@@ -440,7 +440,5 @@ TEST(BasicBoardTest, visit_adjacent_some) {
               UnorderedElementsAre(Eq(mk_move({1, 2}, CellState::Bulb)),
                                    Eq(mk_move({2, 1}, CellState::Illum))));
 }
-
-TEST(BasicBoardTest, visit_adjacent_all) {}
 
 } // namespace model::test

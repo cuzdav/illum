@@ -1,4 +1,4 @@
-#include "LevelCreator.hpp"
+#include "ASCIILevelCreator.hpp"
 #include "TestStateChangeHandler.hpp"
 #include "gtest/gtest.h"
 
@@ -79,7 +79,7 @@ TEST(BM, reset_game_again) {
 TEST(BM, start_game) {
   BoardModel model;
 
-  LevelCreator creator;
+  ASCIILevelCreator creator;
   creator("00000");
   creator("0..10");
   creator("00000");
@@ -108,8 +108,8 @@ TEST(BM, start_game) {
 }
 
 TEST(BM, reset_from_board) {
-  BoardModel   model;
-  LevelCreator creator;
+  BoardModel        model;
+  ASCIILevelCreator creator;
   creator("00000");
   creator("0..10");
   creator("00000");
@@ -118,9 +118,9 @@ TEST(BM, reset_from_board) {
   ASSERT_EQ(3, model.height());
   ASSERT_EQ(5, model.width());
 
-  BasicBoard   board;
-  BoardModel   model2;
-  LevelCreator creator2;
+  BasicBoard        board;
+  BoardModel        model2;
+  ASCIILevelCreator creator2;
   creator2("1...");
   creator2(".2..");
   creator2("..3.");
@@ -134,7 +134,7 @@ TEST(BM, reset_from_board) {
   ASSERT_EQ(4, model2.width());
 
   model.reset_game(board);
-  // (test) LevelCreator "starts" game automatically so we must too, before
+  // (test) ASCIILevelCreator "starts" game automatically so we must too, before
   // we can compare them.
   model.start_game();
 
@@ -145,8 +145,8 @@ TEST(BM, reset_from_board) {
 }
 
 TEST(BM, visit_board) {
-  BoardModel   model;
-  LevelCreator creator;
+  BoardModel        model;
+  ASCIILevelCreator creator;
   creator("00000");
   creator("0..10");
   creator("00000");
