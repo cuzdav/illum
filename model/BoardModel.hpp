@@ -55,15 +55,17 @@ public:
   void apply(SingleMove move);
   void remove(Coord coord);
 
-  // This actually removes entries from the moves vector, but cannot go past
-  // the start-of-game marker.
-  void undo();
+  // This actually removes entries from the moves vector, but cannot go
+  // past/before the start-of-game marker.  Returns true if something was
+  // undone.  If game not started, or moves not played, it returns false.
+  bool undo();
 
   template <typename MoveHandlerT>
   void for_each_move(MoveHandlerT && handler) const;
 
   StateChangeHandler const * get_handler() const;
-  int                        num_moves() const;
+  int                        num_total_moves() const;
+  int                        num_played_moves() const;
   bool                       started() const;
 
   BasicBoard const & get_underlying_board() const;
@@ -74,11 +76,12 @@ public:
   void visit_board(CellVisitor auto && visitor) const;
 
 private:
-  void apply_move(Action, CellState to_state, Coord coord);
+  void apply_move(Action, CellState from, CellState to, Coord coord);
   void on_state_change(Action, CellState from, CellState to, Coord coord);
 
 private:
-  bool                                started_ = false;
+  bool started_         = false;
+  int  num_setup_moves_ = 0; // played before any user moves
   std::unique_ptr<StateChangeHandler> handler_;
   std::vector<SingleMove>             moves_;
   BasicBoard                          board_;
@@ -99,8 +102,14 @@ BoardModel::get_handler() const {
 }
 
 inline int
-BoardModel::num_moves() const {
+BoardModel::num_total_moves() const {
   return moves_.size();
+}
+
+inline int
+BoardModel::num_played_moves() const {
+  return moves_.size() - num_setup_moves_;
+  ;
 }
 
 inline bool

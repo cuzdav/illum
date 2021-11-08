@@ -36,7 +36,7 @@ TEST(SerializeTest, to_ptree) {
   ASSERT_NE(model.width(), model2.width());
   ASSERT_NE(model.height(), model2.height());
   ASSERT_NE(model.started(), model2.started());
-  ASSERT_NE(model.num_moves(), model2.num_moves());
+  ASSERT_NE(model.num_total_moves(), model2.num_total_moves());
 
   // after this they should match
   ::model::serialize::setup_model_from_ptree(serialized, model2);
@@ -45,7 +45,7 @@ TEST(SerializeTest, to_ptree) {
   ASSERT_EQ(model.width(), model2.width());
   ASSERT_EQ(model.height(), model2.height());
   ASSERT_EQ(model.started(), model2.started());
-  ASSERT_EQ(model.num_moves(), model2.num_moves());
+  ASSERT_EQ(model.num_total_moves(), model2.num_total_moves());
 
   for (int r = 0; r < model.height(); ++r) {
     for (int c = 0; c < model.width(); ++c) {

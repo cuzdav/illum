@@ -175,21 +175,21 @@ TEST(BasicBoardTest, visit_some) {
 auto
 recorder(auto & moves) {
   return [&](Coord coord, CellState cell) {
-    moves.push_back({Action::Add, cell, coord});
+    moves.push_back({Action::Add, CellState::Empty, cell, coord});
   };
 }
 
 auto
 recorder(auto & moves, CellState stop_if_cell_is) {
   return [&moves, stop_if_cell_is](Coord coord, CellState cell) {
-    moves.push_back({Action::Add, cell, coord});
+    moves.push_back({Action::Add, CellState::Empty, cell, coord});
     return cell != stop_if_cell_is;
   };
 }
 
 auto
 mk_move(Coord coord, CellState cell) {
-  return SingleMove{Action::Add, cell, coord};
+  return SingleMove{Action::Add, CellState::Empty, cell, coord};
 }
 
 auto

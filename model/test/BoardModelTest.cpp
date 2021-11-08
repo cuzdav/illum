@@ -16,7 +16,7 @@ TEST(BM, construct) {
 
   ASSERT_EQ(0, model.height());
   ASSERT_EQ(0, model.width());
-  ASSERT_EQ(0, model.num_moves());
+  ASSERT_EQ(0, model.num_total_moves());
   ASSERT_FALSE(model.started());
 }
 
@@ -28,7 +28,8 @@ TEST(BM, reset_game) {
   model.reset_game(3, 5);
   ASSERT_EQ(3, model.height());
   ASSERT_EQ(5, model.width());
-  ASSERT_EQ(1, model.num_moves()); // reset_game is the first move (always)
+  ASSERT_EQ(1,
+            model.num_total_moves()); // reset_game is the first move (always)
   ASSERT_FALSE(model.started());
 
   auto const & moves = handler.cur().moves_;
@@ -65,7 +66,7 @@ TEST(BM, reset_game_again) {
   ASSERT_EQ(2, moves.size());
 
   ASSERT_EQ(Add, moves[1].action_);
-  ASSERT_EQ(Wall0, moves[1].state_);
+  ASSERT_EQ(Wall0, moves[1].to_);
   ASSERT_EQ(1, moves[1].coord_.row_);
   ASSERT_EQ(3, moves[1].coord_.col_);
 
@@ -165,11 +166,65 @@ TEST(BM, undo) {
   auto const & handler =
       *dynamic_cast<TestStateChangeHandler const *>(model.get_handler());
 
+  handler.set_trace(true);
+
   ASCIILevelCreator creator;
   creator("0.00.");
   creator("0..1.");
   creator("1....");
-  creator.finished(&model, ASCII_LevelCreator::DONT_START);
+  creator.finished(&model, ASCIILevelCreator::StartPolicy::DontCallStart);
+
+  ASSERT_FALSE(model.undo()); // not started
+  model.start_game();
+  ASSERT_FALSE(model.undo());            // no user-played
+  ASSERT_EQ(8, model.num_total_moves()); // counting reset,start,and setup walls
+  ASSERT_EQ(0, model.num_played_moves()); // none yet
+
+  // Move 1 (not a good move, maybe a user mistake)
+  model.add(CellState::Bulb, {1, 1});
+  ASSERT_EQ(CellState::Empty, handler.last_move().from_);
+  ASSERT_EQ(CellState::Bulb, handler.last_move().to_);
+  ASSERT_EQ(Coord(1, 1), handler.last_move().coord_);
+  ASSERT_EQ(1, model.num_played_moves());
+
+  // Move 2 (remove move 1)
+  model.remove({1, 1});
+  ASSERT_EQ(CellState::Bulb, handler.last_move().from_);
+  ASSERT_EQ(CellState::Empty, handler.cur().moves_.back().to_);
+  ASSERT_EQ(Coord(1, 1), handler.cur().moves_.back().coord_);
+  ASSERT_EQ(2, model.num_played_moves());
+
+  // Move 3 (a good move, maybe prev mistake was a typo)
+  model.add(CellState::Bulb, {2, 1});
+  ASSERT_EQ(CellState::Empty, handler.last_move().from_);
+  ASSERT_EQ(CellState::Bulb, handler.last_move().to_);
+  ASSERT_EQ(Coord(2, 1), handler.last_move().coord_);
+  ASSERT_EQ(3, model.num_played_moves());
+
+  ASSERT_TRUE(model.undo()); // undo move 3
+  // undoing an add looks like a remove to the callback
+  ASSERT_EQ(Action::Remove, handler.last_move().action_);
+  ASSERT_EQ(CellState::Bulb, handler.last_move().from_);
+  ASSERT_EQ(CellState::Empty, handler.last_move().to_);
+  ASSERT_EQ(Coord(2, 1), handler.last_move().coord_);
+  ASSERT_EQ(2, model.num_played_moves());
+
+  ASSERT_TRUE(model.undo()); // undo move 2
+  // undoing a remove looks like an add to the callback
+  ASSERT_EQ(Action::Add, handler.last_move().action_);
+  ASSERT_EQ(CellState::Empty, handler.last_move().from_);
+  ASSERT_EQ(CellState::Bulb, handler.last_move().to_);
+  ASSERT_EQ(Coord(1, 1), handler.last_move().coord_);
+  ASSERT_EQ(1, model.num_played_moves());
+
+  ASSERT_TRUE(model.undo()); // undo move 1
+  ASSERT_EQ(Action::Remove, handler.last_move().action_);
+  ASSERT_EQ(CellState::Bulb, handler.last_move().from_);
+  ASSERT_EQ(CellState::Empty, handler.last_move().to_);
+
+  ASSERT_EQ(Coord(1, 1), handler.last_move().coord_);
+
+  ASSERT_EQ(0, model.num_played_moves());
 }
 
 } // namespace model::test

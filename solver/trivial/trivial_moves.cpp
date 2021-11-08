@@ -30,7 +30,10 @@ find_isolated_empty_cell(model::BasicBoard const & board) {
       // can it be lit from any direction? If not, we found an isolated empty
       // cell that needs a bulb.
       if (is_isolated_empty_cell(coord, board)) {
-        result.emplace(model::Action::Add, model::CellState::Bulb, coord);
+        result.emplace(model::Action::Add,
+                       model::CellState::Empty, // from
+                       model::CellState::Bulb,  // to
+                       coord);
         return false;
       }
     }
@@ -53,7 +56,10 @@ find_wall_with_deps_equalling_open_faces(model::BasicBoard const & board) {
       if (empty_count == deps - bulb_count) {
         board.visit_adjacent(coord, [&](Coord coord, auto cell) {
           if (cell == Empty) {
-            result.emplace(model::Action::Add, model::CellState::Bulb, coord);
+            result.emplace(model::Action::Add,
+                           model::CellState::Empty, // from
+                           model::CellState::Bulb,  // to
+                           coord);
             return false;
           };
           return true;
@@ -78,7 +84,10 @@ find_wall_with_satisfied_deps_and_open_faces(model::BasicBoard const & board) {
       if (bulb_count == deps && empty_count > 0) {
         board.visit_adjacent(coord, [&](Coord coord, auto cell) {
           if (cell == Empty) {
-            result.emplace(model::Action::Add, model::CellState::Mark, coord);
+            result.emplace(model::Action::Add,
+                           model::CellState::Empty, // from
+                           model::CellState::Mark,  // to
+                           coord);
             return false;
           };
           return true;

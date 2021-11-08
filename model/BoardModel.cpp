@@ -38,47 +38,39 @@ BoardModel::start_game() {
     started_ = true;
     // Adds a marker into game histroy separating the level setup from
     // the player's moves.
-    moves_.push_back({Action::StartGame, CellState::Empty, Coord{-1, -1}});
+    moves_.push_back(
+        {Action::StartGame, CellState::Empty, CellState::Empty, Coord{-1, -1}});
+    num_setup_moves_ = moves_.size();
     on_state_change(
         Action::StartGame, CellState::Empty, CellState::Empty, Coord{-1, -1});
   }
 }
 
-void
+bool
 BoardModel::undo() {
-  if (started_ and moves_.back().action_ != Action::StartGame) {
-    auto last = moves_.back();
-    moves_.pop_back();
-    CellState from, to;
-    Action    action;
-    if (last.action_ == Action::Add) {
-      action = Action::Remove;
-      from   = CellState::Empty;
-      to     = last.state_;
-    }
-    else if (last.action_ == Action::Remove) {
-      action = Action::Add;
-      from   = last.state_;
-      to     = CellState::Empty;
-    }
-    else {
-      throw std::runtime_error("undoing a non-add, non-remove action: "s +
-                               to_string(last.action_));
-    }
-
-    on_state_change(action, from, to, last.coord_);
+  if (not started_ or moves_.back().action_ == Action::StartGame) {
+    return false;
   }
+
+  auto last = moves_.back();
+  moves_.pop_back();
+  Action action = last.action_ == Action::Add ? Action::Remove : Action::Add;
+
+  // note: to/from intentionally reversed since this is undo.
+  on_state_change(action, last.to_, last.from_, last.coord_);
+
+  return true;
 }
 
 void
-BoardModel::apply_move(Action action, CellState to_state, Coord coord) {
+BoardModel::apply_move(Action action, CellState from, CellState to,
+                       Coord coord) {
   if (not board_.is_initialized()) {
     throw std::runtime_error("Board uninitialized");
   }
-  CellState orig_cell = board_.get_cell(coord);
-  if (board_.set_cell(coord, to_state)) {
-    moves_.push_back({action, to_state, coord});
-    on_state_change(action, orig_cell, to_state, coord);
+  if (board_.set_cell(coord, to)) {
+    moves_.push_back({action, from, to, coord});
+    on_state_change(action, from, to, coord);
   }
   else {
     throw std::runtime_error("Invalid coordinate for apply_move");
@@ -86,13 +78,14 @@ BoardModel::apply_move(Action action, CellState to_state, Coord coord) {
 }
 
 void
-BoardModel::add(CellState state, Coord coord) {
-  apply_move(Action::Add, state, coord);
+BoardModel::add(CellState to_state, Coord coord) {
+  CellState orig_cell = board_.get_cell(coord);
+  apply_move(Action::Add, orig_cell, to_state, coord);
 }
 
 void
 BoardModel::apply(SingleMove move) {
-  apply_move(move.action_, move.state_, move.coord_);
+  apply_move(move.action_, move.from_, move.to_, move.coord_);
 }
 
 void
@@ -102,7 +95,7 @@ BoardModel::remove(Coord coord) {
   }
   CellState orig_cell = board_.get_cell(coord);
   if (orig_cell == CellState::Bulb or orig_cell == CellState::Mark) {
-    apply_move(Action::Remove, CellState::Empty, coord);
+    apply_move(Action::Remove, orig_cell, CellState::Empty, coord);
   }
 }
 
@@ -112,7 +105,8 @@ BoardModel::reset_game(int height, int width) {
   moves_.clear();
   board_.reset(height, width);
   Coord coord{height, width};
-  moves_.push_back({Action::ResetGame, CellState::Empty, coord});
+  moves_.push_back(
+      {Action::ResetGame, CellState::Empty, CellState::Empty, coord});
   on_state_change(Action::ResetGame, CellState::Empty, CellState::Empty, coord);
 }
 
@@ -121,7 +115,8 @@ BoardModel::reset_game(BasicBoard const & initial_board) {
   started_ = false;
   moves_.clear();
   Coord dims = {initial_board.height(), initial_board.width()};
-  moves_.push_back({Action::ResetGame, CellState::Empty, dims});
+  moves_.push_back(
+      {Action::ResetGame, CellState::Empty, CellState::Empty, dims});
   on_state_change(Action::ResetGame, CellState::Empty, CellState::Empty, dims);
 
   board_ = initial_board;
@@ -130,16 +125,18 @@ BoardModel::reset_game(BasicBoard const & initial_board) {
 
   board_.visit_board([this, &deferred](Coord coord, CellState cell) {
     if (cell != CellState::Empty) {
-      if (cell == CellState::Illum || cell == CellState::Bulb) {
-        deferred.emplace_back(Action::Add, cell, coord);
+      if ((cell & (CellState::Illum | CellState::Bulb | CellState::Mark)) ==
+          cell) {
+        deferred.emplace_back(Action::Add, CellState::Empty, cell, coord);
       }
       else {
-        moves_.push_back({Action::Add, cell, coord});
+        moves_.push_back({Action::Add, CellState::Empty, cell, coord});
       }
     }
   });
+  start_game();
   for (auto move : deferred) {
-    board_.set_cell(move.coord_, move.state_);
+    board_.set_cell(move.coord_, move.to_);
   }
 }
 

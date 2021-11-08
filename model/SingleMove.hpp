@@ -11,7 +11,8 @@ namespace model {
 
 struct SingleMove {
   Action    action_;
-  CellState state_;
+  CellState from_;
+  CellState to_;
   Coord     coord_;
 
   bool operator==(SingleMove const &) const = default;

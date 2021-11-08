@@ -32,10 +32,10 @@ setup_model_from_ptree(pt::ptree & moves, BoardModel & model) {
   for (auto & move : moves.get_child("moves")) {
     std::string move_str = move.second.get<std::string>("");
 
-    auto [action, state, coord] = get_move_from_string(move_str);
+    auto [action, from_state, to_state, coord] = get_move_from_string(move_str);
 
     switch (action) {
-    case Add: model.add(state, coord); break;
+    case Add: model.add(to_state, coord); break;
     case Remove: model.remove(coord); break;
     case StartGame: model.start_game(); break;
     case ResetGame: {

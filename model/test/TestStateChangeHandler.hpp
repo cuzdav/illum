@@ -30,6 +30,11 @@ public:
     std::vector<SingleMove> moves_;
   };
 
+  void
+  set_trace(bool yn) const {
+    debug_trace_ = yn;
+  }
+
   GameState const &
   cur() const {
     return games_.back();
@@ -40,16 +45,30 @@ public:
     return games_.back();
   }
 
+  SingleMove const &
+  last_move() const {
+    if (cur().moves_.size() == 0) {
+      throw std::runtime_error(
+          "Calling last move on empty TestStateChangeHandler");
+    }
+    return cur().moves_.back();
+  }
+
   int
   num_games() const {
     return games_.size();
   }
 
   void
-  on_state_change(Action action, CellState prev_state, CellState to_state,
+  on_state_change(Action action, CellState from_state, CellState to_state,
                   Coord coord) override {
     using enum model::Action;
     using enum model::CellState;
+
+    if (debug_trace_) {
+      std::cout << "TestSCH: on_state_change(" << action << ", " << from_state
+                << " -> " << to_state << ", at " << coord << "\n";
+    }
 
     switch (action) {
 
@@ -67,7 +86,7 @@ public:
                         game.height_,
                         game.width_));
       }
-      game.moves_.push_back({action, to_state, coord});
+      game.moves_.push_back({action, from_state, to_state, coord});
       break;
     }
 
@@ -78,20 +97,26 @@ public:
       }
 
       auto [height, width] = coord;
-      games_.emplace_back(height,
-                          width,
-                          std::move(rows),
-                          std::vector<SingleMove>{{action, to_state, coord}});
+      games_.emplace_back(
+          height,
+          width,
+          std::move(rows),
+          std::vector<SingleMove>{{action, from_state, to_state, coord}});
       break;
     }
 
-    case StartGame: cur().moves_.push_back({action, to_state, coord}); break;
+    case StartGame: {
+      auto & game = cur();
+      game.moves_.push_back({action, from_state, to_state, coord});
+      break;
+    }
 
     default: throw std::runtime_error("Unknown State");
     }
   }
 
 private:
+  mutable bool           debug_trace_;
   std::vector<GameState> games_;
 };
 
