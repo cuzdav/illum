@@ -211,21 +211,25 @@ TEST(BasicBoardTest, visit_left_row_some) {
 
   b.visit_row_left_of({1, 4}, recorder(moves, CellState::Empty));
 
-  ASSERT_EQ((std::vector{mk_move({1, 3}, CellState::Wall0),
-                         mk_move({1, 2}, CellState::Empty)}),
-            moves);
+  // stops at wall to left of cooord
+  ASSERT_EQ((std::vector{mk_move({1, 3}, CellState::Wall0)}), moves);
+
+  moves.clear();
+  b.visit_row_left_of({1, 3}, recorder(moves, CellState::Empty));
+
+  // stops because it sees Empty
+  ASSERT_EQ((std::vector{mk_move({1, 2}, CellState::Empty)}), moves);
 }
 
 TEST(BasicBoardTest, visit_left_row_some2) {
   Moves moves;
-  auto  b = make_board(); // r1: "12.00");
+  auto  b = make_board(); // row0: "..*.."
 
-  b.visit_row_left_of({1, 4}, recorder(moves, CellState::Bulb));
+  b.visit_row_left_of({0, 4}, recorder(moves, CellState::Bulb));
 
-  ASSERT_EQ((std::vector{mk_move({1, 3}, CellState::Wall0),
-                         mk_move({1, 2}, CellState::Empty),
-                         mk_move({1, 1}, CellState::Wall2),
-                         mk_move({1, 0}, CellState::Wall1)}),
+  ASSERT_EQ((std::vector{mk_move({0, 3}, CellState::Empty),
+                         mk_move({0, 2}, CellState::Bulb)}),
+
             moves);
 }
 
@@ -248,11 +252,12 @@ TEST(BasicBoardTest, visit_left_row_some3_invalid) {
 
 TEST(BasicBoardTest, visit_left_row_all) {
   Moves moves;
-  make_board().visit_row_left_of({1, 4}, recorder(moves));
-  ASSERT_EQ((std::vector{mk_move({1, 3}, CellState::Wall0),
-                         mk_move({1, 2}, CellState::Empty),
-                         mk_move({1, 1}, CellState::Wall2),
-                         mk_move({1, 0}, CellState::Wall1)}),
+  // r2: "...X3"
+  make_board().visit_row_left_of({2, 4}, recorder(moves));
+  ASSERT_EQ((std::vector{mk_move({2, 3}, CellState::Mark),
+                         mk_move({2, 2}, CellState::Empty),
+                         mk_move({2, 1}, CellState::Empty),
+                         mk_move({2, 0}, CellState::Empty)}),
             moves);
 }
 
@@ -315,7 +320,6 @@ TEST(BasicBoardTest, visit_above_col_all) {
                 mk_move({3, 4}, CellState::Bulb),
                 mk_move({2, 4}, CellState::Illum),
                 mk_move({1, 4}, CellState::Wall0),
-                mk_move({0, 4}, CellState::Empty),
             }),
             moves);
 }
@@ -324,7 +328,7 @@ TEST(BasicBoardTest, visit_below_col_some) {
   BasicBoard        board;
   ASCIILevelCreator creator;
   creator("..*..");
-  creator("12.00");
+  creator("12.X0");
   creator("...X+");
   creator("...4*");
   creator("...X3");
@@ -334,7 +338,7 @@ TEST(BasicBoardTest, visit_below_col_some) {
   board.visit_col_below({0, 3}, recorder(moves, CellState::Wall4));
 
   ASSERT_EQ((std::vector{
-                mk_move({1, 3}, CellState::Wall0),
+                mk_move({1, 3}, CellState::Mark),
                 mk_move({2, 3}, CellState::Mark),
                 mk_move({3, 3}, CellState::Wall4),
             }),
@@ -344,21 +348,21 @@ TEST(BasicBoardTest, visit_below_col_some) {
 TEST(BasicBoardTest, visit_below_col_all) {
   BasicBoard        board;
   ASCIILevelCreator creator;
-  creator("..*..");
-  creator("12.00");
-  creator("...X+");
-  creator("...4*");
-  creator("...*3");
+  creator("++*++");
+  creator("12+00");
+  creator("..+X+");
+  creator("..+4*");
+  creator("..+*3");
   creator.finished(&board);
 
   Moves moves;
-  board.visit_col_below({0, 3}, recorder(moves));
+  board.visit_col_below({0, 2}, recorder(moves));
 
   ASSERT_EQ((std::vector{
-                mk_move({1, 3}, CellState::Wall0),
-                mk_move({2, 3}, CellState::Mark),
-                mk_move({3, 3}, CellState::Wall4),
-                mk_move({4, 3}, CellState::Bulb),
+                mk_move({1, 2}, CellState::Illum),
+                mk_move({2, 2}, CellState::Illum),
+                mk_move({3, 2}, CellState::Illum),
+                mk_move({4, 2}, CellState::Illum),
             }),
             moves);
 }

@@ -1,5 +1,5 @@
 #pragma once
-#include <ostream>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -35,18 +35,52 @@ operator&(CellState lhs, CellState rhs) {
   return CellState(+lhs & +rhs);
 }
 
-constexpr CellState any_wall = CellState::Wall0 | CellState::Wall1 |
-                               CellState::Wall2 | CellState::Wall3 |
-                               CellState::Wall4;
+constexpr bool
+is_illumable(CellState cell) {
+  return cell == (cell & (CellState::Empty | CellState::Mark));
+}
+
+constexpr bool
+is_wall(CellState cell) {
+  return +cell >= +CellState::Wall0 && +cell <= +CellState::Wall4;
+}
+
+constexpr bool
+is_wall_with_deps(CellState cell) {
+  return +cell >= +CellState::Wall1 && +cell <= +CellState::Wall4;
+}
+
+// Convert Wall4 to Wall3, or Wall1 to Wall0, etc. Leave non-walls alone.
+constexpr CellState
+remove_wall_dep(CellState cell) {
+  if (is_wall_with_deps(cell)) {
+    return CellState(+cell >> 1);
+  }
+  return cell;
+}
+
+constexpr CellState
+add_wall_dep(CellState cell) {
+  // Wall4 is the max
+  if (+cell < +CellState::Wall4) {
+    return CellState(+cell << 1);
+  }
+  return cell;
+}
 
 constexpr int
 num_wall_deps(CellState cell) {
   switch (cell) {
-  case CellState::Wall1: return 1;
-  case CellState::Wall2: return 2;
-  case CellState::Wall3: return 3;
-  case CellState::Wall4: return 4;
-  default: return 0;
+    case CellState::Wall1:
+      return 1;
+    case CellState::Wall2:
+      return 2;
+    case CellState::Wall3:
+      return 3;
+    case CellState::Wall4:
+      return 4;
+    default:
+      return 0;
   }
 }
 
@@ -101,20 +135,29 @@ constexpr char
 to_char(CellState state) {
   using enum CellState;
   switch (state) {
-  case Empty: return chr::Empty;
-  case Illum: return chr::Illum;
-  case Wall0: return chr::Wall0;
-  case Wall1: return chr::Wall1;
-  case Wall2: return chr::Wall2;
-  case Wall3: return chr::Wall3;
-  case Wall4: return chr::Wall4;
-  case Bulb: return chr::Bulb;
-  case Mark: return chr::Mark;
+    case Empty:
+      return chr::Empty;
+    case Illum:
+      return chr::Illum;
+    case Wall0:
+      return chr::Wall0;
+    case Wall1:
+      return chr::Wall1;
+    case Wall2:
+      return chr::Wall2;
+    case Wall3:
+      return chr::Wall3;
+    case Wall4:
+      return chr::Wall4;
+    case Bulb:
+      return chr::Bulb;
+    case Mark:
+      return chr::Mark;
 
-  default:
-    throw std::runtime_error(
-        std::string("Invalid CellState in Serialize to_char(): ") +
-        std::to_string(static_cast<int>(state)));
+    default:
+      throw std::runtime_error(
+          std::string("Invalid CellState in Serialize to_char(): ") +
+          std::to_string(static_cast<int>(state)));
   }
 }
 
@@ -122,19 +165,28 @@ constexpr CellState
 get_state_from_char(char state) {
   using enum CellState;
   switch (state) {
-  case chr::Empty: return Empty;
-  case chr::Illum: return Illum;
-  case chr::Wall0: return Wall0;
-  case chr::Wall1: return Wall1;
-  case chr::Wall2: return Wall2;
-  case chr::Wall3: return Wall3;
-  case chr::Wall4: return Wall4;
-  case chr::Bulb: return Bulb;
-  case chr::Mark: return Mark;
-  default:
-    throw std::runtime_error(
-        std::string("Invalid State char in Serialize state_from_char(): ") +
-        state);
+    case chr::Empty:
+      return Empty;
+    case chr::Illum:
+      return Illum;
+    case chr::Wall0:
+      return Wall0;
+    case chr::Wall1:
+      return Wall1;
+    case chr::Wall2:
+      return Wall2;
+    case chr::Wall3:
+      return Wall3;
+    case chr::Wall4:
+      return Wall4;
+    case chr::Bulb:
+      return Bulb;
+    case chr::Mark:
+      return Mark;
+    default:
+      throw std::runtime_error(
+          std::string("Invalid State char in Serialize state_from_char(): ") +
+          state);
   }
 }
 
@@ -142,18 +194,27 @@ constexpr char const *
 to_string(CellState state) {
   using enum CellState;
   switch (state) {
-  case Empty: return str::Empty;
-  case Illum: return str::Illum;
-  case Wall0: return str::Wall0;
-  case Wall1: return str::Wall1;
-  case Wall2: return str::Wall2;
-  case Wall3: return str::Wall3;
-  case Wall4: return str::Wall4;
-  case Bulb: return str::Bulb;
-  case Mark: return str::Mark;
-  default:
-    throw std::runtime_error("Invalid CellState in Serialize to_string: " +
-                             std::to_string(static_cast<int>(state)));
+    case Empty:
+      return str::Empty;
+    case Illum:
+      return str::Illum;
+    case Wall0:
+      return str::Wall0;
+    case Wall1:
+      return str::Wall1;
+    case Wall2:
+      return str::Wall2;
+    case Wall3:
+      return str::Wall3;
+    case Wall4:
+      return str::Wall4;
+    case Bulb:
+      return str::Bulb;
+    case Mark:
+      return str::Mark;
+    default:
+      throw std::runtime_error("Invalid CellState in Serialize to_string: " +
+                               std::to_string(static_cast<int>(state)));
   };
 }
 

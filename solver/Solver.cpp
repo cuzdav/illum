@@ -34,7 +34,7 @@ check_solved(model::BasicBoard const & board) {
     case Wall0:
     case Illum: break;
 
-    case Mark: ++requires_adjacent; [[fallthrough]];
+    case Mark:
     case Empty: solved = false; break;
 
     case Wall4: ++requires_adjacent; [[fallthrough]];
@@ -51,35 +51,13 @@ check_solved(model::BasicBoard const & board) {
       break;
 
     case Bulb: {
-      bool sees_other_bulb = false;
-
-      // return true/false to keep visiting or to stop
-      auto can_see_bulb = [&](Coord coord, auto cell) {
-        if ((cell & model::any_wall) == cell) {
-          // done scanning in this direction
-          return false;
-        }
-        else if (cell == Bulb) {
-          sees_other_bulb = true;
-          return false;
-        }
-        return true;
-      };
-
-      board.visit_row_left_of(coord, can_see_bulb);
-      not sees_other_bulb && board.visit_row_left_of(coord, can_see_bulb);
-      not sees_other_bulb && board.visit_row_right_of(coord, can_see_bulb);
-      not sees_other_bulb && board.visit_col_above(coord, can_see_bulb);
-      not sees_other_bulb && board.visit_col_below(coord, can_see_bulb);
-
-      if (sees_other_bulb) {
-        solved = false;
-        return false;
-      }
-      break;
+      auto no_bulb_in_sight = [&](Coord, auto cell) { return cell != Bulb; };
+      solved = board.visit_row_right_of(coord, no_bulb_in_sight) &&
+               board.visit_col_below(coord, no_bulb_in_sight);
+    } break;
     }
-    }
-    return true;
+
+    return solved;
   });
   return solved;
 }

@@ -41,8 +41,7 @@ public:
   // general sequence of events:
   // 1) reset_game()    -- initialize a new empty board with given dimensions
   // 2) <LEVEL SETUP>   -- add walls to setup level
-  // 3) START_GAME()    -- add marker to separate level setup from player
-  // moves
+  // 3) START_GAME()    -- add marker to separate level setup from player moves
   //                       esp. to protect UNDO from going back too far
   // 4) <PLAYER MOVES>  -- sequence of add/remove calls
   // These are all appeneded to the vector of moves.  (For purposes of undo,

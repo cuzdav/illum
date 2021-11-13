@@ -1,6 +1,7 @@
 #include "trivial_moves.hpp"
 #include "CellState.hpp"
 #include "Coord.hpp"
+#include "DebugLog.hpp"
 #include "SingleMove.hpp"
 #include "Solution.hpp"
 
@@ -13,40 +14,37 @@ bool
 is_isolated_empty_cell(Coord coord, model::BasicBoard const & board) {
   bool can_be_lit = false;
   board.visit_rows_cols_outward(coord, [&](Coord, model::CellState cell) {
-    if ((cell & model::any_wall) == cell) {
-      return false;
-    }
-    can_be_lit |= (cell & (Empty | Bulb)) == cell;
-    return not can_be_lit;
+    can_be_lit |= is_illumable(cell);
+    return can_be_lit == false;
   });
   return not can_be_lit;
 }
 
 std::optional<model::SingleMove>
 find_isolated_empty_cell(model::BasicBoard const & board) {
-  std::optional<model::SingleMove> result;
+  std::optional<model::SingleMove> result_move;
   board.visit_board([&](Coord coord, model::CellState cell) {
     if (cell == Empty) {
       // can it be lit from any direction? If not, we found an isolated empty
       // cell that needs a bulb.
       if (is_isolated_empty_cell(coord, board)) {
-        result.emplace(model::Action::Add,
-                       model::CellState::Empty, // from
-                       model::CellState::Bulb,  // to
-                       coord);
+        result_move.emplace(model::Action::Add,
+                            model::CellState::Empty, // from
+                            model::CellState::Bulb,  // to
+                            coord);
         return false;
       }
     }
     return true;
   });
-  return result;
+  return result_move;
 }
 
 std::optional<model::SingleMove>
 find_wall_with_deps_equalling_open_faces(model::BasicBoard const & board) {
   std::optional<model::SingleMove> result;
   board.visit_board([&](Coord coord, model::CellState cell) {
-    if (int deps = num_wall_deps(cell)) {
+    if (int deps = num_wall_deps(cell); deps > 0) {
       int empty_count = 0;
       int bulb_count  = 0;
       board.visit_adjacent(coord, [&](Coord, auto cell) {
@@ -112,15 +110,19 @@ play_trivial_move(Solution & solution) {
   //    on the same row or column.
   auto & board = solution.model_.get_underlying_board();
   if (auto opt_move = find_isolated_empty_cell(board)) {
+    LOG_DEBUG("[TRIVIAL] isolated empty cell: {}\n", *opt_move);
     solution.model_.apply(*opt_move);
     return true;
   }
   else if (auto opt_move = find_wall_with_deps_equalling_open_faces(board)) {
+    LOG_DEBUG("[TRIVIAL] wall with deps==open spaces: {}\n", *opt_move);
     solution.model_.apply(*opt_move);
     return true;
   }
   else if (auto opt_move =
                find_wall_with_satisfied_deps_and_open_faces(board)) {
+    LOG_DEBUG("[TRIVIAL] wall with satisfied deps and open faces: {}\n",
+              *opt_move);
     solution.model_.apply(*opt_move);
     return true;
   }

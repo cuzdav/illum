@@ -3,7 +3,7 @@
 #include "CellVisitorConcepts.hpp"
 #include "Coord.hpp"
 #include <array>
-#include <iostream>
+#include <iosfwd>
 #include <optional>
 #include <stdexcept>
 
@@ -37,19 +37,18 @@ public:
   // returns false if CellVisitorSome stopped visiting prematurely.
   // Otherwise returns true.
   bool visit_board(CellVisitor auto && visitor) const;
+  bool visit_adjacent(Coord coord, CellVisitor auto && visitor) const;
+
+  // will stop _after_ visiting a wall, or if visitor returns false
   bool visit_row_left_of(Coord coord, CellVisitor auto && visitor) const;
   bool visit_row_right_of(Coord coord, CellVisitor auto && visitor) const;
   bool visit_col_above(Coord coord, CellVisitor auto && visitor) const;
   bool visit_col_below(Coord coord, CellVisitor auto && visitor) const;
 
-  // Note: Use care with a CellVisitorSome. If cell visitor stops early, there
-  // is no guarantee of order of what was visited first, so only break if search
-  // is for existence of something and it's found, so no more searching
-  // necessary.
-  bool visit_rows_cols_outward(Coord coord, CellVisitor auto && visitor) const;
-
-  // same caveat as visit_rows_cols_outward
-  bool visit_adjacent(Coord coord, CellVisitor auto && visitor) const;
+  // visitor will always visit every direction. If it is a CellVisitorSome and
+  // returns false, it will stop for the current direction, but still visit
+  // other directions.
+  void visit_rows_cols_outward(Coord coord, CellVisitor auto && visitor) const;
 
   friend std::ostream & operator<<(std::ostream &, BasicBoard const &);
 
@@ -154,14 +153,16 @@ BasicBoard::height() const {
 }
 
 inline bool
-BasicBoard::visit_cell(Coord coord, int i,
+BasicBoard::visit_cell(Coord                   coord,
+                       int                     i,
                        CellVisitorSome auto && visitor) const {
   assert(get_flat_idx(coord) == i);
   return visitor(coord, cells_[i]);
 }
 
 inline bool
-BasicBoard::visit_cell(Coord coord, int i,
+BasicBoard::visit_cell(Coord                  coord,
+                       int                    i,
                        CellVisitorAll auto && visitor) const {
   assert(get_flat_idx(coord) == i);
   visitor(coord, cells_[i]);
@@ -191,6 +192,9 @@ BasicBoard::visit_row_left_of(Coord coord, CellVisitor auto && visitor) const {
       if (not visit_cell(coord, idx, visitor)) {
         return false;
       }
+      if (is_wall(cells_[idx])) {
+        break;
+      }
       --coord.col_;
       --idx;
     }
@@ -206,6 +210,9 @@ BasicBoard::visit_row_right_of(Coord coord, CellVisitor auto && visitor) const {
     while (coord.col_ < width_) {
       if (not visit_cell(coord, idx, visitor)) {
         return false;
+      }
+      if (is_wall(cells_[idx])) {
+        break;
       }
       ++coord.col_;
       ++idx;
@@ -223,6 +230,9 @@ BasicBoard::visit_col_above(Coord coord, CellVisitor auto && visitor) const {
       if (not visit_cell(coord, idx, visitor)) {
         return false;
       }
+      if (is_wall(cells_[idx])) {
+        break;
+      }
       --coord.row_;
       idx -= width_;
     }
@@ -239,6 +249,9 @@ BasicBoard::visit_col_below(Coord coord, CellVisitor auto && visitor) const {
       if (not visit_cell(coord, idx, visitor)) {
         return false;
       }
+      if (is_wall(cells_[idx])) {
+        break;
+      }
       ++coord.row_;
       idx += width_;
     }
@@ -246,12 +259,13 @@ BasicBoard::visit_col_below(Coord coord, CellVisitor auto && visitor) const {
   return true;
 }
 
-inline bool
+inline void
 BasicBoard::visit_rows_cols_outward(Coord               coord,
                                     CellVisitor auto && visitor) const {
-  return visit_row_left_of(coord, visitor) &&
-         visit_row_right_of(coord, visitor) &&
-         visit_col_above(coord, visitor) && visit_col_below(coord, visitor);
+  visit_row_left_of(coord, visitor);
+  visit_row_right_of(coord, visitor);
+  visit_col_above(coord, visitor);
+  visit_col_below(coord, visitor);
 }
 
 inline bool
@@ -266,22 +280,6 @@ BasicBoard::visit_adjacent(Coord coord, CellVisitor auto && visitor) const {
   auto [row, col] = coord;
   return visit({row + 1, col}) && visit({row - 1, col}) &&
          visit({row, col - 1}) && visit({row, col + 1});
-}
-
-inline std::ostream &
-operator<<(std::ostream & os, BasicBoard const & board) {
-  os << "Board: [\n\t";
-
-  for (int i = 0, r = board.width_, e = r * board.height_; i < e; ++i) {
-    auto state = board.cells_[i];
-    os << to_char(state);
-    if (--r == 0) {
-      os << "\n\t";
-      r = board.width_;
-    }
-  }
-  os << "]";
-  return os;
 }
 
 } // namespace model

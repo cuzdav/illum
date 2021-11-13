@@ -22,13 +22,13 @@ BoardModel::operator==(BoardModel const & other) const {
 
 std::ostream &
 operator<<(std::ostream & os, BoardModel const & model) {
-  os << "BoardModel<" << (model.handler_ ? "<*>" : "<NULL>")
-     << ", started: " << std::boolalpha << model.started_ << ", moves: [";
+  os << "BoardModel{" << (model.handler_ ? "<*>" : "<NoHandler>")
+     << ", started: " << std::boolalpha << model.started_ << ",\n  moves: [\n";
 
   for (SingleMove const & m : model.moves_) {
-    os << "\n\t" << m;
+    os << "    " << m << "\n";
   }
-  os << "], " << model.board_ << ">";
+  os << "  ],\n  " << model.board_ << "}";
   return os;
 }
 
@@ -63,8 +63,10 @@ BoardModel::undo() {
 }
 
 void
-BoardModel::apply_move(Action action, CellState from, CellState to,
-                       Coord coord) {
+BoardModel::apply_move(Action    action,
+                       CellState from,
+                       CellState to,
+                       Coord     coord) {
   if (not board_.is_initialized()) {
     throw std::runtime_error("Board uninitialized");
   }
@@ -141,8 +143,10 @@ BoardModel::reset_game(BasicBoard const & initial_board) {
 }
 
 void
-BoardModel::on_state_change(Action action, CellState prev_state,
-                            CellState to_state, Coord coord) {
+BoardModel::on_state_change(Action    action,
+                            CellState prev_state,
+                            CellState to_state,
+                            Coord     coord) {
   if (handler_) {
     handler_->on_state_change(action, prev_state, to_state, coord);
   }
