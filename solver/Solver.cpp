@@ -9,12 +9,32 @@
 
 namespace solver {
 using enum model::CellState;
+using model::CellState;
 using model::Coord;
 
 constexpr int MAX_SOLVE_STEPS = 10000;
 
+// Speculation involves "trying" to place a bulb (or mark) in each empty cell,
+// and playing it out until:
+// 1) an unambiguous full solution is found
+// 2) an invalid board is encountered
+
+// After finding a solution, speculation must continue with other moves to
+// ensure all other options lead to an invalid board. If multiple solutions are
+// found, then at least one move in the path to where we are was in error.
+//
+// There may be room for optimization here to reduce speculating the same moves.
+// However, since the moment we encounter an invalid board we stop this path,
+// and we only begin speculation when there are no trivial moves remaining,
+// we're essentially speculating against empty and unsatisfied walls only, and
+// all solutions found will not interact with any existing bulbs or satisfied
+// walls.
 bool
 speculate_playing_bulbs(Solution & solution) {
+  solution.board_.board().visit_board([&](Coord coord, CellState cell) {
+
+  });
+
   return false;
 }
 
@@ -34,59 +54,6 @@ play_move(Solution & solution) {
   }
   else if (speculate_playing_marks(solution))
     solution.status_ = SolutionStatus::FailedFindingMove;
-}
-
-// brute force
-bool
-check_solved(model::BasicBoard const & board) {
-  using enum model::CellState;
-  bool solved = true;
-  board.visit_board([&](Coord coord, model::CellState cell) {
-    int requires_adjacent = 0;
-
-    switch (cell) {
-      case Wall0:
-      case Illum:
-        break;
-
-      case Mark:
-      case Empty:
-        solved = false;
-        break;
-
-      case Wall4:
-        ++requires_adjacent;
-        [[fallthrough]];
-      case Wall3:
-        ++requires_adjacent;
-        [[fallthrough]];
-      case Wall2:
-        ++requires_adjacent;
-        [[fallthrough]];
-      case Wall1:
-        ++requires_adjacent;
-        board.visit_adjacent(coord, [&](Coord, model::CellState adj_cell) {
-          requires_adjacent -= adj_cell == Bulb;
-        });
-        if (requires_adjacent != 0) {
-          solved = false;
-        }
-        break;
-
-      case Bulb:
-        {
-          auto no_bulb_in_sight = [&](Coord, auto cell) {
-            return cell != Bulb;
-          };
-          solved = board.visit_row_right_of(coord, no_bulb_in_sight) &&
-                   board.visit_col_below(coord, no_bulb_in_sight);
-        }
-        break;
-    }
-
-    return solved;
-  });
-  return solved;
 }
 
 void
