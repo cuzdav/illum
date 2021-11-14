@@ -37,7 +37,10 @@ public:
   // returns false if CellVisitorSome stopped visiting prematurely.
   // Otherwise returns true.
   bool visit_board(CellVisitor auto && visitor) const;
+  bool visit_board(CellVisitor auto &&     visitor,
+                   CellVisitorSome auto && should_visit_pred) const;
   bool visit_adjacent(Coord coord, CellVisitor auto && visitor) const;
+  bool visit_empty(CellVisitor auto && visitor) const;
 
   // will stop _after_ visiting a wall, or if visitor returns false
   bool visit_row_left_of(Coord coord, CellVisitor auto && visitor) const;
@@ -172,10 +175,14 @@ BasicBoard::visit_cell(Coord                  coord,
 }
 
 inline bool
-BasicBoard::visit_board(CellVisitor auto && visitor) const {
+BasicBoard::visit_board(CellVisitor auto &&     visitor,
+                        CellVisitorSome auto && visit_cell_pred) const {
   for (int r = 0, c = 0, i = 0; r < height_; ++i) {
-    if (not visit_cell(Coord{r, c}, i, visitor)) {
-      return false;
+    Coord coord{r, c};
+    if (visit_cell_pred(coord, cells_[i])) {
+      if (not visit_cell(coord, i, visitor)) {
+        return false;
+      }
     }
     if (++c == width_) {
       c = 0;
@@ -183,6 +190,11 @@ BasicBoard::visit_board(CellVisitor auto && visitor) const {
     }
   }
   return true;
+}
+
+inline bool
+BasicBoard::visit_board(CellVisitor auto && visitor) const {
+  return visit_board(visitor, [](auto, auto) { return true; });
 }
 
 inline bool
@@ -282,6 +294,12 @@ BasicBoard::visit_adjacent(Coord coord, CellVisitor auto && visitor) const {
   auto [row, col] = coord;
   return visit({row + 1, col}) && visit({row - 1, col}) &&
          visit({row, col - 1}) && visit({row, col + 1});
+}
+
+inline bool
+BasicBoard::visit_empty(CellVisitor auto && visitor) const {
+  return visit_board(
+      visitor, [](auto, CellState cell) { return cell == CellState::Empty; });
 }
 
 } // namespace model

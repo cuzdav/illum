@@ -46,6 +46,16 @@ is_wall(CellState cell) {
 }
 
 constexpr bool
+is_empty(CellState cell) {
+  return cell == CellState::Empty;
+}
+
+constexpr bool
+is_bulb(CellState cell) {
+  return cell == CellState::Bulb;
+}
+
+constexpr bool
 is_wall_with_deps(CellState cell) {
   return +cell >= +CellState::Wall1 && +cell <= +CellState::Wall4;
 }

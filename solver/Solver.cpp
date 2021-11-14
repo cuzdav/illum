@@ -13,13 +13,27 @@ using model::Coord;
 
 constexpr int MAX_SOLVE_STEPS = 10000;
 
+bool
+speculate_playing_bulbs(Solution & solution) {
+  return false;
+}
+
+bool
+speculate_playing_marks(Solution & solution) {
+  return false;
+}
+
 void
 play_move(Solution & solution) {
   ++solution.step_count_;
   if (play_trivial_move(solution)) {
     return;
   }
-  solution.status_ = SolutionStatus::FailedFindingMove;
+  else if (speculate_playing_bulbs(solution)) {
+    return;
+  }
+  else if (speculate_playing_marks(solution))
+    solution.status_ = SolutionStatus::FailedFindingMove;
 }
 
 // brute force
@@ -31,30 +45,43 @@ check_solved(model::BasicBoard const & board) {
     int requires_adjacent = 0;
 
     switch (cell) {
-    case Wall0:
-    case Illum: break;
+      case Wall0:
+      case Illum:
+        break;
 
-    case Mark:
-    case Empty: solved = false; break;
-
-    case Wall4: ++requires_adjacent; [[fallthrough]];
-    case Wall3: ++requires_adjacent; [[fallthrough]];
-    case Wall2: ++requires_adjacent; [[fallthrough]];
-    case Wall1:
-      ++requires_adjacent;
-      board.visit_adjacent(coord, [&](Coord, model::CellState adj_cell) {
-        requires_adjacent -= adj_cell == Bulb;
-      });
-      if (requires_adjacent != 0) {
+      case Mark:
+      case Empty:
         solved = false;
-      }
-      break;
+        break;
 
-    case Bulb: {
-      auto no_bulb_in_sight = [&](Coord, auto cell) { return cell != Bulb; };
-      solved = board.visit_row_right_of(coord, no_bulb_in_sight) &&
-               board.visit_col_below(coord, no_bulb_in_sight);
-    } break;
+      case Wall4:
+        ++requires_adjacent;
+        [[fallthrough]];
+      case Wall3:
+        ++requires_adjacent;
+        [[fallthrough]];
+      case Wall2:
+        ++requires_adjacent;
+        [[fallthrough]];
+      case Wall1:
+        ++requires_adjacent;
+        board.visit_adjacent(coord, [&](Coord, model::CellState adj_cell) {
+          requires_adjacent -= adj_cell == Bulb;
+        });
+        if (requires_adjacent != 0) {
+          solved = false;
+        }
+        break;
+
+      case Bulb:
+        {
+          auto no_bulb_in_sight = [&](Coord, auto cell) {
+            return cell != Bulb;
+          };
+          solved = board.visit_row_right_of(coord, no_bulb_in_sight) &&
+                   board.visit_col_below(coord, no_bulb_in_sight);
+        }
+        break;
     }
 
     return solved;
@@ -64,7 +91,7 @@ check_solved(model::BasicBoard const & board) {
 
 void
 play_single_move(Solution & solution) {
-  if (check_solved(solution.model_.get_underlying_board())) {
+  if (solution.board_.is_solved()) {
     solution.status_ = SolutionStatus::Solved;
   }
   else {
@@ -74,8 +101,7 @@ play_single_move(Solution & solution) {
 
 Solution
 solve(model::BasicBoard const & board) {
-  Solution solution;
-  solution.model_.reset_game(board);
+  Solution solution(board);
   solution.status_ = SolutionStatus::Progressing;
 
   do {

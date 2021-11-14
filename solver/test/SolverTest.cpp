@@ -16,7 +16,7 @@ TEST(SolverTest, isolated_empty) {
   model::BasicBoard board;
   creator.finished(&board);
   auto solution = solver::solve(board);
-  ASSERT_TRUE(check_solved(solution.model_.get_underlying_board()));
+  ASSERT_TRUE(check_solved(solution.board_.board()));
 }
 
 TEST(SolverTest, isolated_empty2) {
@@ -27,7 +27,7 @@ TEST(SolverTest, isolated_empty2) {
   model::BasicBoard board;
   creator.finished(&board);
   auto solution = solver::solve(board);
-  ASSERT_TRUE(check_solved(solution.model_.get_underlying_board()));
+  ASSERT_TRUE(check_solved(solution.board_.board()));
 }
 
 TEST(SolverTest, isolated_empty3_no_solution) {
@@ -38,7 +38,7 @@ TEST(SolverTest, isolated_empty3_no_solution) {
   model::BasicBoard board;
   creator.finished(&board);
   auto solution = solver::solve(board);
-  ASSERT_FALSE(check_solved(solution.model_.get_underlying_board()));
+  ASSERT_FALSE(check_solved(solution.board_.board()));
 }
 
 TEST(SolverTest, wall_with_deps_equal_to_open_faces1) {
@@ -49,7 +49,7 @@ TEST(SolverTest, wall_with_deps_equal_to_open_faces1) {
   model::BasicBoard board;
   creator.finished(&board);
   auto solution = solver::solve(board);
-  ASSERT_TRUE(check_solved(solution.model_.get_underlying_board()));
+  ASSERT_TRUE(check_solved(solution.board_.board()));
 }
 
 TEST(SolverTest, wall_with_deps_equal_to_open_faces2) {
@@ -60,7 +60,7 @@ TEST(SolverTest, wall_with_deps_equal_to_open_faces2) {
   model::BasicBoard board;
   creator.finished(&board);
   auto solution = solver::solve(board);
-  ASSERT_TRUE(check_solved(solution.model_.get_underlying_board()));
+  ASSERT_TRUE(check_solved(solution.board_.board()));
 }
 
 TEST(SolverTest, wall_with_deps_equal_to_open_faces3) {
@@ -71,7 +71,7 @@ TEST(SolverTest, wall_with_deps_equal_to_open_faces3) {
   model::BasicBoard board;
   creator.finished(&board);
   auto solution = solver::solve(board);
-  EXPECT_TRUE(check_solved(solution.model_.get_underlying_board()));
+  EXPECT_TRUE(check_solved(solution.board_.board()));
 }
 
 TEST(SolverTest, wall_with_deps_and_open_face_gets_mark) {
@@ -82,8 +82,8 @@ TEST(SolverTest, wall_with_deps_and_open_face_gets_mark) {
   model::BasicBoard board;
   creator.finished(&board);
   auto solution = solver::solve(board);
-  EXPECT_FALSE(check_solved(solution.model_.get_underlying_board()));
-  EXPECT_EQ(model::CellState::Mark, solution.model_.get_cell({1, 0}));
+  EXPECT_FALSE(check_solved(solution.board_.board()));
+  EXPECT_EQ(model::CellState::Mark, solution.board_.board().get_cell({1, 0}));
 }
 
 } // namespace solver::test

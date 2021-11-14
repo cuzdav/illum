@@ -26,6 +26,14 @@ AnalysisBoard::AnalysisBoard(model::BasicBoard const & current)
           break;
       }
     }
+    else if (is_bulb(cell)) {
+      auto bulb_checker = [&](auto, CellState other) {
+        cur().has_error_ |= is_bulb(other);
+      };
+      // If error between X-Y not caught with X, it will be caught with Y
+      board().visit_col_below(coord, bulb_checker);
+      board().visit_row_right_of(coord, bulb_checker);
+    }
   });
 }
 
@@ -157,6 +165,9 @@ AnalysisBoard::add_bulb(model::Coord bulb_coord) {
               illum_coord, [&](model::Coord adj_coord, CellState neighbor) {
                 update_wall(adj_coord, neighbor, CellState::Illum, false);
               });
+        }
+        else if (cell == CellState::Bulb) {
+          cur().has_error_ = true;
         }
       });
 

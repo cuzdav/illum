@@ -349,7 +349,7 @@ TEST(AnalysisBoardTest, add_bulbs3_to_invalid_state) {
   /// move 1
   analysis_board.add_bulb({0, 1});
   EXPECT_FALSE(analysis_board.has_error());
-  EXPECT_EQ(16, analysis_board.num_cells_needing_illumination());
+  EXPECT_EQ(15, analysis_board.num_cells_needing_illumination());
 
   /// move 2
   analysis_board.add_bulb({4, 3});
@@ -389,6 +389,103 @@ TEST(AnalysisBoardTest, adding_bulb_to_nonempty_cell_fails) {
   ASSERT_FALSE(analysis_board.add_bulb({0, 5}));
   ASSERT_FALSE(analysis_board.add_bulb({1, 0}));
   ASSERT_FALSE(analysis_board.add_bulb({2, 2}));
+}
+
+TEST(AnalysisBoardTest, add_bulbs_that_see_each_other) {
+  model::test::ASCIILevelCreator creator;
+  creator(".....");
+  creator(".....");
+  creator("..*..");
+  creator(".....");
+  creator(".....");
+
+  model::BasicBoard basic_board;
+  creator.finished(&basic_board);
+  AnalysisBoard analysis_board(basic_board);
+
+  // Above - same col as existing bulb
+  analysis_board.add_bulb({0, 2});
+  EXPECT_TRUE(analysis_board.has_error());
+  analysis_board.pop();
+  EXPECT_FALSE(analysis_board.has_error());
+  analysis_board.add_bulb({1, 2});
+  EXPECT_TRUE(analysis_board.has_error());
+  analysis_board.pop();
+  EXPECT_FALSE(analysis_board.has_error());
+
+  // Below
+  analysis_board.add_bulb({4, 2});
+  EXPECT_TRUE(analysis_board.has_error());
+  analysis_board.pop();
+  EXPECT_FALSE(analysis_board.has_error());
+  analysis_board.add_bulb({3, 2});
+  EXPECT_TRUE(analysis_board.has_error());
+  analysis_board.pop();
+  EXPECT_FALSE(analysis_board.has_error());
+
+  // From Left
+  analysis_board.add_bulb({0, 2});
+  EXPECT_TRUE(analysis_board.has_error());
+  analysis_board.pop();
+  EXPECT_FALSE(analysis_board.has_error());
+  analysis_board.add_bulb({1, 2});
+  EXPECT_TRUE(analysis_board.has_error());
+  analysis_board.pop();
+  EXPECT_FALSE(analysis_board.has_error());
+
+  // From Right
+  analysis_board.add_bulb({2, 4});
+  EXPECT_TRUE(analysis_board.has_error());
+  analysis_board.pop();
+  EXPECT_FALSE(analysis_board.has_error());
+  analysis_board.add_bulb({2, 3});
+  EXPECT_TRUE(analysis_board.has_error());
+  analysis_board.pop();
+  EXPECT_FALSE(analysis_board.has_error());
+}
+
+TEST(AnalysisBoardTest, adding_bulbs_cannot_see_each_other_through_walls) {
+  model::test::ASCIILevelCreator creator;
+  creator(".....");
+  creator("..0..");
+  creator(".3*4.");
+  creator("..2..");
+  creator(".....");
+
+  model::BasicBoard basic_board;
+  creator.finished(&basic_board);
+  AnalysisBoard analysis_board(basic_board);
+
+  // Above - same col as existing bulb
+  analysis_board.add_bulb({0, 2});
+  EXPECT_FALSE(analysis_board.has_error());
+
+  // Below
+  analysis_board.add_bulb({4, 2});
+  EXPECT_FALSE(analysis_board.has_error());
+
+  // From Left
+  analysis_board.add_bulb({0, 2});
+  EXPECT_FALSE(analysis_board.has_error());
+
+  // From Right
+  analysis_board.add_bulb({2, 4});
+  EXPECT_FALSE(analysis_board.has_error());
+}
+
+TEST(AnalysisBoardTest, load_board_ok_if_wall_between_bulbs) {
+  model::test::ASCIILevelCreator creator;
+  creator("..*..");
+  creator("..0..");
+  creator("*3*4*");
+  creator("..2..");
+  creator("..*..");
+
+  model::BasicBoard basic_board;
+  creator.finished(&basic_board);
+  AnalysisBoard analysis_board(basic_board);
+
+  EXPECT_FALSE(analysis_board.has_error());
 }
 
 TEST(AnalysisBoardTest, add_bulb_adjacent_to_multiple_walls_with_deps) {
