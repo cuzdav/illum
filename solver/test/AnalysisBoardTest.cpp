@@ -371,4 +371,93 @@ TEST(AnalysisBoardTest, invalid_state_bulbs_see_each_other) {
   EXPECT_EQ(4, analysisBoard.num_cells_needing_illumination());
 }
 
+TEST(AnalysisBoardTest, adding_bulb_to_nonempty_cell_fails) {
+  model::test::ASCIILevelCreator creator;
+  creator("+0.1.2+");
+  creator("*+++0*+");
+  creator("+.XX..+");
+
+  model::BasicBoard basic_board;
+  creator.finished(&basic_board);
+  AnalysisBoard analysisBoard(basic_board);
+
+  EXPECT_FALSE(analysisBoard.has_error());
+  EXPECT_EQ(7, analysisBoard.num_cells_needing_illumination());
+
+  ASSERT_FALSE(analysisBoard.add_bulb({0, 1}));
+  ASSERT_FALSE(analysisBoard.add_bulb({0, 3}));
+  ASSERT_FALSE(analysisBoard.add_bulb({0, 5}));
+  ASSERT_FALSE(analysisBoard.add_bulb({1, 0}));
+  ASSERT_FALSE(analysisBoard.add_bulb({2, 2}));
+}
+
+TEST(AnalysisBoardTest, add_bulb_adjacent_to_multiple_walls_with_deps) {
+  model::test::ASCIILevelCreator creator;
+  creator("010");
+  creator("1.1");
+  creator("010");
+
+  model::BasicBoard basic_board;
+  creator.finished(&basic_board);
+  AnalysisBoard analysisBoard(basic_board);
+
+  EXPECT_FALSE(analysisBoard.is_solved());
+  EXPECT_FALSE(analysisBoard.has_error());
+  EXPECT_EQ(1, analysisBoard.num_cells_needing_illumination());
+  EXPECT_EQ(4, analysisBoard.num_walls_with_deps());
+
+  analysisBoard.add_bulb({1, 1});
+
+  EXPECT_TRUE(analysisBoard.is_solved());
+  EXPECT_FALSE(analysisBoard.has_error());
+  EXPECT_EQ(0, analysisBoard.num_cells_needing_illumination());
+  EXPECT_EQ(0, analysisBoard.num_walls_with_deps());
+}
+
+TEST(AnalysisBoardTest, add_mark1) {
+  model::test::ASCIILevelCreator creator;
+  creator("....");
+  creator("..2.");
+  creator("....");
+
+  model::BasicBoard basic_board;
+  creator.finished(&basic_board);
+  AnalysisBoard analysisBoard(basic_board);
+
+  EXPECT_FALSE(analysisBoard.has_error());
+  EXPECT_EQ(11, analysisBoard.num_cells_needing_illumination());
+
+  ASSERT_FALSE(analysisBoard.add_mark({1, 2})); // on wall fails
+  EXPECT_FALSE(analysisBoard.has_error());
+  EXPECT_EQ(11, analysisBoard.num_cells_needing_illumination());
+
+  // mark 1 ok - NOTE: marks don't decrease num cells needing illum
+  analysisBoard.add_mark({0, 2});
+  EXPECT_FALSE(analysisBoard.has_error());
+  EXPECT_EQ(11, analysisBoard.num_cells_needing_illumination());
+
+  // mark 2 ok
+  analysisBoard.add_mark({2, 2});
+  EXPECT_FALSE(analysisBoard.has_error());
+  EXPECT_EQ(11, analysisBoard.num_cells_needing_illumination());
+
+  // mark 3 error - wall unsatisfiable now
+  analysisBoard.add_mark({1, 1});
+  EXPECT_TRUE(analysisBoard.has_error()); //
+  EXPECT_EQ(11, analysisBoard.num_cells_needing_illumination());
+
+  // final sanity check
+  {
+    model::test::ASCIILevelCreator creator;
+    creator("..X.");
+    creator(".X2.");
+    creator("..X.");
+
+    model::BasicBoard marked_board;
+    creator.finished(&marked_board);
+
+    ASSERT_EQ(marked_board, analysisBoard.board());
+  }
+}
+
 } // namespace solver::test

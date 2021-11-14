@@ -15,7 +15,7 @@ public:
   // clones board, applies move, returns all affected cells. Returns bool
   // indicating request was successful.
   bool add_bulb(model::Coord);
-  void add_mark(model::Coord);
+  bool add_mark(model::Coord);
 
   WallState compute_wall_state(model::Coord     wall_coord,
                                model::CellState wall_cell) const;

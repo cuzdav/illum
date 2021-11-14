@@ -131,23 +131,23 @@ AnalysisBoard::update_wall(model::Coord wall_coord,
 }
 
 bool
-AnalysisBoard::add_bulb(model::Coord coord) {
-  if (board().get_cell(coord) != CellState::Empty) {
+AnalysisBoard::add_bulb(model::Coord bulb_coord) {
+  if (board().get_cell(bulb_coord) != CellState::Empty) {
     return false;
   }
   clone_position();
-  mut_board().set_cell(coord, CellState::Bulb);
+  mut_board().set_cell(bulb_coord, CellState::Bulb);
   cur().needs_illum_count_--;
 
   // update walls immediately adjacent to the bulb
   board().visit_adjacent(
-      coord, [&](model::Coord adj_coord, CellState neighbor) {
+      bulb_coord, [&](model::Coord adj_coord, CellState neighbor) {
         update_wall(adj_coord, neighbor, CellState::Bulb, true);
       });
 
   // now emit light outwards, and see if it affects walls nearby
   board().visit_rows_cols_outward(
-      coord, [&](model::Coord illum_coord, CellState cell) {
+      bulb_coord, [&](model::Coord illum_coord, CellState cell) {
         if (is_illumable(cell)) {
           mut_board().set_cell(illum_coord, model::CellState::Illum);
           cur().needs_illum_count_--;
@@ -160,6 +160,22 @@ AnalysisBoard::add_bulb(model::Coord coord) {
         }
       });
 
+  return true;
+}
+
+bool
+AnalysisBoard::add_mark(model::Coord mark_coord) {
+  if (board().get_cell(mark_coord) != CellState::Empty) {
+    return false;
+  }
+  clone_position();
+  mut_board().set_cell(mark_coord, CellState::Mark);
+
+  // update walls immediately adjacent to the mark
+  board().visit_adjacent(
+      mark_coord, [&](model::Coord neighbor_coord, CellState neighbor_cell) {
+        update_wall(neighbor_coord, neighbor_cell, CellState::Mark, true);
+      });
   return true;
 }
 
