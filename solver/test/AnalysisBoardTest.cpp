@@ -12,11 +12,11 @@ TEST(AnalysisBoardTest, initialize1) {
   creator("0.0");
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
-  AnalysisBoard analysisBoard(basic_board);
+  AnalysisBoard analysis_board(basic_board);
 
-  EXPECT_FALSE(analysisBoard.is_solved());
-  EXPECT_EQ(4, analysisBoard.num_cells_needing_illumination());
-  EXPECT_EQ(1, analysisBoard.num_walls_with_deps());
+  EXPECT_FALSE(analysis_board.is_solved());
+  EXPECT_EQ(4, analysis_board.num_cells_needing_illumination());
+  EXPECT_EQ(1, analysis_board.num_walls_with_deps());
 }
 
 TEST(AnalysisBoardTest, initialize2) {
@@ -26,11 +26,11 @@ TEST(AnalysisBoardTest, initialize2) {
   creator(".+.");
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
-  AnalysisBoard analysisBoard(basic_board);
+  AnalysisBoard analysis_board(basic_board);
 
-  EXPECT_FALSE(analysisBoard.is_solved());
-  EXPECT_EQ(2, analysisBoard.num_cells_needing_illumination());
-  EXPECT_EQ(1, analysisBoard.num_walls_with_deps());
+  EXPECT_FALSE(analysis_board.is_solved());
+  EXPECT_EQ(2, analysis_board.num_cells_needing_illumination());
+  EXPECT_EQ(1, analysis_board.num_walls_with_deps());
 }
 
 TEST(AnalysisBoardTest, initialize3) {
@@ -40,11 +40,11 @@ TEST(AnalysisBoardTest, initialize3) {
   creator("....");
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
-  AnalysisBoard analysisBoard(basic_board);
+  AnalysisBoard analysis_board(basic_board);
 
-  EXPECT_FALSE(analysisBoard.is_solved());
-  EXPECT_EQ(12, analysisBoard.num_cells_needing_illumination());
-  EXPECT_EQ(0, analysisBoard.num_walls_with_deps());
+  EXPECT_FALSE(analysis_board.is_solved());
+  EXPECT_EQ(12, analysis_board.num_cells_needing_illumination());
+  EXPECT_EQ(0, analysis_board.num_walls_with_deps());
 }
 
 TEST(AnalysisBoardTest, initialize4a) {
@@ -54,11 +54,11 @@ TEST(AnalysisBoardTest, initialize4a) {
   creator("+*+0.");
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
-  AnalysisBoard analysisBoard(basic_board);
+  AnalysisBoard analysis_board(basic_board);
 
-  EXPECT_FALSE(analysisBoard.is_solved());
-  EXPECT_EQ(1, analysisBoard.num_cells_needing_illumination());
-  EXPECT_EQ(0, analysisBoard.num_walls_with_deps());
+  EXPECT_FALSE(analysis_board.is_solved());
+  EXPECT_EQ(1, analysis_board.num_cells_needing_illumination());
+  EXPECT_EQ(0, analysis_board.num_walls_with_deps());
 }
 
 TEST(AnalysisBoardTest, initialize4b) {
@@ -68,11 +68,11 @@ TEST(AnalysisBoardTest, initialize4b) {
   creator("+*+0*");
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
-  AnalysisBoard analysisBoard(basic_board);
+  AnalysisBoard analysis_board(basic_board);
 
-  EXPECT_TRUE(analysisBoard.is_solved());
-  EXPECT_EQ(0, analysisBoard.num_cells_needing_illumination());
-  EXPECT_EQ(0, analysisBoard.num_walls_with_deps());
+  EXPECT_TRUE(analysis_board.is_solved());
+  EXPECT_EQ(0, analysis_board.num_cells_needing_illumination());
+  EXPECT_EQ(0, analysis_board.num_walls_with_deps());
 }
 
 TEST(AnalysisBoardTest, solved1_pathological) {
@@ -80,9 +80,9 @@ TEST(AnalysisBoardTest, solved1_pathological) {
   creator("0");
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
-  AnalysisBoard analysisBoard(basic_board);
+  AnalysisBoard analysis_board(basic_board);
 
-  EXPECT_TRUE(analysisBoard.is_solved());
+  EXPECT_TRUE(analysis_board.is_solved());
 }
 
 TEST(AnalysisBoardTest, not_solved1_pathological) {
@@ -90,9 +90,9 @@ TEST(AnalysisBoardTest, not_solved1_pathological) {
   creator(".");
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
-  AnalysisBoard analysisBoard(basic_board);
+  AnalysisBoard analysis_board(basic_board);
 
-  EXPECT_FALSE(analysisBoard.is_solved());
+  EXPECT_FALSE(analysis_board.is_solved());
 }
 
 TEST(AnalysisBoardTest, invalid_board) {
@@ -100,10 +100,10 @@ TEST(AnalysisBoardTest, invalid_board) {
   creator("X1");
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
-  AnalysisBoard analysisBoard(basic_board);
+  AnalysisBoard analysis_board(basic_board);
 
-  EXPECT_FALSE(analysisBoard.is_solved());
-  EXPECT_TRUE(analysisBoard.has_error());
+  EXPECT_FALSE(analysis_board.is_solved());
+  EXPECT_TRUE(analysis_board.has_error());
 }
 
 TEST(AnalysisBoardTest, invalid_board2) {
@@ -111,10 +111,10 @@ TEST(AnalysisBoardTest, invalid_board2) {
   creator("X20");
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
-  AnalysisBoard analysisBoard(basic_board);
+  AnalysisBoard analysis_board(basic_board);
 
-  EXPECT_FALSE(analysisBoard.is_solved());
-  EXPECT_TRUE(analysisBoard.has_error());
+  EXPECT_FALSE(analysis_board.is_solved());
+  EXPECT_TRUE(analysis_board.has_error());
 }
 
 TEST(AnalysisBoardTest, invalid_board3) {
@@ -123,10 +123,10 @@ TEST(AnalysisBoardTest, invalid_board3) {
   creator("X..");
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
-  AnalysisBoard analysisBoard(basic_board);
+  AnalysisBoard analysis_board(basic_board);
 
-  EXPECT_FALSE(analysisBoard.is_solved());
-  EXPECT_TRUE(analysisBoard.has_error());
+  EXPECT_FALSE(analysis_board.is_solved());
+  EXPECT_TRUE(analysis_board.has_error());
 }
 
 TEST(AnalysisBoardTest, board_scenarios4) {
@@ -140,10 +140,10 @@ TEST(AnalysisBoardTest, board_scenarios4) {
     creator("..++..");
     model::BasicBoard basic_board;
     creator.finished(&basic_board);
-    AnalysisBoard analysisBoard(basic_board);
+    AnalysisBoard analysis_board(basic_board);
 
-    EXPECT_FALSE(analysisBoard.is_solved());
-    EXPECT_TRUE(analysisBoard.has_error());
+    EXPECT_FALSE(analysis_board.is_solved());
+    EXPECT_TRUE(analysis_board.has_error());
   }
 
   // error removed (X to left of 4)
@@ -156,10 +156,10 @@ TEST(AnalysisBoardTest, board_scenarios4) {
     creator("..++..");
     model::BasicBoard basic_board;
     creator.finished(&basic_board);
-    AnalysisBoard analysisBoard(basic_board);
+    AnalysisBoard analysis_board(basic_board);
 
-    EXPECT_FALSE(analysisBoard.is_solved());
-    EXPECT_FALSE(analysisBoard.has_error());
+    EXPECT_FALSE(analysis_board.is_solved());
+    EXPECT_FALSE(analysis_board.has_error());
   }
 
   // solved
@@ -172,10 +172,10 @@ TEST(AnalysisBoardTest, board_scenarios4) {
     creator("*++++");
     model::BasicBoard basic_board;
     creator.finished(&basic_board);
-    AnalysisBoard analysisBoard(basic_board);
+    AnalysisBoard analysis_board(basic_board);
 
-    EXPECT_TRUE(analysisBoard.is_solved());
-    EXPECT_FALSE(analysisBoard.has_error());
+    EXPECT_TRUE(analysis_board.is_solved());
+    EXPECT_FALSE(analysis_board.has_error());
   }
 }
 
@@ -188,12 +188,12 @@ TEST(AnalysisBoardTest, add_bulbs1) {
   creator(".....");
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
-  AnalysisBoard analysisBoard(basic_board);
+  AnalysisBoard analysis_board(basic_board);
 
-  EXPECT_FALSE(analysisBoard.is_solved());
-  EXPECT_FALSE(analysisBoard.has_error());
-  EXPECT_EQ(24, analysisBoard.num_cells_needing_illumination());
-  EXPECT_EQ(1, analysisBoard.num_walls_with_deps());
+  EXPECT_FALSE(analysis_board.is_solved());
+  EXPECT_FALSE(analysis_board.has_error());
+  EXPECT_EQ(24, analysis_board.num_cells_needing_illumination());
+  EXPECT_EQ(1, analysis_board.num_walls_with_deps());
 
   /// move 1
   {
@@ -206,11 +206,11 @@ TEST(AnalysisBoardTest, add_bulbs1) {
     model::BasicBoard board_move1;
     creator.finished(&board_move1);
 
-    analysisBoard.add_bulb({1, 2});
+    analysis_board.add_bulb({1, 2});
 
-    EXPECT_FALSE(analysisBoard.is_solved());
-    EXPECT_EQ(board_move1, analysisBoard.board());
-    EXPECT_EQ(18, analysisBoard.num_cells_needing_illumination());
+    EXPECT_FALSE(analysis_board.is_solved());
+    EXPECT_EQ(board_move1, analysis_board.board());
+    EXPECT_EQ(18, analysis_board.num_cells_needing_illumination());
   }
 
   /// move 2
@@ -224,11 +224,11 @@ TEST(AnalysisBoardTest, add_bulbs1) {
     model::BasicBoard board_move2;
     creator.finished(&board_move2);
 
-    analysisBoard.add_bulb({2, 1});
+    analysis_board.add_bulb({2, 1});
 
-    EXPECT_FALSE(analysisBoard.is_solved());
-    EXPECT_EQ(board_move2, analysisBoard.board());
-    EXPECT_EQ(13, analysisBoard.num_cells_needing_illumination());
+    EXPECT_FALSE(analysis_board.is_solved());
+    EXPECT_EQ(board_move2, analysis_board.board());
+    EXPECT_EQ(13, analysis_board.num_cells_needing_illumination());
   }
 
   /// move 3
@@ -242,11 +242,11 @@ TEST(AnalysisBoardTest, add_bulbs1) {
     model::BasicBoard board_move3;
     creator.finished(&board_move3);
 
-    analysisBoard.add_bulb({2, 3});
+    analysis_board.add_bulb({2, 3});
 
-    EXPECT_FALSE(analysisBoard.is_solved());
-    EXPECT_EQ(board_move3, analysisBoard.board());
-    EXPECT_EQ(8, analysisBoard.num_cells_needing_illumination());
+    EXPECT_FALSE(analysis_board.is_solved());
+    EXPECT_EQ(board_move3, analysis_board.board());
+    EXPECT_EQ(8, analysis_board.num_cells_needing_illumination());
   }
 
   /// move 4
@@ -260,11 +260,11 @@ TEST(AnalysisBoardTest, add_bulbs1) {
     model::BasicBoard board_move4;
     creator.finished(&board_move4);
 
-    analysisBoard.add_bulb({3, 2});
+    analysis_board.add_bulb({3, 2});
 
-    EXPECT_FALSE(analysisBoard.is_solved());
-    EXPECT_EQ(board_move4, analysisBoard.board());
-    EXPECT_EQ(4, analysisBoard.num_cells_needing_illumination());
+    EXPECT_FALSE(analysis_board.is_solved());
+    EXPECT_EQ(board_move4, analysis_board.board());
+    EXPECT_EQ(4, analysis_board.num_cells_needing_illumination());
   }
 
   /// move 5
@@ -278,11 +278,11 @@ TEST(AnalysisBoardTest, add_bulbs1) {
     model::BasicBoard board_move5;
     creator.finished(&board_move5);
 
-    analysisBoard.add_bulb({0, 0});
+    analysis_board.add_bulb({0, 0});
 
-    EXPECT_FALSE(analysisBoard.is_solved());
-    EXPECT_EQ(board_move5, analysisBoard.board());
-    EXPECT_EQ(1, analysisBoard.num_cells_needing_illumination());
+    EXPECT_FALSE(analysis_board.is_solved());
+    EXPECT_EQ(board_move5, analysis_board.board());
+    EXPECT_EQ(1, analysis_board.num_cells_needing_illumination());
   }
 
   /// move 6
@@ -296,11 +296,11 @@ TEST(AnalysisBoardTest, add_bulbs1) {
     model::BasicBoard board_move5;
     creator.finished(&board_move5);
 
-    analysisBoard.add_bulb({4, 4});
+    analysis_board.add_bulb({4, 4});
 
-    EXPECT_TRUE(analysisBoard.is_solved());
-    EXPECT_EQ(board_move5, analysisBoard.board());
-    EXPECT_EQ(0, analysisBoard.num_cells_needing_illumination());
+    EXPECT_TRUE(analysis_board.is_solved());
+    EXPECT_EQ(board_move5, analysis_board.board());
+    EXPECT_EQ(0, analysis_board.num_cells_needing_illumination());
   }
 }
 
@@ -313,7 +313,7 @@ TEST(AnalysisBoardTest, add_bulbs2_to_invalid_state) {
   creator(".....");
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
-  AnalysisBoard analysisBoard(basic_board);
+  AnalysisBoard analysis_board(basic_board);
 
   /// move 1
   {
@@ -326,12 +326,12 @@ TEST(AnalysisBoardTest, add_bulbs2_to_invalid_state) {
     model::BasicBoard board_move1;
     creator.finished(&board_move1);
 
-    analysisBoard.add_bulb({0, 1});
+    analysis_board.add_bulb({0, 1});
 
-    EXPECT_FALSE(analysisBoard.is_solved());
-    EXPECT_TRUE(analysisBoard.has_error());
-    EXPECT_EQ(board_move1, analysisBoard.board());
-    EXPECT_EQ(15, analysisBoard.num_cells_needing_illumination());
+    EXPECT_FALSE(analysis_board.is_solved());
+    EXPECT_TRUE(analysis_board.has_error());
+    EXPECT_EQ(board_move1, analysis_board.board());
+    EXPECT_EQ(15, analysis_board.num_cells_needing_illumination());
   }
 }
 
@@ -344,17 +344,17 @@ TEST(AnalysisBoardTest, add_bulbs3_to_invalid_state) {
   creator(".....");
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
-  AnalysisBoard analysisBoard(basic_board);
+  AnalysisBoard analysis_board(basic_board);
 
   /// move 1
-  analysisBoard.add_bulb({0, 1});
-  EXPECT_FALSE(analysisBoard.has_error());
-  EXPECT_EQ(16, analysisBoard.num_cells_needing_illumination());
+  analysis_board.add_bulb({0, 1});
+  EXPECT_FALSE(analysis_board.has_error());
+  EXPECT_EQ(16, analysis_board.num_cells_needing_illumination());
 
   /// move 2
-  analysisBoard.add_bulb({4, 3});
-  EXPECT_TRUE(analysisBoard.has_error());
-  EXPECT_EQ(8, analysisBoard.num_cells_needing_illumination());
+  analysis_board.add_bulb({4, 3});
+  EXPECT_TRUE(analysis_board.has_error());
+  EXPECT_EQ(8, analysis_board.num_cells_needing_illumination());
 }
 
 TEST(AnalysisBoardTest, invalid_state_bulbs_see_each_other) {
@@ -365,10 +365,10 @@ TEST(AnalysisBoardTest, invalid_state_bulbs_see_each_other) {
 
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
-  AnalysisBoard analysisBoard(basic_board);
+  AnalysisBoard analysis_board(basic_board);
 
-  EXPECT_TRUE(analysisBoard.has_error());
-  EXPECT_EQ(4, analysisBoard.num_cells_needing_illumination());
+  EXPECT_TRUE(analysis_board.has_error());
+  EXPECT_EQ(4, analysis_board.num_cells_needing_illumination());
 }
 
 TEST(AnalysisBoardTest, adding_bulb_to_nonempty_cell_fails) {
@@ -379,16 +379,16 @@ TEST(AnalysisBoardTest, adding_bulb_to_nonempty_cell_fails) {
 
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
-  AnalysisBoard analysisBoard(basic_board);
+  AnalysisBoard analysis_board(basic_board);
 
-  EXPECT_FALSE(analysisBoard.has_error());
-  EXPECT_EQ(7, analysisBoard.num_cells_needing_illumination());
+  EXPECT_FALSE(analysis_board.has_error());
+  EXPECT_EQ(7, analysis_board.num_cells_needing_illumination());
 
-  ASSERT_FALSE(analysisBoard.add_bulb({0, 1}));
-  ASSERT_FALSE(analysisBoard.add_bulb({0, 3}));
-  ASSERT_FALSE(analysisBoard.add_bulb({0, 5}));
-  ASSERT_FALSE(analysisBoard.add_bulb({1, 0}));
-  ASSERT_FALSE(analysisBoard.add_bulb({2, 2}));
+  ASSERT_FALSE(analysis_board.add_bulb({0, 1}));
+  ASSERT_FALSE(analysis_board.add_bulb({0, 3}));
+  ASSERT_FALSE(analysis_board.add_bulb({0, 5}));
+  ASSERT_FALSE(analysis_board.add_bulb({1, 0}));
+  ASSERT_FALSE(analysis_board.add_bulb({2, 2}));
 }
 
 TEST(AnalysisBoardTest, add_bulb_adjacent_to_multiple_walls_with_deps) {
@@ -399,19 +399,19 @@ TEST(AnalysisBoardTest, add_bulb_adjacent_to_multiple_walls_with_deps) {
 
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
-  AnalysisBoard analysisBoard(basic_board);
+  AnalysisBoard analysis_board(basic_board);
 
-  EXPECT_FALSE(analysisBoard.is_solved());
-  EXPECT_FALSE(analysisBoard.has_error());
-  EXPECT_EQ(1, analysisBoard.num_cells_needing_illumination());
-  EXPECT_EQ(4, analysisBoard.num_walls_with_deps());
+  EXPECT_FALSE(analysis_board.is_solved());
+  EXPECT_FALSE(analysis_board.has_error());
+  EXPECT_EQ(1, analysis_board.num_cells_needing_illumination());
+  EXPECT_EQ(4, analysis_board.num_walls_with_deps());
 
-  analysisBoard.add_bulb({1, 1});
+  analysis_board.add_bulb({1, 1});
 
-  EXPECT_TRUE(analysisBoard.is_solved());
-  EXPECT_FALSE(analysisBoard.has_error());
-  EXPECT_EQ(0, analysisBoard.num_cells_needing_illumination());
-  EXPECT_EQ(0, analysisBoard.num_walls_with_deps());
+  EXPECT_TRUE(analysis_board.is_solved());
+  EXPECT_FALSE(analysis_board.has_error());
+  EXPECT_EQ(0, analysis_board.num_cells_needing_illumination());
+  EXPECT_EQ(0, analysis_board.num_walls_with_deps());
 }
 
 TEST(AnalysisBoardTest, add_mark1) {
@@ -422,29 +422,29 @@ TEST(AnalysisBoardTest, add_mark1) {
 
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
-  AnalysisBoard analysisBoard(basic_board);
+  AnalysisBoard analysis_board(basic_board);
 
-  EXPECT_FALSE(analysisBoard.has_error());
-  EXPECT_EQ(11, analysisBoard.num_cells_needing_illumination());
+  EXPECT_FALSE(analysis_board.has_error());
+  EXPECT_EQ(11, analysis_board.num_cells_needing_illumination());
 
-  ASSERT_FALSE(analysisBoard.add_mark({1, 2})); // on wall fails
-  EXPECT_FALSE(analysisBoard.has_error());
-  EXPECT_EQ(11, analysisBoard.num_cells_needing_illumination());
+  ASSERT_FALSE(analysis_board.add_mark({1, 2})); // on wall fails
+  EXPECT_FALSE(analysis_board.has_error());
+  EXPECT_EQ(11, analysis_board.num_cells_needing_illumination());
 
   // mark 1 ok - NOTE: marks don't decrease num cells needing illum
-  analysisBoard.add_mark({0, 2});
-  EXPECT_FALSE(analysisBoard.has_error());
-  EXPECT_EQ(11, analysisBoard.num_cells_needing_illumination());
+  analysis_board.add_mark({0, 2});
+  EXPECT_FALSE(analysis_board.has_error());
+  EXPECT_EQ(11, analysis_board.num_cells_needing_illumination());
 
   // mark 2 ok
-  analysisBoard.add_mark({2, 2});
-  EXPECT_FALSE(analysisBoard.has_error());
-  EXPECT_EQ(11, analysisBoard.num_cells_needing_illumination());
+  analysis_board.add_mark({2, 2});
+  EXPECT_FALSE(analysis_board.has_error());
+  EXPECT_EQ(11, analysis_board.num_cells_needing_illumination());
 
   // mark 3 error - wall unsatisfiable now
-  analysisBoard.add_mark({1, 1});
-  EXPECT_TRUE(analysisBoard.has_error()); //
-  EXPECT_EQ(11, analysisBoard.num_cells_needing_illumination());
+  analysis_board.add_mark({1, 1});
+  EXPECT_TRUE(analysis_board.has_error()); //
+  EXPECT_EQ(11, analysis_board.num_cells_needing_illumination());
 
   // final sanity check
   {
@@ -456,8 +456,46 @@ TEST(AnalysisBoardTest, add_mark1) {
     model::BasicBoard marked_board;
     creator.finished(&marked_board);
 
-    ASSERT_EQ(marked_board, analysisBoard.board());
+    ASSERT_EQ(marked_board, analysis_board.board());
   }
+}
+
+TEST(AnalysisBoardTest, pop1) {
+  model::test::ASCIILevelCreator creator;
+  creator("...");
+  creator(".3.");
+  creator("...");
+  model::BasicBoard board;
+  creator.finished(&board);
+  AnalysisBoard analysis_board(board);
+
+  EXPECT_FALSE(analysis_board.has_error());
+  EXPECT_FALSE(analysis_board.is_solved());
+  EXPECT_EQ(8, analysis_board.num_cells_needing_illumination());
+
+  // MOVE 1
+  analysis_board.add_bulb({0, 0});
+  EXPECT_TRUE(analysis_board.has_error()); // unsatisfiable
+  EXPECT_FALSE(analysis_board.is_solved());
+  EXPECT_EQ(3, analysis_board.num_cells_needing_illumination());
+
+  // MOVE 2
+  analysis_board.add_bulb({2, 2});
+  EXPECT_TRUE(analysis_board.has_error()); // unsatisfiable
+  EXPECT_FALSE(analysis_board.is_solved());
+  EXPECT_EQ(0, analysis_board.num_cells_needing_illumination());
+
+  // POP MOVE2 back to move1 state
+  analysis_board.pop();
+  EXPECT_TRUE(analysis_board.has_error()); // unsatisfiable
+  EXPECT_FALSE(analysis_board.is_solved());
+  EXPECT_EQ(3, analysis_board.num_cells_needing_illumination());
+
+  // POP MOVE1 back to original board
+  analysis_board.pop();
+  EXPECT_FALSE(analysis_board.has_error());
+  EXPECT_FALSE(analysis_board.is_solved());
+  EXPECT_EQ(8, analysis_board.num_cells_needing_illumination());
 }
 
 } // namespace solver::test
