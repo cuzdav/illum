@@ -1,9 +1,83 @@
 #include "BasicBoard.hpp"
 #include "ASCIILevelCreator.hpp"
+#include "CellVisitorConcepts.hpp"
+#include "Direction.hpp"
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
 namespace model::test {
+
+using enum Direction;
+
+struct SingleMoveDirection : SingleMove {
+  Direction direction_;
+  bool      operator==(SingleMoveDirection const &) const = default;
+
+  SingleMoveDirection(
+      Direction dir, Action action, CellState from, CellState to, Coord coord)
+      : SingleMove{action, from, to, coord}, direction_(dir) {}
+};
+
+std::ostream &
+operator<<(std::ostream & os, SingleMoveDirection const & smd) {
+  os << "[Direction: " << smd.direction_ << ", "
+     << static_cast<SingleMove const &>(smd) << "]";
+  return os;
+}
+
+using Moves          = std::vector<SingleMove>;
+using DirectionMoves = std::vector<SingleMoveDirection>;
+
+auto
+mk_move(Coord coord, CellState cell) {
+  return SingleMove{Action::Add, CellState::Empty, cell, coord};
+}
+
+auto
+mk_move(Direction dir, Coord coord, CellState cell) {
+  return SingleMoveDirection(dir, Action::Add, CellState::Empty, cell, coord);
+}
+
+auto
+recorder(Moves & moves) {
+  return [&](Coord coord, CellState cell) {
+    moves.push_back(mk_move(coord, cell));
+  };
+}
+
+auto
+recorder(Moves & moves, CellState stop_if_cell_is) {
+  return [&moves, stop_if_cell_is](Coord coord, CellState cell) {
+    moves.push_back(mk_move(coord, cell));
+    return cell != stop_if_cell_is;
+  };
+}
+
+auto
+recorder(DirectionMoves & moves) {
+  return [&](Direction dir, Coord coord, CellState cell) {
+    moves.push_back(mk_move(dir, coord, cell));
+  };
+}
+
+auto
+recorder(DirectionMoves & moves, CellState stop_if_cell_is) {
+  return [&moves, stop_if_cell_is](Direction dir, Coord coord, CellState cell) {
+    moves.push_back(mk_move(dir, coord, cell));
+    return cell != stop_if_cell_is;
+  };
+}
+
+auto
+make_board() {
+  BasicBoard        board;
+  ASCIILevelCreator creator;
+  creator("..*..");
+  creator("12.00");
+  creator("...X3");
+  creator.finished(&board);
+  return board;
+}
 
 using namespace ::testing;
 
@@ -172,39 +246,6 @@ TEST(BasicBoardTest, visit_some) {
   ASSERT_EQ(expected, board2);
 }
 
-auto
-recorder(auto & moves) {
-  return [&](Coord coord, CellState cell) {
-    moves.push_back({Action::Add, CellState::Empty, cell, coord});
-  };
-}
-
-auto
-recorder(auto & moves, CellState stop_if_cell_is) {
-  return [&moves, stop_if_cell_is](Coord coord, CellState cell) {
-    moves.push_back({Action::Add, CellState::Empty, cell, coord});
-    return cell != stop_if_cell_is;
-  };
-}
-
-auto
-mk_move(Coord coord, CellState cell) {
-  return SingleMove{Action::Add, CellState::Empty, cell, coord};
-}
-
-auto
-make_board() {
-  BasicBoard        board;
-  ASCIILevelCreator creator;
-  creator("..*..");
-  creator("12.00");
-  creator("...X3");
-  creator.finished(&board);
-  return board;
-}
-
-using Moves = std::vector<SingleMove>;
-
 TEST(BasicBoardTest, visit_left_row_some) {
   Moves moves;
   auto  b = make_board(); // r1: "12.00");
@@ -219,6 +260,22 @@ TEST(BasicBoardTest, visit_left_row_some) {
 
   // stops because it sees Empty
   ASSERT_EQ((std::vector{mk_move({1, 2}, CellState::Empty)}), moves);
+}
+
+TEST(BasicBoardTest, visit_directional_left_row_some) {
+  DirectionMoves moves;
+  auto           b = make_board(); // r1: "12.00");
+
+  b.visit_row_left_of({1, 4}, recorder(moves, CellState::Empty));
+
+  // stops at wall to left of cooord
+  ASSERT_EQ((std::vector{mk_move(Left, {1, 3}, CellState::Wall0)}), moves);
+
+  moves.clear();
+  b.visit_row_left_of({1, 3}, recorder(moves, CellState::Empty));
+
+  // stops because it sees Empty
+  ASSERT_EQ((std::vector{mk_move(Left, {1, 2}, CellState::Empty)}), moves);
 }
 
 TEST(BasicBoardTest, visit_left_row_some2) {
@@ -261,6 +318,17 @@ TEST(BasicBoardTest, visit_left_row_all) {
             moves);
 }
 
+TEST(BasicBoardTest, visit_directional_left_row_all) {
+  DirectionMoves moves;
+  // r2: "...X3"
+  make_board().visit_row_left_of({2, 4}, recorder(moves));
+  ASSERT_EQ((std::vector{mk_move(Left, {2, 3}, CellState::Mark),
+                         mk_move(Left, {2, 2}, CellState::Empty),
+                         mk_move(Left, {2, 1}, CellState::Empty),
+                         mk_move(Left, {2, 0}, CellState::Empty)}),
+            moves);
+}
+
 TEST(BasicBoardTest, visit_right_row_some) {
   Moves moves;
   make_board().visit_row_right_of({2, 0}, recorder(moves, CellState::Mark));
@@ -271,6 +339,26 @@ TEST(BasicBoardTest, visit_right_row_some) {
             moves);
 }
 
+TEST(BasicBoardTest, visit_directional_right_row_some) {
+  DirectionMoves moves;
+  make_board().visit_row_right_of({2, 0}, recorder(moves, CellState::Mark));
+  // NOTE row 2 looks like: "...X3"
+  ASSERT_EQ((std::vector{mk_move(Right, {2, 1}, CellState::Empty),
+                         mk_move(Right, {2, 2}, CellState::Empty),
+                         mk_move(Right, {2, 3}, CellState::Mark)}),
+            moves);
+}
+
+TEST(BasicBoardTest, visit_directional_right_row_all) {
+  DirectionMoves moves;
+  make_board().visit_row_right_of({2, 0}, recorder(moves));
+  // NOTE r2 looks like: "...X3"
+  ASSERT_EQ((std::vector{mk_move(Right, {2, 1}, CellState::Empty),
+                         mk_move(Right, {2, 2}, CellState::Empty),
+                         mk_move(Right, {2, 3}, CellState::Mark),
+                         mk_move(Right, {2, 4}, CellState::Wall3)}),
+            moves);
+}
 TEST(BasicBoardTest, visit_right_row_all) {
   Moves moves;
   make_board().visit_row_right_of({2, 0}, recorder(moves));
@@ -303,6 +391,27 @@ TEST(BasicBoardTest, visit_above_col_some) {
             moves);
 }
 
+TEST(BasicBoardTest, visit_directional_above_col_some) {
+  BasicBoard        board;
+  ASCIILevelCreator creator;
+  creator("..*..");
+  creator("12.00");
+  creator("...X+");
+  creator("...X*");
+  creator("...X3");
+  creator.finished(&board);
+
+  DirectionMoves moves;
+  board.visit_col_above({4, 4}, recorder(moves, CellState::Wall0));
+
+  ASSERT_EQ((std::vector{
+                mk_move(Up, {3, 4}, CellState::Bulb),
+                mk_move(Up, {2, 4}, CellState::Illum),
+                mk_move(Up, {1, 4}, CellState::Wall0),
+            }),
+            moves);
+}
+
 TEST(BasicBoardTest, visit_above_col_all) {
   BasicBoard        board;
   ASCIILevelCreator creator;
@@ -320,6 +429,27 @@ TEST(BasicBoardTest, visit_above_col_all) {
                 mk_move({3, 4}, CellState::Bulb),
                 mk_move({2, 4}, CellState::Illum),
                 mk_move({1, 4}, CellState::Wall0),
+            }),
+            moves);
+}
+
+TEST(BasicBoardTest, visit_directional_above_col_all) {
+  BasicBoard        board;
+  ASCIILevelCreator creator;
+  creator("..*..");
+  creator("12.00");
+  creator("...X+");
+  creator("...X*");
+  creator("...X3");
+  creator.finished(&board);
+
+  DirectionMoves moves;
+  board.visit_col_above({4, 4}, recorder(moves));
+
+  ASSERT_EQ((std::vector{
+                mk_move(Up, {3, 4}, CellState::Bulb),
+                mk_move(Up, {2, 4}, CellState::Illum),
+                mk_move(Up, {1, 4}, CellState::Wall0),
             }),
             moves);
 }
@@ -345,6 +475,27 @@ TEST(BasicBoardTest, visit_below_col_some) {
             moves);
 }
 
+TEST(BasicBoardTest, visit_directional_below_col_some) {
+  BasicBoard        board;
+  ASCIILevelCreator creator;
+  creator("..*..");
+  creator("12.X0");
+  creator("...X+");
+  creator("...4*");
+  creator("...X3");
+  creator.finished(&board);
+
+  DirectionMoves moves;
+  board.visit_col_below({0, 3}, recorder(moves, CellState::Wall4));
+
+  ASSERT_EQ((std::vector{
+                mk_move(Down, {1, 3}, CellState::Mark),
+                mk_move(Down, {2, 3}, CellState::Mark),
+                mk_move(Down, {3, 3}, CellState::Wall4),
+            }),
+            moves);
+}
+
 TEST(BasicBoardTest, visit_below_col_all) {
   BasicBoard        board;
   ASCIILevelCreator creator;
@@ -363,6 +514,28 @@ TEST(BasicBoardTest, visit_below_col_all) {
                 mk_move({2, 2}, CellState::Illum),
                 mk_move({3, 2}, CellState::Illum),
                 mk_move({4, 2}, CellState::Illum),
+            }),
+            moves);
+}
+
+TEST(BasicBoardTest, visit_directional_below_col_all) {
+  BasicBoard        board;
+  ASCIILevelCreator creator;
+  creator("++*++");
+  creator("12+00");
+  creator("..+X+");
+  creator("..+4*");
+  creator("..+*3");
+  creator.finished(&board);
+
+  DirectionMoves moves;
+  board.visit_col_below({0, 2}, recorder(moves));
+
+  ASSERT_EQ((std::vector{
+                mk_move(Down, {1, 2}, CellState::Illum),
+                mk_move(Down, {2, 2}, CellState::Illum),
+                mk_move(Down, {3, 2}, CellState::Illum),
+                mk_move(Down, {4, 2}, CellState::Illum),
             }),
             moves);
 }
@@ -443,6 +616,82 @@ TEST(BasicBoardTest, visit_adjacent_all) {
   EXPECT_THAT(moves,
               UnorderedElementsAre(Eq(mk_move({1, 2}, CellState::Bulb)),
                                    Eq(mk_move({2, 1}, CellState::Illum))));
+}
+
+TEST(BasicBoardTest, visit_perpendiculars) {
+  BasicBoard        board;
+  ASCIILevelCreator creator;
+  creator("..X+0");
+  creator("X..+0");
+  creator("+++*+");
+  creator("1..+.");
+  creator.finished(&board);
+
+  // If moving up from 2,0 ...
+  {
+    DirectionMoves moves;
+    board.visit_perpendicular({2, 0}, Direction::Up, recorder(moves));
+    EXPECT_THAT(moves,
+                UnorderedElementsAre(
+                    Eq(mk_move(Direction::Right, {2, 1}, CellState::Illum)),
+                    Eq(mk_move(Direction::Right, {2, 2}, CellState::Illum)),
+                    Eq(mk_move(Direction::Right, {2, 3}, CellState::Bulb)),
+                    Eq(mk_move(Direction::Right, {2, 4}, CellState::Illum))));
+  }
+  // If moving up from 1,2 ...
+  {
+    DirectionMoves moves;
+    board.visit_perpendicular({1, 2}, Direction::Up, recorder(moves));
+    EXPECT_THAT(moves,
+                UnorderedElementsAre(
+                    Eq(mk_move(Direction::Left, {1, 0}, CellState::Mark)),
+                    Eq(mk_move(Direction::Left, {1, 1}, CellState::Empty)),
+                    Eq(mk_move(Direction::Right, {1, 3}, CellState::Illum)),
+                    Eq(mk_move(Direction::Right, {1, 4}, CellState::Wall0))));
+  }
+
+  // If moving down from 2,0 ...
+  {
+    DirectionMoves moves;
+    board.visit_perpendicular({2, 0}, Direction::Down, recorder(moves));
+    EXPECT_THAT(moves,
+                UnorderedElementsAre(
+                    Eq(mk_move(Direction::Right, {2, 1}, CellState::Illum)),
+                    Eq(mk_move(Direction::Right, {2, 2}, CellState::Illum)),
+                    Eq(mk_move(Direction::Right, {2, 3}, CellState::Bulb)),
+                    Eq(mk_move(Direction::Right, {2, 4}, CellState::Illum))));
+  }
+  // If moving down from 1,2 ...
+  {
+    DirectionMoves moves;
+    board.visit_perpendicular({1, 2}, Direction::Down, recorder(moves));
+    EXPECT_THAT(moves,
+                UnorderedElementsAre(
+                    Eq(mk_move(Direction::Left, {1, 0}, CellState::Mark)),
+                    Eq(mk_move(Direction::Left, {1, 1}, CellState::Empty)),
+                    Eq(mk_move(Direction::Right, {1, 3}, CellState::Illum)),
+                    Eq(mk_move(Direction::Right, {1, 4}, CellState::Wall0))));
+  }
+
+  // If moving right at 2,0 ...
+  {
+    DirectionMoves moves;
+    board.visit_perpendicular({2, 0}, Direction::Right, recorder(moves));
+    EXPECT_THAT(moves,
+                UnorderedElementsAre(
+                    Eq(mk_move(Direction::Up, {0, 0}, CellState::Empty)),
+                    Eq(mk_move(Direction::Up, {1, 0}, CellState::Mark)),
+                    Eq(mk_move(Direction::Down, {3, 0}, CellState::Wall1))));
+  }
+  // If moving right at 3,4 ...
+  {
+    DirectionMoves moves;
+    board.visit_perpendicular({3, 4}, Direction::Right, recorder(moves));
+    EXPECT_THAT(moves,
+                UnorderedElementsAre(
+                    Eq(mk_move(Direction::Up, {2, 4}, CellState::Illum)),
+                    Eq(mk_move(Direction::Up, {1, 4}, CellState::Wall0))));
+  }
 }
 
 } // namespace model::test

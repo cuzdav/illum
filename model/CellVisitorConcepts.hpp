@@ -2,11 +2,10 @@
 
 #include "CellState.hpp"
 #include "Coord.hpp"
+#include "Direction.hpp"
 #include <concepts>
 
 namespace model {
-
-enum class Direction : char { None, Up, Down, Right, Left };
 
 // Non-directional visitors don't have a direction. They are used with
 // visit-algorithms that are not "linear", but involve mult-direction scans,
@@ -44,12 +43,12 @@ concept CellVisitor = CellVisitorAll<T> || CellVisitorSome<T>;
 
 template <typename T>
 concept DirectedCellVisitorAll = requires(T visitor, CellState cell) {
-  { visitor(Coord{0, 0}, cell, Direction{}) } -> std::same_as<void>;
+  { visitor(Direction{}, Coord{0, 0}, cell) } -> std::same_as<void>;
 };
 
 template <typename T>
 concept DirectedCellVisitorSome = requires(T visitor, CellState cell) {
-  { visitor(Coord{0, 0}, cell, Direction{}) } -> std::same_as<bool>;
+  { visitor(Direction{}, Coord{0, 0}, cell) } -> std::same_as<bool>;
 };
 
 //

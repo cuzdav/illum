@@ -2,6 +2,7 @@ add_library(model
     BasicBoard.cpp
     BoardModel.cpp
     Coord.cpp
+    Direction.cpp
     Serialize.cpp
     SingleMove.cpp
 )
