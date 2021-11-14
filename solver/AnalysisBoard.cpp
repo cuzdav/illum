@@ -39,13 +39,13 @@ AnalysisBoard::cur() const {
   return positions_.back();
 }
 
-model::BasicBoard &
-AnalysisBoard::board() {
+model::BasicBoard const &
+AnalysisBoard::board() const {
   return cur().board_;
 }
 
-model::BasicBoard const &
-AnalysisBoard::board() const {
+model::BasicBoard &
+AnalysisBoard::mut_board() {
   return cur().board_;
 }
 
@@ -97,6 +97,7 @@ AnalysisBoard::compute_wall_state(model::Coord     wall_coord,
                            bulb_neighbors += neighbor == CellState::Bulb;
                            empty_neighbors += neighbor == CellState::Empty;
                          });
+
   if (bulb_neighbors > deps || (deps - bulb_neighbors) > empty_neighbors) {
     // there are too many bulbs around this wall, or it cannot be satisfied
     // due to marks/illuminations covering too many sides.
@@ -133,10 +134,10 @@ bool
 AnalysisBoard::add_bulb(model::Coord coord) {
   if (board().get_cell(coord) != CellState::Empty) {
     return false;
-    ;
   }
   clone_position();
-  board().set_cell(coord, CellState::Bulb);
+  mut_board().set_cell(coord, CellState::Bulb);
+  cur().needs_illum_count_--;
 
   // update walls immediately adjacent to the bulb
   board().visit_adjacent(
@@ -144,15 +145,16 @@ AnalysisBoard::add_bulb(model::Coord coord) {
         update_wall(adj_coord, neighbor, CellState::Bulb, true);
       });
 
+  // now emit light outwards, and see if it affects walls nearby
   board().visit_rows_cols_outward(
-      coord, [&](model::Coord cur_coord, CellState cell) {
+      coord, [&](model::Coord illum_coord, CellState cell) {
         if (is_illumable(cell)) {
-          board().set_cell(cur_coord, model::CellState::Illum);
+          mut_board().set_cell(illum_coord, model::CellState::Illum);
           cur().needs_illum_count_--;
 
           // illuminating a cell adjacent to a wall with deps affects it
           board().visit_adjacent(
-              coord, [&](model::Coord adj_coord, CellState neighbor) {
+              illum_coord, [&](model::Coord adj_coord, CellState neighbor) {
                 update_wall(adj_coord, neighbor, CellState::Illum, false);
               });
         }

@@ -79,6 +79,8 @@ BasicBoard::operator==(BasicBoard const & other) const {
 
 inline void
 BasicBoard::reset(int height, int width) {
+  assert(height > 0);
+  assert(width > 0);
   for (auto & cell : cells_) {
     cell = CellState::Empty;
   }

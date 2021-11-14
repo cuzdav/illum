@@ -29,6 +29,8 @@ public:
   int num_cells_needing_illumination() const;
   int num_walls_with_deps() const;
 
+  model::BasicBoard const & board() const;
+
 private:
   struct Position {
     bool              has_error_             = false;
@@ -39,10 +41,9 @@ private:
     Position(model::BasicBoard const & board) : board_(board) {}
   };
 
-  Position &                cur();
-  Position const &          cur() const;
-  model::BasicBoard &       board();
-  model::BasicBoard const & board() const;
+  Position &          cur();
+  Position const &    cur() const;
+  model::BasicBoard & mut_board();
 
   void clone_position();
   void update_wall(model::Coord     wall_coord,
