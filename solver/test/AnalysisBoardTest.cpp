@@ -404,9 +404,12 @@ TEST(AnalysisBoardTest, add_bulbs_that_see_each_other) {
   AnalysisBoard analysis_board(basic_board);
 
   // Above - same col as existing bulb
+  analysis_board.clone_position();
   analysis_board.add_bulb({0, 2});
   EXPECT_TRUE(analysis_board.has_error());
   analysis_board.pop();
+
+  analysis_board.clone_position();
   EXPECT_FALSE(analysis_board.has_error());
   analysis_board.add_bulb({1, 2});
   EXPECT_TRUE(analysis_board.has_error());
@@ -414,9 +417,12 @@ TEST(AnalysisBoardTest, add_bulbs_that_see_each_other) {
   EXPECT_FALSE(analysis_board.has_error());
 
   // Below
+  analysis_board.clone_position();
   analysis_board.add_bulb({4, 2});
   EXPECT_TRUE(analysis_board.has_error());
   analysis_board.pop();
+
+  analysis_board.clone_position();
   EXPECT_FALSE(analysis_board.has_error());
   analysis_board.add_bulb({3, 2});
   EXPECT_TRUE(analysis_board.has_error());
@@ -424,9 +430,12 @@ TEST(AnalysisBoardTest, add_bulbs_that_see_each_other) {
   EXPECT_FALSE(analysis_board.has_error());
 
   // From Left
+  analysis_board.clone_position();
   analysis_board.add_bulb({0, 2});
   EXPECT_TRUE(analysis_board.has_error());
   analysis_board.pop();
+
+  analysis_board.clone_position();
   EXPECT_FALSE(analysis_board.has_error());
   analysis_board.add_bulb({1, 2});
   EXPECT_TRUE(analysis_board.has_error());
@@ -434,9 +443,12 @@ TEST(AnalysisBoardTest, add_bulbs_that_see_each_other) {
   EXPECT_FALSE(analysis_board.has_error());
 
   // From Right
+  analysis_board.clone_position();
   analysis_board.add_bulb({2, 4});
   EXPECT_TRUE(analysis_board.has_error());
   analysis_board.pop();
+
+  analysis_board.clone_position();
   EXPECT_FALSE(analysis_board.has_error());
   analysis_board.add_bulb({2, 3});
   EXPECT_TRUE(analysis_board.has_error());
@@ -571,12 +583,14 @@ TEST(AnalysisBoardTest, pop1) {
   EXPECT_EQ(8, analysis_board.num_cells_needing_illumination());
 
   // MOVE 1
+  analysis_board.clone_position();
   analysis_board.add_bulb({0, 0});
   EXPECT_TRUE(analysis_board.has_error()); // unsatisfiable
   EXPECT_FALSE(analysis_board.is_solved());
   EXPECT_EQ(3, analysis_board.num_cells_needing_illumination());
 
   // MOVE 2
+  analysis_board.clone_position();
   analysis_board.add_bulb({2, 2});
   EXPECT_TRUE(analysis_board.has_error()); // unsatisfiable
   EXPECT_FALSE(analysis_board.is_solved());

@@ -8,6 +8,7 @@ using model::CellState;
 
 AnalysisBoard::AnalysisBoard(model::BasicBoard const & current)
     : positions_{{current}} {
+  positions_.reserve(4);
   board().visit_board([&](model::Coord coord, auto cell) {
     if (model::is_illumable(cell)) {
       cur().needs_illum_count_++;
@@ -59,7 +60,7 @@ AnalysisBoard::mut_board() {
 
 void
 AnalysisBoard::clone_position() {
-  positions_.emplace_back(positions_.back());
+  positions_.push_back(positions_.back());
 }
 
 void
@@ -143,7 +144,6 @@ AnalysisBoard::add_bulb(model::Coord bulb_coord) {
   if (board().get_cell(bulb_coord) != CellState::Empty) {
     return false;
   }
-  clone_position();
   mut_board().set_cell(bulb_coord, CellState::Bulb);
   cur().needs_illum_count_--;
 
@@ -179,7 +179,6 @@ AnalysisBoard::add_mark(model::Coord mark_coord) {
   if (board().get_cell(mark_coord) != CellState::Empty) {
     return false;
   }
-  clone_position();
   mut_board().set_cell(mark_coord, CellState::Mark);
 
   // update walls immediately adjacent to the mark

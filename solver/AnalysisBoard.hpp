@@ -21,6 +21,7 @@ public:
                                model::CellState wall_cell) const;
 
   // removes most recently cloned board, stats, to previous position
+  void clone_position();
   void pop();
 
   bool is_solved() const;
@@ -45,7 +46,6 @@ private:
   Position const &    cur() const;
   model::BasicBoard & mut_board();
 
-  void clone_position();
   void update_wall(model::Coord     wall_coord,
                    model::CellState wall_cell,
                    model::CellState play_cell,

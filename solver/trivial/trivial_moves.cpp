@@ -99,6 +99,7 @@ find_wall_with_satisfied_deps_and_open_faces(model::BasicBoard const & board) {
 void
 apply_move(Solution & solution, OptMove opt_move) {
   if (opt_move) {
+    LOG_DEBUG("[TRIVIAL] Applying move: {}\n", *opt_move);
     switch (opt_move->to_) {
       case model::CellState::Bulb:
         solution.board_.add_bulb(opt_move->coord_);

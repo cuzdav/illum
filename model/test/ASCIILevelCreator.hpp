@@ -42,6 +42,7 @@ public:
     if (start_policy == StartPolicy::CallStart) {
       model->start_game();
     }
+    reset();
   }
 
   void
@@ -52,9 +53,16 @@ public:
         board->set_cell(coord, cell);
       }
     });
+    reset();
   }
 
 private:
+  void
+  reset() {
+    unparsed_rows_.clear();
+    width_ = 0;
+  }
+
   void
   finished_impl(auto && cell_handler) {
     int rownum = 0;
