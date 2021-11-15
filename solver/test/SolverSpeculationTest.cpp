@@ -25,7 +25,7 @@ TEST(SolverSpeculationTest, simple_deductions1) {
   std::cout << solution.board_.board() << std::endl;
 
   creator("1+*+");
-  creator("*+2+");
+  creator("*+2*");
 
   model::BasicBoard expected;
   creator.finished(&expected);

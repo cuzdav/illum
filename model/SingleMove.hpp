@@ -41,9 +41,8 @@ struct formatter<model::SingleMove> {
   auto
   format(model::SingleMove const & single_move, FormatContext & ctx) {
     return fmt::format_to(ctx.out(),
-                          "([r:{},c:{}]: {} {}->{})",
-                          single_move.coord_.row_,
-                          single_move.coord_.col_,
+                          "({}: {} {}->{})",
+                          single_move.coord_,
                           to_string(single_move.action_),
                           to_string(single_move.from_),
                           to_string(single_move.to_));

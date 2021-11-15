@@ -1,10 +1,14 @@
 #include "AnalysisBoard.hpp"
 #include "BasicBoard.hpp"
 #include "CellState.hpp"
+#include "DebugLog.hpp"
+#include "Direction.hpp"
 
 namespace solver {
 
 using model::CellState;
+using model::Coord;
+using model::Direction;
 
 AnalysisBoard::AnalysisBoard(model::BasicBoard const & current)
     : positions_{{current}} {
@@ -93,6 +97,11 @@ AnalysisBoard::has_error() const {
   return cur().has_error_;
 }
 
+void
+AnalysisBoard::set_has_error(bool yn) {
+  cur().has_error_ = yn;
+}
+
 AnalysisBoard::WallState
 AnalysisBoard::compute_wall_state(model::Coord     wall_coord,
                                   model::CellState wall_cell) const {
@@ -141,7 +150,8 @@ AnalysisBoard::update_wall(model::Coord wall_coord,
 
 bool
 AnalysisBoard::add_bulb(model::Coord bulb_coord) {
-  if (board().get_cell(bulb_coord) != CellState::Empty) {
+  CellState bulb_target = board().get_cell(bulb_coord);
+  if (not is_empty(bulb_target)) {
     return false;
   }
   mut_board().set_cell(bulb_coord, CellState::Bulb);
@@ -155,7 +165,8 @@ AnalysisBoard::add_bulb(model::Coord bulb_coord) {
 
   // now emit light outwards, and see if it affects walls nearby
   board().visit_rows_cols_outward(
-      bulb_coord, [&](model::Coord illum_coord, CellState cell) {
+      bulb_coord,
+      [&](model::Direction dir, model::Coord illum_coord, CellState cell) {
         if (is_illumable(cell)) {
           mut_board().set_cell(illum_coord, model::CellState::Illum);
           cur().needs_illum_count_--;
@@ -176,7 +187,8 @@ AnalysisBoard::add_bulb(model::Coord bulb_coord) {
 
 bool
 AnalysisBoard::add_mark(model::Coord mark_coord) {
-  if (board().get_cell(mark_coord) != CellState::Empty) {
+  CellState mark_target = board().get_cell(mark_coord);
+  if (not is_empty(mark_target)) {
     return false;
   }
   mut_board().set_cell(mark_coord, CellState::Mark);

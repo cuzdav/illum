@@ -46,7 +46,9 @@ speculate_playing_bulbs(Solution & solution) {
 
     LOG_DEBUG("[SPECULATE-BULB] Playing ({},{})\n", coord.row_, coord.col_);
     solution.board_.add_bulb(coord);
-    play_trivial_move(solution);
+    while (play_trivial_move(solution)) {
+      // empty
+    }
 
     if (solution.board_.has_error()) {
       // This is actually success - we found a contradiction with this move
@@ -80,8 +82,7 @@ speculate_playing_bulbs(Solution & solution) {
             solution.step_count_,
             to_string(solution.status_));
   if (one_solution.has_value()) {
-    solution.status_         = SolutionStatus::Solved;
-    solution.known_solution_ = *one_solution;
+    solution.status_ = SolutionStatus::Solved;
     return true;
   }
   return played_move;
@@ -129,7 +130,8 @@ play_single_move(Solution & solution) {
   if (solution.board_.is_solved()) {
     if (not solution.speculating_) {
       LOG_DEBUG("play_single_move: Solved! steps={}\n", solution.step_count_);
-      solution.status_ = SolutionStatus::Solved;
+      solution.status_         = SolutionStatus::Solved;
+      solution.known_solution_ = solution.board_.board();
       return true;
     }
   }

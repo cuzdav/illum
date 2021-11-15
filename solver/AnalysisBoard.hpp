@@ -32,6 +32,8 @@ public:
 
   model::BasicBoard const & board() const;
 
+  void set_has_error(bool);
+
 private:
   struct Position {
     bool              has_error_             = false;

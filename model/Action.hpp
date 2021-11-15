@@ -33,13 +33,17 @@ constexpr char
 to_char(Action action) {
   using enum Action;
   switch (action) {
-  case Add: return chr::Add;
-  case Remove: return chr::Remove;
-  case ResetGame: return chr::ResetGame;
-  case StartGame: return chr::StartGame;
-  default:
-    throw std::runtime_error("Invalid Action in Serialize to_char()" +
-                             std::to_string(static_cast<int>(action)));
+    case Add:
+      return chr::Add;
+    case Remove:
+      return chr::Remove;
+    case ResetGame:
+      return chr::ResetGame;
+    case StartGame:
+      return chr::StartGame;
+    default:
+      throw std::runtime_error("Invalid Action in Serialize to_char()" +
+                               std::to_string(static_cast<int>(action)));
   }
 }
 
@@ -47,13 +51,18 @@ constexpr Action
 get_action_from_char(char action) {
   using enum Action;
   switch (action) {
-  case chr::Add: return Add;
-  case chr::Remove: return Remove;
-  case chr::ResetGame: return ResetGame;
-  case chr::StartGame: return StartGame;
-  default:
-    throw std::runtime_error(
-        std::string("Invalid Action in Serialize action_from_char: ") + action);
+    case chr::Add:
+      return Add;
+    case chr::Remove:
+      return Remove;
+    case chr::ResetGame:
+      return ResetGame;
+    case chr::StartGame:
+      return StartGame;
+    default:
+      throw std::runtime_error(
+          std::string("Invalid Action in Serialize action_from_char: ") +
+          action);
   }
 }
 
@@ -61,13 +70,17 @@ constexpr char const *
 to_string(Action action) {
   using enum Action;
   switch (action) {
-  case Add: return str::Add;
-  case Remove: return str::Remove;
-  case ResetGame: return str::ResetGame;
-  case StartGame: return str::StartGame;
-  default:
-    throw std::runtime_error("Unknown Action in Serialize to_string: " +
-                             std::to_string(static_cast<int>(action)));
+    case Add:
+      return str::Add;
+    case Remove:
+      return str::Remove;
+    case ResetGame:
+      return str::ResetGame;
+    case StartGame:
+      return str::StartGame;
+    default:
+      throw std::runtime_error("Unknown Action in Serialize to_string: " +
+                               std::to_string(static_cast<int>(action)));
   };
 }
 

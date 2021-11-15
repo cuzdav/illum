@@ -24,4 +24,21 @@ to_string(Direction d) {
 
 std::ostream & operator<<(std::ostream & os, Direction d);
 
+constexpr Direction
+rotate90_left(Direction d) {
+  using enum Direction;
+  switch (d) {
+    case Up:
+      return Left;
+    case Left:
+      return Down;
+    case Down:
+      return Right;
+    case Right:
+      return Up;
+    default:
+      return None;
+  }
+}
+
 } // namespace model

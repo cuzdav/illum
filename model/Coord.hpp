@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <fmt/format.h>
 #include <iosfwd>
 #include <limits>
 
@@ -38,3 +39,22 @@ private:
 };
 
 } // namespace model
+
+namespace fmt {
+
+template <>
+struct formatter<model::Coord> {
+  template <typename ParseContext>
+  constexpr auto
+  parse(ParseContext & ctx) {
+    return ctx.begin();
+  }
+
+  template <typename FormatContext>
+  auto
+  format(model::Coord const & coord, FormatContext & ctx) {
+    return fmt::format_to(ctx.out(), "[r:{},c:{}]", coord.row_, coord.col_);
+  }
+};
+
+} // namespace fmt
