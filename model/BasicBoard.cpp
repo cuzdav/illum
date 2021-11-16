@@ -3,14 +3,17 @@
 
 namespace model {
 
+char const * const indent = "    ";
+
 std::ostream &
 operator<<(std::ostream & os, BasicBoard const & board) {
-  os << "Board: [\n";
+
+  os << indent << "Board: [\n";
 
   for (int i = 0, r = board.width_, e = r * board.height_; i < e; ++i) {
     auto state = board.cells_[i];
     if (r == board.width_) {
-      os << "    ";
+      os << indent;
     }
     os << to_char(state);
     if (--r == 0) {
@@ -18,7 +21,8 @@ operator<<(std::ostream & os, BasicBoard const & board) {
       r = board.width_;
     }
   }
-  os << "]";
+  os << indent << "]";
   return os;
 }
+
 } // namespace model

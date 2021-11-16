@@ -17,8 +17,6 @@ using model::Coord;
 
 constexpr int MAX_SOLVE_STEPS = 10000;
 
-void find_solution(Solution & solution);
-
 // Speculation involves "trying" to place a bulb (or mark) in each empty cell,
 // and playing out the trivial/forced moves as a result to see if it causes a
 // contradiction. If it does not cause trivial/forced moves, or they play out
@@ -51,6 +49,7 @@ speculate_playing_bulbs(Solution & solution) {
     }
 
     if (solution.board_.has_error()) {
+
       // This is actually success - we found a contradiction with this move
       LOG_DEBUG("[SPECULATE-BULB] Contradiction, so  ({},{}) must be a mark\n",
                 coord.row_,
@@ -62,8 +61,8 @@ speculate_playing_bulbs(Solution & solution) {
     }
     else if (solution.board_.is_solved()) {
       if (not one_solution.has_value()) {
-        solution.board_.pop();
         one_solution.emplace(solution.board_.board());
+        solution.board_.pop();
         // keep visiting to see if there are no more solutions
         // if we finish and this is the only one, that's success.
         return true;
@@ -81,8 +80,10 @@ speculate_playing_bulbs(Solution & solution) {
   LOG_DEBUG("Done visiting empty spaces (speculate) steps={} {}\n",
             solution.step_count_,
             to_string(solution.status_));
-  if (one_solution.has_value()) {
-    solution.status_ = SolutionStatus::Solved;
+  if (one_solution.has_value() &&
+      solution.status_ == SolutionStatus::Progressing) {
+    solution.status_         = SolutionStatus::Solved;
+    solution.known_solution_ = *one_solution;
     return true;
   }
   return played_move;
@@ -118,6 +119,7 @@ play_move(Solution & solution) {
   if (speculate_playing_bulbs(solution)) {
     return true;
   }
+
   if (speculate_playing_marks(solution)) {
     return true;
   }
@@ -151,9 +153,6 @@ play_single_move(Solution & solution) {
 void
 find_solution(Solution & solution) {
   do {
-    // LOG_DEBUG("Top of find_solution loop.  {} steps={}\n",
-    //           to_string(solution.status_),
-    //           solution.step_count_);
     solution.step_count_++;
     if (not play_single_move(solution)) {
       break;

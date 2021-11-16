@@ -49,14 +49,15 @@ public:
   bool visit_col_above(Coord coord, OptDirCellVisitor auto && visitor) const;
   bool visit_col_below(Coord coord, OptDirCellVisitor auto && visitor) const;
 
-  bool visit_perpendicular(
-      Coord coord, Direction dir, OptDirCellVisitor auto && visitor) const;
+  bool visit_perpendicular(Coord                     coord,
+                           Direction                 dir,
+                           OptDirCellVisitor auto && visitor) const;
 
   // visitor will always visit every direction. If it is a CellVisitorSome
   // and returns false, it will stop for the current direction, but still
   // visit other directions.
-  void visit_rows_cols_outward(
-      Coord coord, OptDirCellVisitor auto && visitor) const;
+  void visit_rows_cols_outward(Coord                     coord,
+                               OptDirCellVisitor auto && visitor) const;
 
   friend std::ostream & operator<<(std::ostream &, BasicBoard const &);
 
@@ -64,23 +65,21 @@ private:
   int get_flat_idx(Coord coord) const;
   int get_flat_idx_unchecked(Coord coord) const;
 
-  bool visit_cell(
-      Direction, Coord, int idx, CellVisitorSome auto && visitor) const;
+  bool
+  visit_cell(Direction, Coord, int idx, CellVisitorSome auto && visitor) const;
 
-  bool visit_cell(
-      Direction, Coord, int idx, CellVisitorAll auto && visitor) const;
+  bool
+  visit_cell(Direction, Coord, int idx, CellVisitorAll auto && visitor) const;
 
-  bool visit_cell(
-      Direction                       direction,
-      Coord                           coord,
-      int                             idx,
-      DirectedCellVisitorSome auto && visitor) const;
+  bool visit_cell(Direction                       direction,
+                  Coord                           coord,
+                  int                             idx,
+                  DirectedCellVisitorSome auto && visitor) const;
 
-  bool visit_cell(
-      Direction                      direction,
-      Coord                          coord,
-      int                            idx,
-      DirectedCellVisitorAll auto && visitor) const;
+  bool visit_cell(Direction                      direction,
+                  Coord                          coord,
+                  int                            idx,
+                  DirectedCellVisitorAll auto && visitor) const;
 
   // a building block for all the visit_(row|col) variations to be assembled
   bool visit_straight_line(
@@ -188,38 +187,38 @@ BasicBoard::height() const {
 }
 
 inline bool
-BasicBoard::visit_cell(
-    Direction direction, Coord coord, int i, CellVisitorSome auto && visitor)
-    const {
+BasicBoard::visit_cell(Direction               direction,
+                       Coord                   coord,
+                       int                     i,
+                       CellVisitorSome auto && visitor) const {
   assert(get_flat_idx(coord) == i);
   return visitor(coord, cells_[i]);
 }
 
 inline bool
-BasicBoard::visit_cell(
-    Direction direction, Coord coord, int i, CellVisitorAll auto && visitor)
-    const {
+BasicBoard::visit_cell(Direction              direction,
+                       Coord                  coord,
+                       int                    i,
+                       CellVisitorAll auto && visitor) const {
   assert(get_flat_idx(coord) == i);
   visitor(coord, cells_[i]);
   return true;
 }
 
 inline bool
-BasicBoard::visit_cell(
-    Direction                       direction,
-    Coord                           coord,
-    int                             i,
-    DirectedCellVisitorSome auto && visitor) const {
+BasicBoard::visit_cell(Direction                       direction,
+                       Coord                           coord,
+                       int                             i,
+                       DirectedCellVisitorSome auto && visitor) const {
   assert(get_flat_idx(coord) == i);
   return visitor(direction, coord, cells_[i]);
 }
 
 inline bool
-BasicBoard::visit_cell(
-    Direction                      direction,
-    Coord                          coord,
-    int                            i,
-    DirectedCellVisitorAll auto && visitor) const {
+BasicBoard::visit_cell(Direction                      direction,
+                       Coord                          coord,
+                       int                            i,
+                       DirectedCellVisitorAll auto && visitor) const {
   assert(get_flat_idx(coord) == i);
   visitor(direction, coord, cells_[i]);
   return true;
@@ -241,9 +240,8 @@ BasicBoard::visit_adjacent(Coord coord, CellVisitor auto && visitor) const {
 
 inline bool
 BasicBoard::visit_empty(CellVisitor auto && visitor) const {
-  return visit_board(visitor, [](auto, CellState cell) {
-    return cell == CellState::Empty;
-  });
+  return visit_board(
+      visitor, [](auto, CellState cell) { return cell == CellState::Empty; });
 }
 
 inline bool
@@ -270,13 +268,12 @@ BasicBoard::visit_board(CellVisitor auto && visitor) const {
 }
 
 inline bool
-BasicBoard::visit_straight_line(
-    Direction                 dir,
-    Coord                     coord,
-    auto &&                   update_coord,
-    auto &&                   update_index,
-    auto &&                   test_coord,
-    OptDirCellVisitor auto && visitor) const {
+BasicBoard::visit_straight_line(Direction                 dir,
+                                Coord                     coord,
+                                auto &&                   update_coord,
+                                auto &&                   update_index,
+                                auto &&                   test_coord,
+                                OptDirCellVisitor auto && visitor) const {
   // initial movement, since we are scanning above, to the right of, etc., the
   // starting point.
   update_coord(coord);
@@ -300,8 +297,8 @@ BasicBoard::visit_straight_line(
 }
 
 inline bool
-BasicBoard::visit_row_left_of(
-    Coord coord, OptDirCellVisitor auto && visitor) const {
+BasicBoard::visit_row_left_of(Coord                     coord,
+                              OptDirCellVisitor auto && visitor) const {
   auto update_coord = [](Coord & coord) { --coord.col_; };
   auto update_idx   = [](int & idx) { --idx; };
   auto test_coord   = [](Coord coord) { return coord.col_ >= 0; };
@@ -310,8 +307,8 @@ BasicBoard::visit_row_left_of(
 }
 
 inline bool
-BasicBoard::visit_row_right_of(
-    Coord coord, OptDirCellVisitor auto && visitor) const {
+BasicBoard::visit_row_right_of(Coord                     coord,
+                               OptDirCellVisitor auto && visitor) const {
   auto update_coord = [](Coord & coord) { ++coord.col_; };
   auto update_idx   = [](int & idx) { ++idx; };
   auto test_coord   = [w = width_](Coord coord) { return coord.col_ < w; };
@@ -320,8 +317,8 @@ BasicBoard::visit_row_right_of(
 }
 
 inline bool
-BasicBoard::visit_col_above(
-    Coord coord, OptDirCellVisitor auto && visitor) const {
+BasicBoard::visit_col_above(Coord                     coord,
+                            OptDirCellVisitor auto && visitor) const {
   auto update_coord = [](Coord & coord) { --coord.row_; };
   auto update_idx   = [w = width_](int & idx) { idx -= w; };
   auto test_coord   = [](Coord coord) { return coord.row_ >= 0; };
@@ -330,8 +327,8 @@ BasicBoard::visit_col_above(
 }
 
 inline bool
-BasicBoard::visit_col_below(
-    Coord coord, OptDirCellVisitor auto && visitor) const {
+BasicBoard::visit_col_below(Coord                     coord,
+                            OptDirCellVisitor auto && visitor) const {
   auto update_coord = [](Coord & coord) { ++coord.row_; };
   auto update_idx   = [w = width_](int & idx) { idx += w; };
   auto test_coord   = [h = height_](Coord coord) { return coord.row_ < h; };
@@ -340,8 +337,8 @@ BasicBoard::visit_col_below(
 }
 
 inline void
-BasicBoard::visit_rows_cols_outward(
-    Coord coord, OptDirCellVisitor auto && visitor) const {
+BasicBoard::visit_rows_cols_outward(Coord                     coord,
+                                    OptDirCellVisitor auto && visitor) const {
   visit_row_left_of(coord, visitor);
   visit_row_right_of(coord, visitor);
   visit_col_above(coord, visitor);
@@ -360,8 +357,9 @@ BasicBoard::visit_rows_cols_outward(
 // higher columns being to the Right of lower columns. Lower numbered rows are
 // Up, and higher numbered rows are Down.
 inline bool
-BasicBoard::visit_perpendicular(
-    Coord coord, Direction dir, OptDirCellVisitor auto && visitor) const {
+BasicBoard::visit_perpendicular(Coord                     coord,
+                                Direction                 dir,
+                                OptDirCellVisitor auto && visitor) const {
   switch (dir) {
     case Direction::Left:
     case Direction::Right:

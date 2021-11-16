@@ -35,6 +35,9 @@ operator&(CellState lhs, CellState rhs) {
   return CellState(+lhs & +rhs);
 }
 
+// some of these predicates are super simple, but they are readable, and ADL
+// friendly
+
 constexpr bool
 is_illumable(CellState cell) {
   return cell == (cell & (CellState::Empty | CellState::Mark));
@@ -48,6 +51,11 @@ is_wall(CellState cell) {
 constexpr bool
 is_empty(CellState cell) {
   return cell == CellState::Empty;
+}
+
+constexpr bool
+is_mark(CellState cell) {
+  return cell == CellState::Mark;
 }
 
 constexpr bool

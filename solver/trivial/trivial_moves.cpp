@@ -5,42 +5,59 @@
 #include "SingleMove.hpp"
 #include "Solution.hpp"
 #include "meta.hpp"
+#include <optional>
 
 namespace solver {
 
 using enum model::CellState;
 using model::Coord;
 
-bool
-is_isolated_cell(Coord coord, model::BasicBoard const & board) {
-  bool can_be_lit = false;
-  board.visit_rows_cols_outward(coord, [&](Coord, model::CellState cell) {
-    can_be_lit |= is_illumable(cell);
-    return can_be_lit == false;
-  });
-  return not can_be_lit;
-}
+// Handles 3 simple cases:
+
+// 1) Empty cell cannot see any empty cells in any direction - must be a bulb.
+// 2) Mark cannot see any empty cells in any direction - contradiction
+// 3) Mark can *only* see one empty cell in any direction - that cell must have
+//    a bulb.
 
 IsolatedCell
 find_isolated_cell(model::BasicBoard const & board) {
   IsolatedCell result;
   board.visit_board([&](Coord coord, model::CellState cell) {
     if (is_illumable(cell)) {
-      // can it be lit from any direction? If not, we found an isolated empty
-      // cell that needs a bulb.
-      if (is_isolated_cell(coord, board)) {
+
+      int                  visible_empty_neighbors = 0;
+      std::optional<Coord> empty_cell_location;
+      board.visit_rows_cols_outward(coord,
+                                    [&](Coord coord, model::CellState cell) {
+                                      if (is_empty(cell)) {
+                                        visible_empty_neighbors++;
+                                        empty_cell_location = coord;
+                                      }
+                                    });
+
+      if (visible_empty_neighbors == 0) {
         if (is_empty(cell)) {
-          // isolated empty cell - place a bulb on it
+          LOG_DEBUG("[TRIVIAL] ADD Bulb: {} isolated Empty cell\n", coord);
           result.emplace<model::SingleMove>(model::Action::Add,
                                             model::CellState::Empty, // from
                                             model::CellState::Bulb,  // to
                                             coord);
         }
         else {
-          // isolated mark - we have a contradiction
+          LOG_DEBUG("[TRIVIAL] ERR: {} isolated Mark is contradition\n", coord);
           result.emplace<IsolatedMarkCoordinate>(coord);
         }
         return false; // stop visiting
+      }
+      else if (is_mark(cell) and visible_empty_neighbors == 1) {
+        LOG_DEBUG(
+            "[TRIVIAL] ADD Bulb: {} Mark can only be illuminated by this "
+            "cell\n",
+            *empty_cell_location);
+        result.emplace<model::SingleMove>(model::Action::Add,
+                                          model::CellState::Empty, // from
+                                          model::CellState::Bulb,  // to
+                                          *empty_cell_location);
       }
     }
     return true; // keep visiting
@@ -135,15 +152,14 @@ play_trivial_move(Solution & solution) {
   // illuminated by a single other square
   //    on the same row or column.
   auto const & board = solution.board_.board();
-  if (auto opt_move = find_wall_with_deps_equalling_open_faces(board)) {
-    LOG_DEBUG("[TRIVIAL] wall with deps==open faces; Add bulb: {}\n",
-              *opt_move);
+  if (auto opt_move = find_wall_with_satisfied_deps_and_open_faces(board)) {
+    LOG_DEBUG("[TRIVIAL] ADD Mark: {} Wall deps satisfied\n", opt_move->coord_);
     apply_move(solution, opt_move);
     return true;
   }
-  else if (auto opt_move =
-               find_wall_with_satisfied_deps_and_open_faces(board)) {
-    LOG_DEBUG("[TRIVIAL] wall satisfied, adding Mark: {}\n", *opt_move);
+  else if (auto opt_move = find_wall_with_deps_equalling_open_faces(board)) {
+    LOG_DEBUG("[TRIVIAL] ADD Bulb: {} Wall with N deps has N open faces\n",
+              opt_move->coord_);
     apply_move(solution, opt_move);
     return true;
   }
@@ -155,13 +171,10 @@ play_trivial_move(Solution & solution) {
       overloaded{
         [] (std::monostate) {},
         [&](model::SingleMove const & move) {
-           LOG_DEBUG("[TRIVIAL] isolated empty cell needs bulb: {}\n", move.coord_);
            solution.board_.add_bulb(move.coord_);
            played_move = true;
         },
         [&](IsolatedMarkCoordinate const & mark_coord) {
-           LOG_DEBUG("[TRIVIAL] isolated Mark is contradition: {}\n",
-                     mark_coord.coord_);
            solution.board_.set_has_error(true);
         }
       },
