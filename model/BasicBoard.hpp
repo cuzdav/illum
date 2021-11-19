@@ -49,7 +49,7 @@ public:
   bool visit_col_above(Coord coord, OptDirCellVisitor auto && visitor) const;
   bool visit_col_below(Coord coord, OptDirCellVisitor auto && visitor) const;
 
-  bool visit_perpendicular(Coord                     coord,
+  void visit_perpendicular(Coord                     coord,
                            Direction                 dir,
                            OptDirCellVisitor auto && visitor) const;
 
@@ -211,7 +211,7 @@ BasicBoard::visit_cell(Direction                       direction,
                        int                             i,
                        DirectedCellVisitorSome auto && visitor) const {
   assert(get_flat_idx(coord) == i);
-  return visitor(direction, coord, cells_[i]);
+  return visitor(direction, coord, cells_[i]) == KEEP_VISITING;
 }
 
 inline bool
@@ -250,7 +250,7 @@ BasicBoard::visit_board(CellVisitor auto &&     visitor,
   for (int r = 0, c = 0, i = 0; r < height_; ++i) {
     Coord coord{r, c};
     if (visit_cell_pred(coord, cells_[i])) {
-      if (not visit_cell(Direction::None, coord, i, visitor)) {
+      if (visit_cell(Direction::None, coord, i, visitor) == STOP_VISITING) {
         return false;
       }
     }
@@ -264,7 +264,7 @@ BasicBoard::visit_board(CellVisitor auto &&     visitor,
 
 inline bool
 BasicBoard::visit_board(CellVisitor auto && visitor) const {
-  return visit_board(visitor, [](auto, auto) { return true; });
+  return visit_board(visitor, [](auto, auto) { return KEEP_VISITING; });
 }
 
 inline bool
@@ -293,7 +293,7 @@ BasicBoard::visit_straight_line(Direction                 dir,
       update_index(idx);
     }
   }
-  return true;
+  return KEEP_VISITING;
 }
 
 inline bool
@@ -349,14 +349,14 @@ BasicBoard::visit_rows_cols_outward(Coord                     coord,
 // will visit the crossing row or column. That is, if you're going left/right,
 // along a row, it'll visit the vertical column that goes above and below you.
 // If you're going up/down along a column, it'll visit the row you're on. (It
-// will NOT visit your starting cell).
-// If you use a Directed visitor, it'll give you the direction the scan is
-// moving on the board in absolute perspective, relative to a fixed camera
-// looking at the board. Your direction is not considered. That is,
-// lower-numbered columns are always "Left" of higher number columns, regardless
-// higher columns being to the Right of lower columns. Lower numbered rows are
-// Up, and higher numbered rows are Down.
-inline bool
+// will NOT visit your starting cell). If you use a Directed visitor, it'll give
+// you the direction the scan is moving on the board in absolute perspective,
+// relative to a fixed camera looking at the board. Your direction is not
+// considered. That is, lower-numbered columns are always "Left" of higher
+// numbered columns, and higher columns are always to the Right of
+// lower-numbered columns. Similarly lower-numbered rows are Up, and higher
+// numbered rows are Down.
+inline void
 BasicBoard::visit_perpendicular(Coord                     coord,
                                 Direction                 dir,
                                 OptDirCellVisitor auto && visitor) const {
@@ -374,9 +374,8 @@ BasicBoard::visit_perpendicular(Coord                     coord,
       break;
 
     case Direction::None:
-      return false;
+      break;
   }
-  return true;
 }
 
 } // namespace model

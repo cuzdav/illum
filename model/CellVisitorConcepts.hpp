@@ -7,6 +7,8 @@
 
 namespace model {
 
+enum VisitStatus { KEEP_VISITING, STOP_VISITING };
+
 // Non-directional visitors don't have a direction. They are used with
 // visit-algorithms that are not "linear", but involve mult-direction scans,
 // such as the whole board, or "what's adjacent to this cell"
@@ -21,11 +23,11 @@ concept CellVisitorAll = requires(T visitor, CellState cell) {
 };
 
 //
-// returning a bool indicates the visit may be stopped prematurely
+// returning a VisitStatus indicates the visit may be stopped prematurely
 //
 template <typename T>
 concept CellVisitorSome = requires(T visitor, CellState cell) {
-  { visitor(Coord{0, 0}, cell) } -> std::same_as<bool>;
+  { visitor(Coord{0, 0}, cell) } -> std::same_as<VisitStatus>;
 };
 
 //
@@ -48,7 +50,7 @@ concept DirectedCellVisitorAll = requires(T visitor, CellState cell) {
 
 template <typename T>
 concept DirectedCellVisitorSome = requires(T visitor, CellState cell) {
-  { visitor(Direction{}, Coord{0, 0}, cell) } -> std::same_as<bool>;
+  { visitor(Direction{}, Coord{0, 0}, cell) } -> std::same_as<VisitStatus>;
 };
 
 //

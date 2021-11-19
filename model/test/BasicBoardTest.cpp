@@ -49,7 +49,7 @@ auto
 recorder(Moves & moves, CellState stop_if_cell_is) {
   return [&moves, stop_if_cell_is](Coord coord, CellState cell) {
     moves.push_back(mk_move(coord, cell));
-    return cell != stop_if_cell_is;
+    return cell != stop_if_cell_is ? KEEP_VISITING : STOP_VISITING;
   };
 }
 
@@ -64,7 +64,7 @@ auto
 recorder(DirectionMoves & moves, CellState stop_if_cell_is) {
   return [&moves, stop_if_cell_is](Direction dir, Coord coord, CellState cell) {
     moves.push_back(mk_move(dir, coord, cell));
-    return cell != stop_if_cell_is;
+    return cell != stop_if_cell_is ? KEEP_VISITING : STOP_VISITING;
   };
 }
 
@@ -231,7 +231,7 @@ TEST(BasicBoardTest, visit_some) {
   board.visit_board([&](Coord coord, CellState cell) {
     ++count;
     board2.set_cell(coord, cell);
-    return cell != CellState::Wall2;
+    return cell != CellState::Wall2 ? KEEP_VISITING : STOP_VISITING;
   });
   ASSERT_EQ(5, count);
 

@@ -1,6 +1,7 @@
 #include "Solver.hpp"
 #include "BasicBoard.hpp"
 #include "CellState.hpp"
+#include "CellVisitorConcepts.hpp"
 #include "DebugLog.hpp"
 #include "Direction.hpp"
 #include "SingleMove.hpp"
@@ -14,6 +15,7 @@ namespace solver {
 using enum model::CellState;
 using model::CellState;
 using model::Coord;
+using model::VisitStatus;
 
 constexpr int MAX_SOLVE_STEPS = 10000;
 
@@ -29,10 +31,12 @@ constexpr int MAX_SOLVE_STEPS = 10000;
 // that ambiguity is a contradiction and we failed (earlier in the path to get
 // here)
 bool
-speculate_playing_bulbs(Solution & solution) {
-  LOG_DEBUG("speculate playing_bulbs: step_count: {}, status: {}\n",
-            solution.step_count_,
-            to_string(solution.status_));
+speculate_playing_bulbs(Solution & solution, int depth, int maxDepth) {
+  LOG_DEBUG("{:>{}}[Depth {:>2}, Max {:2}] New speculation frame\n",
+            depth,
+            " ",
+            depth,
+            maxDepth);
 
   Solution::OptBoard one_solution;
   bool               played_move = false;
@@ -44,20 +48,20 @@ speculate_playing_bulbs(Solution & solution) {
 
     LOG_DEBUG("[SPECULATE-BULB] Playing ({},{})\n", coord.row_, coord.col_);
     solution.board_.add_bulb(coord);
-    while (play_trivial_move(solution)) {
-      // empty
-    }
 
     if (solution.board_.has_error()) {
 
-      // This is actually success - we found a contradiction with this move
-      LOG_DEBUG("[SPECULATE-BULB] Contradiction, so  ({},{}) must be a mark\n",
-                coord.row_,
-                coord.col_);
+      // This is actually success - we found a contradiction with this
+      // move
+      LOG_DEBUG(
+          "[SPECULATE-BULB] Contradiction, so  ({},{}) must be a "
+          "mark\n",
+          coord.row_,
+          coord.col_);
       solution.board_.pop();
       solution.board_.add_mark(coord);
       played_move = true;
-      return false; // stop visiting
+      return model::STOP_VISITING;
     }
     else if (solution.board_.is_solved()) {
       if (not one_solution.has_value()) {
@@ -65,17 +69,17 @@ speculate_playing_bulbs(Solution & solution) {
         solution.board_.pop();
         // keep visiting to see if there are no more solutions
         // if we finish and this is the only one, that's success.
-        return true;
+        return model::KEEP_VISITING;
       }
       else if (solution.board_.board() != *one_solution) {
         // multiple different solutions?  Uh oh.
         solution.board_.pop();
         solution.status_ = SolutionStatus::Ambiguous;
-        return false; // stop visiting
+        return model::STOP_VISITING;
       }
     }
     solution.board_.pop();
-    return true; // keep visiting
+    return model::KEEP_VISITING;
   });
   LOG_DEBUG("Done visiting empty spaces (speculate) steps={} {}\n",
             solution.step_count_,
@@ -99,7 +103,7 @@ speculate_playing_marks(Solution & solution) {
 
 bool
 play_move(Solution & solution) {
-  if (play_trivial_move(solution)) {
+  if (play_any_forced_move(solution)) {
     return true;
   }
 
