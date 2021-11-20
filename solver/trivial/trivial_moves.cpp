@@ -155,8 +155,8 @@ find_wall_with_deps_equal_open_faces(model::BasicBoard const & board) {
 }
 
 void
-find_walls_with_deps_equalling_open_faces(model::BasicBoard const & board,
-                                          Moves &                   moves) {
+find_walls_with_deps_equal_open_faces(model::BasicBoard const & board,
+                                      Moves &                   moves) {
   find_wall_deps_equal_faces_impl(board, [&](Coord coord) {
     board.visit_adjacent(coord, [&](Coord coord, model::CellState cell) {
       if (is_empty(cell)) {
@@ -237,7 +237,7 @@ apply_move(Solution & solution, model::SingleMove single_move) {
 bool
 find_trivial_moves(model::BasicBoard const & board, Moves & moves) {
   find_satisfied_wall_having_open_faces(board, moves);
-  find_walls_with_deps_equalling_open_faces(board, moves);
+  find_walls_with_deps_equal_open_faces(board, moves);
   return find_isolated_cells(board, moves);
 }
 
@@ -300,10 +300,11 @@ play_forced_move(Solution & solution) {
   auto const & board = solution.board_.board();
   if (OptCoord opt_coord = find_wall_with_deps_equal_open_faces(board)) {
     solution.step_count_++;
-    LOG_DEBUG("[FORCED ] ADD Bulb: {} Wall with N deps has N open faces\n",
-              *opt_coord);
     board.visit_adjacent(*opt_coord, [&](Coord coord, auto cell) {
       if (cell == Empty) {
+        LOG_DEBUG("[FORCED ] ADD Bulb: {} Wall with N deps has N open faces\n",
+                  coord);
+
         next_move = model::SingleMove{model::Action::Add,
                                       model::CellState::Empty, // from
                                       model::CellState::Bulb,  // to
@@ -312,7 +313,6 @@ play_forced_move(Solution & solution) {
       };
       return model::KEEP_VISITING;
     });
-    return true;
   }
   else if (auto isolated_cell = find_isolated_cell(board);
            isolated_cell.index() != 0) {

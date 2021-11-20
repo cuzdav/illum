@@ -226,6 +226,9 @@ update_after_spec_move(SpeculationContext & context) {
   }
   else if (find_trivial_moves(context.board.board(),
                               context.unexplored_forced_moves)) {
+    std::cout << "find_trivial_moves() returned true.  Size of moves is: "
+              << context.unexplored_forced_moves.size() << std::endl;
+
     if (context.unexplored_forced_moves.empty()) {
       context.status = SpeculationContext::DEADEND;
     }
