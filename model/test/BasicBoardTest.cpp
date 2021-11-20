@@ -83,28 +83,28 @@ using namespace ::testing;
 
 TEST(BasicBoardTest, constructor) {
   BasicBoard b;
-  ASSERT_FALSE(b.is_initialized());
-  ASSERT_EQ(0, b.width());
-  ASSERT_EQ(0, b.height());
+  EXPECT_FALSE(b.is_initialized());
+  EXPECT_EQ(0, b.width());
+  EXPECT_EQ(0, b.height());
 }
 
 TEST(BasicBoardTest, initialize) {
   BasicBoard b;
   b.reset(5, 6);
-  ASSERT_TRUE(b.is_initialized());
-  ASSERT_EQ(5, b.height());
-  ASSERT_EQ(6, b.width());
+  EXPECT_TRUE(b.is_initialized());
+  EXPECT_EQ(5, b.height());
+  EXPECT_EQ(6, b.width());
 }
 
 TEST(BasicBoardTest, cell_accessors) {
   BasicBoard b;
   b.reset(5, 6);
 
-  ASSERT_EQ(CellState::Empty, b.get_cell({0, 0}));
-  ASSERT_EQ(CellState::Empty, b.get_cell({0, 1}));
-  ASSERT_EQ(CellState::Empty, b.get_cell({1, 2}));
-  ASSERT_EQ(CellState::Empty, b.get_cell({2, 3}));
-  ASSERT_EQ(CellState::Empty, b.get_cell({4, 4}));
+  EXPECT_EQ(CellState::Empty, b.get_cell({0, 0}));
+  EXPECT_EQ(CellState::Empty, b.get_cell({0, 1}));
+  EXPECT_EQ(CellState::Empty, b.get_cell({1, 2}));
+  EXPECT_EQ(CellState::Empty, b.get_cell({2, 3}));
+  EXPECT_EQ(CellState::Empty, b.get_cell({4, 4}));
 
   b.set_cell({0, 0}, CellState::Wall0);
   b.set_cell({0, 1}, CellState::Wall1);
@@ -112,22 +112,22 @@ TEST(BasicBoardTest, cell_accessors) {
   b.set_cell({2, 3}, CellState::Wall3);
   b.set_cell({4, 4}, CellState::Mark);
 
-  ASSERT_EQ(CellState::Wall0, b.get_cell({0, 0}));
-  ASSERT_EQ(CellState::Wall1, b.get_cell({0, 1}));
-  ASSERT_EQ(CellState::Wall2, b.get_cell({1, 2}));
-  ASSERT_EQ(CellState::Wall3, b.get_cell({2, 3}));
-  ASSERT_EQ(CellState::Mark, b.get_cell({4, 4}));
+  EXPECT_EQ(CellState::Wall0, b.get_cell({0, 0}));
+  EXPECT_EQ(CellState::Wall1, b.get_cell({0, 1}));
+  EXPECT_EQ(CellState::Wall2, b.get_cell({1, 2}));
+  EXPECT_EQ(CellState::Wall3, b.get_cell({2, 3}));
+  EXPECT_EQ(CellState::Mark, b.get_cell({4, 4}));
 
-  ASSERT_TRUE(b.get_opt_cell({0, 0}).has_value());
-  ASSERT_TRUE(b.get_opt_cell({0, 1}).has_value());
-  ASSERT_TRUE(b.get_opt_cell({1, 2}).has_value());
-  ASSERT_TRUE(b.get_opt_cell({2, 3}).has_value());
-  ASSERT_TRUE(b.get_opt_cell({4, 4}).has_value());
-  ASSERT_EQ(CellState::Wall0, *b.get_opt_cell({0, 0}));
-  ASSERT_EQ(CellState::Wall1, *b.get_opt_cell({0, 1}));
-  ASSERT_EQ(CellState::Wall2, *b.get_opt_cell({1, 2}));
-  ASSERT_EQ(CellState::Wall3, *b.get_opt_cell({2, 3}));
-  ASSERT_EQ(CellState::Mark, *b.get_opt_cell({4, 4}));
+  EXPECT_TRUE(b.get_opt_cell({0, 0}).has_value());
+  EXPECT_TRUE(b.get_opt_cell({0, 1}).has_value());
+  EXPECT_TRUE(b.get_opt_cell({1, 2}).has_value());
+  EXPECT_TRUE(b.get_opt_cell({2, 3}).has_value());
+  EXPECT_TRUE(b.get_opt_cell({4, 4}).has_value());
+  EXPECT_EQ(CellState::Wall0, *b.get_opt_cell({0, 0}));
+  EXPECT_EQ(CellState::Wall1, *b.get_opt_cell({0, 1}));
+  EXPECT_EQ(CellState::Wall2, *b.get_opt_cell({1, 2}));
+  EXPECT_EQ(CellState::Wall3, *b.get_opt_cell({2, 3}));
+  EXPECT_EQ(CellState::Mark, *b.get_opt_cell({4, 4}));
 
   auto not_wall1_or_wall2 = [](CellState cell) {
     return cell != CellState::Wall1 && cell != CellState::Wall2;
@@ -138,26 +138,26 @@ TEST(BasicBoardTest, cell_accessors) {
   b.set_cell_if({2, 3}, CellState::Empty, not_wall1_or_wall2);
   b.set_cell_if({4, 4}, CellState::Empty, not_wall1_or_wall2);
 
-  ASSERT_EQ(CellState::Empty, b.get_cell({0, 0}));
-  ASSERT_EQ(CellState::Wall1, b.get_cell({0, 1}));
-  ASSERT_EQ(CellState::Wall2, b.get_cell({1, 2}));
-  ASSERT_EQ(CellState::Empty, b.get_cell({2, 3}));
-  ASSERT_EQ(CellState::Empty, b.get_cell({4, 4}));
+  EXPECT_EQ(CellState::Empty, b.get_cell({0, 0}));
+  EXPECT_EQ(CellState::Wall1, b.get_cell({0, 1}));
+  EXPECT_EQ(CellState::Wall2, b.get_cell({1, 2}));
+  EXPECT_EQ(CellState::Empty, b.get_cell({2, 3}));
+  EXPECT_EQ(CellState::Empty, b.get_cell({4, 4}));
 }
 
 TEST(BasicBoardTest, bad_cell_access) {
   BasicBoard b;
   b.reset(5, 6);
 
-  ASSERT_THROW(b.get_cell({-1, 0}), std::range_error);
-  ASSERT_THROW(b.get_cell({0, -1}), std::range_error);
-  ASSERT_THROW(b.get_cell({0, -1}), std::range_error);
-  ASSERT_THROW(b.get_cell({0, 6}), std::range_error);
+  EXPECT_THROW(b.get_cell({-1, 0}), std::range_error);
+  EXPECT_THROW(b.get_cell({0, -1}), std::range_error);
+  EXPECT_THROW(b.get_cell({0, -1}), std::range_error);
+  EXPECT_THROW(b.get_cell({0, 6}), std::range_error);
 
-  ASSERT_EQ(std::nullopt, b.get_opt_cell({-1, 0}));
-  ASSERT_EQ(std::nullopt, b.get_opt_cell({0, -1}));
-  ASSERT_EQ(std::nullopt, b.get_opt_cell({0, -1}));
-  ASSERT_EQ(std::nullopt, b.get_opt_cell({0, 6}));
+  EXPECT_EQ(std::nullopt, b.get_opt_cell({-1, 0}));
+  EXPECT_EQ(std::nullopt, b.get_opt_cell({0, -1}));
+  EXPECT_EQ(std::nullopt, b.get_opt_cell({0, -1}));
+  EXPECT_EQ(std::nullopt, b.get_opt_cell({0, 6}));
 }
 
 TEST(BasicBoardTest, equality) {
@@ -172,26 +172,26 @@ TEST(BasicBoardTest, equality) {
 
   auto test = [&](BasicBoard const & board) {
     // Top row
-    ASSERT_EQ(Empty, board.get_cell({0, 0}));
-    ASSERT_EQ(Empty, board.get_cell({0, 1}));
-    ASSERT_EQ(Bulb, board.get_cell({0, 2}));
+    EXPECT_EQ(Empty, board.get_cell({0, 0}));
+    EXPECT_EQ(Empty, board.get_cell({0, 1}));
+    EXPECT_EQ(Bulb, board.get_cell({0, 2}));
 
     // Mid row
-    ASSERT_EQ(Wall1, board.get_cell({1, 0}));
-    ASSERT_EQ(Wall2, board.get_cell({1, 1}));
-    ASSERT_EQ(Wall3, board.get_cell({1, 2}));
+    EXPECT_EQ(Wall1, board.get_cell({1, 0}));
+    EXPECT_EQ(Wall2, board.get_cell({1, 1}));
+    EXPECT_EQ(Wall3, board.get_cell({1, 2}));
 
     // Bot row
-    ASSERT_EQ(Wall0, board.get_cell({2, 0}));
-    ASSERT_EQ(Mark, board.get_cell({2, 1}));
-    ASSERT_EQ(Wall4, board.get_cell({2, 2}));
+    EXPECT_EQ(Wall0, board.get_cell({2, 0}));
+    EXPECT_EQ(Mark, board.get_cell({2, 1}));
+    EXPECT_EQ(Wall4, board.get_cell({2, 2}));
   };
 
   board2 = board1;
   test(board1);
   test(board2);
 
-  ASSERT_EQ(board1, board2);
+  EXPECT_EQ(board1, board2);
 }
 
 TEST(BasicBoardTest, visit_all) {
@@ -210,8 +210,8 @@ TEST(BasicBoardTest, visit_all) {
     ++count;
     board2.set_cell(coord, cell);
   });
-  ASSERT_EQ(9, count);
-  ASSERT_EQ(board, board2);
+  EXPECT_EQ(9, count);
+  EXPECT_EQ(board, board2);
 }
 
 TEST(BasicBoardTest, visit_some) {
@@ -233,7 +233,7 @@ TEST(BasicBoardTest, visit_some) {
     board2.set_cell(coord, cell);
     return cell != CellState::Wall2 ? KEEP_VISITING : STOP_VISITING;
   });
-  ASSERT_EQ(5, count);
+  EXPECT_EQ(5, count);
 
   BasicBoard expected;
   {
@@ -243,7 +243,7 @@ TEST(BasicBoardTest, visit_some) {
     creator("...");
     creator.finished(&expected);
   }
-  ASSERT_EQ(expected, board2);
+  EXPECT_EQ(expected, board2);
 }
 
 TEST(BasicBoardTest, visit_left_row_some) {
@@ -253,13 +253,13 @@ TEST(BasicBoardTest, visit_left_row_some) {
   b.visit_row_left_of({1, 4}, recorder(moves, CellState::Empty));
 
   // stops at wall to left of cooord
-  ASSERT_EQ((std::vector{mk_move({1, 3}, CellState::Wall0)}), moves);
+  EXPECT_EQ((std::vector{mk_move({1, 3}, CellState::Wall0)}), moves);
 
   moves.clear();
   b.visit_row_left_of({1, 3}, recorder(moves, CellState::Empty));
 
   // stops because it sees Empty
-  ASSERT_EQ((std::vector{mk_move({1, 2}, CellState::Empty)}), moves);
+  EXPECT_EQ((std::vector{mk_move({1, 2}, CellState::Empty)}), moves);
 }
 
 TEST(BasicBoardTest, visit_directional_left_row_some) {
@@ -269,13 +269,13 @@ TEST(BasicBoardTest, visit_directional_left_row_some) {
   b.visit_row_left_of({1, 4}, recorder(moves, CellState::Empty));
 
   // stops at wall to left of cooord
-  ASSERT_EQ((std::vector{mk_move(Left, {1, 3}, CellState::Wall0)}), moves);
+  EXPECT_EQ((std::vector{mk_move(Left, {1, 3}, CellState::Wall0)}), moves);
 
   moves.clear();
   b.visit_row_left_of({1, 3}, recorder(moves, CellState::Empty));
 
   // stops because it sees Empty
-  ASSERT_EQ((std::vector{mk_move(Left, {1, 2}, CellState::Empty)}), moves);
+  EXPECT_EQ((std::vector{mk_move(Left, {1, 2}, CellState::Empty)}), moves);
 }
 
 TEST(BasicBoardTest, visit_left_row_some2) {
@@ -284,7 +284,7 @@ TEST(BasicBoardTest, visit_left_row_some2) {
 
   b.visit_row_left_of({0, 4}, recorder(moves, CellState::Bulb));
 
-  ASSERT_EQ((std::vector{mk_move({0, 3}, CellState::Empty),
+  EXPECT_EQ((std::vector{mk_move({0, 3}, CellState::Empty),
                          mk_move({0, 2}, CellState::Bulb)}),
 
             moves);
@@ -295,23 +295,23 @@ TEST(BasicBoardTest, visit_left_row_some3_invalid) {
   auto  b = make_board();
 
   b.visit_row_left_of({1, 0}, recorder(moves, CellState::Bulb));
-  ASSERT_EQ(Moves{}, moves);
+  EXPECT_EQ(Moves{}, moves);
 
   b.visit_row_left_of({-1, 0}, recorder(moves, CellState::Bulb));
-  ASSERT_EQ(Moves{}, moves);
+  EXPECT_EQ(Moves{}, moves);
 
   b.visit_row_left_of({0, -4}, recorder(moves, CellState::Bulb));
-  ASSERT_EQ(Moves{}, moves);
+  EXPECT_EQ(Moves{}, moves);
 
   b.visit_row_left_of({30, 0}, recorder(moves, CellState::Bulb));
-  ASSERT_EQ(Moves{}, moves);
+  EXPECT_EQ(Moves{}, moves);
 }
 
 TEST(BasicBoardTest, visit_left_row_all) {
   Moves moves;
   // r2: "...X3"
   make_board().visit_row_left_of({2, 4}, recorder(moves));
-  ASSERT_EQ((std::vector{mk_move({2, 3}, CellState::Mark),
+  EXPECT_EQ((std::vector{mk_move({2, 3}, CellState::Mark),
                          mk_move({2, 2}, CellState::Empty),
                          mk_move({2, 1}, CellState::Empty),
                          mk_move({2, 0}, CellState::Empty)}),
@@ -322,7 +322,7 @@ TEST(BasicBoardTest, visit_directional_left_row_all) {
   DirectionMoves moves;
   // r2: "...X3"
   make_board().visit_row_left_of({2, 4}, recorder(moves));
-  ASSERT_EQ((std::vector{mk_move(Left, {2, 3}, CellState::Mark),
+  EXPECT_EQ((std::vector{mk_move(Left, {2, 3}, CellState::Mark),
                          mk_move(Left, {2, 2}, CellState::Empty),
                          mk_move(Left, {2, 1}, CellState::Empty),
                          mk_move(Left, {2, 0}, CellState::Empty)}),
@@ -333,7 +333,7 @@ TEST(BasicBoardTest, visit_right_row_some) {
   Moves moves;
   make_board().visit_row_right_of({2, 0}, recorder(moves, CellState::Mark));
   // NOTE row 2 looks like: "...X3"
-  ASSERT_EQ((std::vector{mk_move({2, 1}, CellState::Empty),
+  EXPECT_EQ((std::vector{mk_move({2, 1}, CellState::Empty),
                          mk_move({2, 2}, CellState::Empty),
                          mk_move({2, 3}, CellState::Mark)}),
             moves);
@@ -343,7 +343,7 @@ TEST(BasicBoardTest, visit_directional_right_row_some) {
   DirectionMoves moves;
   make_board().visit_row_right_of({2, 0}, recorder(moves, CellState::Mark));
   // NOTE row 2 looks like: "...X3"
-  ASSERT_EQ((std::vector{mk_move(Right, {2, 1}, CellState::Empty),
+  EXPECT_EQ((std::vector{mk_move(Right, {2, 1}, CellState::Empty),
                          mk_move(Right, {2, 2}, CellState::Empty),
                          mk_move(Right, {2, 3}, CellState::Mark)}),
             moves);
@@ -353,7 +353,7 @@ TEST(BasicBoardTest, visit_directional_right_row_all) {
   DirectionMoves moves;
   make_board().visit_row_right_of({2, 0}, recorder(moves));
   // NOTE r2 looks like: "...X3"
-  ASSERT_EQ((std::vector{mk_move(Right, {2, 1}, CellState::Empty),
+  EXPECT_EQ((std::vector{mk_move(Right, {2, 1}, CellState::Empty),
                          mk_move(Right, {2, 2}, CellState::Empty),
                          mk_move(Right, {2, 3}, CellState::Mark),
                          mk_move(Right, {2, 4}, CellState::Wall3)}),
@@ -363,7 +363,7 @@ TEST(BasicBoardTest, visit_right_row_all) {
   Moves moves;
   make_board().visit_row_right_of({2, 0}, recorder(moves));
   // NOTE r2 looks like: "...X3"
-  ASSERT_EQ((std::vector{mk_move({2, 1}, CellState::Empty),
+  EXPECT_EQ((std::vector{mk_move({2, 1}, CellState::Empty),
                          mk_move({2, 2}, CellState::Empty),
                          mk_move({2, 3}, CellState::Mark),
                          mk_move({2, 4}, CellState::Wall3)}),
@@ -383,7 +383,7 @@ TEST(BasicBoardTest, visit_above_col_some) {
   Moves moves;
   board.visit_col_above({4, 4}, recorder(moves, CellState::Wall0));
 
-  ASSERT_EQ((std::vector{
+  EXPECT_EQ((std::vector{
                 mk_move({3, 4}, CellState::Bulb),
                 mk_move({2, 4}, CellState::Illum),
                 mk_move({1, 4}, CellState::Wall0),
@@ -404,7 +404,7 @@ TEST(BasicBoardTest, visit_directional_above_col_some) {
   DirectionMoves moves;
   board.visit_col_above({4, 4}, recorder(moves, CellState::Wall0));
 
-  ASSERT_EQ((std::vector{
+  EXPECT_EQ((std::vector{
                 mk_move(Up, {3, 4}, CellState::Bulb),
                 mk_move(Up, {2, 4}, CellState::Illum),
                 mk_move(Up, {1, 4}, CellState::Wall0),
@@ -425,7 +425,7 @@ TEST(BasicBoardTest, visit_above_col_all) {
   Moves moves;
   board.visit_col_above({4, 4}, recorder(moves));
 
-  ASSERT_EQ((std::vector{
+  EXPECT_EQ((std::vector{
                 mk_move({3, 4}, CellState::Bulb),
                 mk_move({2, 4}, CellState::Illum),
                 mk_move({1, 4}, CellState::Wall0),
@@ -446,7 +446,7 @@ TEST(BasicBoardTest, visit_directional_above_col_all) {
   DirectionMoves moves;
   board.visit_col_above({4, 4}, recorder(moves));
 
-  ASSERT_EQ((std::vector{
+  EXPECT_EQ((std::vector{
                 mk_move(Up, {3, 4}, CellState::Bulb),
                 mk_move(Up, {2, 4}, CellState::Illum),
                 mk_move(Up, {1, 4}, CellState::Wall0),
@@ -467,7 +467,7 @@ TEST(BasicBoardTest, visit_below_col_some) {
   Moves moves;
   board.visit_col_below({0, 3}, recorder(moves, CellState::Wall4));
 
-  ASSERT_EQ((std::vector{
+  EXPECT_EQ((std::vector{
                 mk_move({1, 3}, CellState::Mark),
                 mk_move({2, 3}, CellState::Mark),
                 mk_move({3, 3}, CellState::Wall4),
@@ -488,7 +488,7 @@ TEST(BasicBoardTest, visit_directional_below_col_some) {
   DirectionMoves moves;
   board.visit_col_below({0, 3}, recorder(moves, CellState::Wall4));
 
-  ASSERT_EQ((std::vector{
+  EXPECT_EQ((std::vector{
                 mk_move(Down, {1, 3}, CellState::Mark),
                 mk_move(Down, {2, 3}, CellState::Mark),
                 mk_move(Down, {3, 3}, CellState::Wall4),
@@ -509,7 +509,7 @@ TEST(BasicBoardTest, visit_below_col_all) {
   Moves moves;
   board.visit_col_below({0, 2}, recorder(moves));
 
-  ASSERT_EQ((std::vector{
+  EXPECT_EQ((std::vector{
                 mk_move({1, 2}, CellState::Illum),
                 mk_move({2, 2}, CellState::Illum),
                 mk_move({3, 2}, CellState::Illum),
@@ -531,7 +531,7 @@ TEST(BasicBoardTest, visit_directional_below_col_all) {
   DirectionMoves moves;
   board.visit_col_below({0, 2}, recorder(moves));
 
-  ASSERT_EQ((std::vector{
+  EXPECT_EQ((std::vector{
                 mk_move(Down, {1, 2}, CellState::Illum),
                 mk_move(Down, {2, 2}, CellState::Illum),
                 mk_move(Down, {3, 2}, CellState::Illum),

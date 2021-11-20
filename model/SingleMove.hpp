@@ -18,8 +18,7 @@ struct SingleMove {
   CellState to_;
   Coord     coord_;
 
-  bool operator==(SingleMove const &) const = default;
-
+  auto                  operator<=>(SingleMove const &) const = default;
   friend std::ostream & operator<<(std::ostream &, SingleMove const &);
 };
 

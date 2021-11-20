@@ -50,6 +50,8 @@ struct SpeculationContext {
   ChildPaths                child_paths;
 };
 
+void speculate_iterate(SpeculationContext & context);
+
 // SpeculationResult
 int
 speculate_impl(SpeculationContext & context) {
@@ -214,10 +216,9 @@ init_root_speculation_contexts(Solution & solution) {
 }
 
 bool
-check_after_spec_move(SpeculationContext & context) {
+update_after_spec_move(SpeculationContext & context) {
   if (context.board.is_solved()) {
     context.status = SpeculationContext::SOLVED;
-    return false;
   }
   else if (context.board.has_error()) {
     context.status = SpeculationContext::CONTRADICTION;
@@ -227,7 +228,6 @@ check_after_spec_move(SpeculationContext & context) {
                               context.unexplored_forced_moves)) {
     if (context.unexplored_forced_moves.empty()) {
       context.status = SpeculationContext::DEADEND;
-      return false;
     }
     else {
       for (auto & move : context.unexplored_forced_moves) {
@@ -239,19 +239,56 @@ check_after_spec_move(SpeculationContext & context) {
                                                  move,
                                                  SpeculationContext::HATCHED)});
       }
+      context.unexplored_forced_moves.clear();
+      context.status = SpeculationContext::STILL_SPECULATING;
     }
   }
   return false;
 }
 
+void
+speculate_into_children(SpeculationContext & context) {
+  for (auto & [child_coord, child_context] : context.child_paths) {
+    if (child_context) {
+      speculate_iterate(*child_context);
+      int solved_count = 0;
+      switch (child_context->status) {
+        case SpeculationContext::STILL_SPECULATING:
+          break;
+        case SpeculationContext::DEADEND:
+          context.child_paths.erase(child_coord);
+          break;
+        case SpeculationContext::SOLVED:
+          if (++solved_count > 1) {
+            context.status = SpeculationContext::CONTRADICTION;
+            context.board.set_has_error(true);
+          }
+          break;
+        case SpeculationContext::HATCHED:
+          throw std::runtime_error(
+              "BUG: Should never be hatched after iterating child.");
+      }
+    }
+  }
+}
+
 // do the recursion...
 void
-speculate_iterate(SpeculationContext & context, Solution & solution) {
-  if (context.status == SpeculationContext::HATCHED) {
-    context.board.apply_move(*context.my_move);
-    if (check_after_spec_move(context)) {
-      // todo
-    }
+speculate_iterate(SpeculationContext & context) {
+  switch (context.status) {
+    case SpeculationContext::HATCHED:
+      context.board.apply_move(*context.my_move);
+      update_after_spec_move(context);
+      break;
+
+    case SpeculationContext::STILL_SPECULATING:
+      speculate_into_children(context);
+      break;
+
+    case SpeculationContext::SOLVED:
+    case SpeculationContext::DEADEND:
+    case SpeculationContext::CONTRADICTION:
+      break;
   }
 }
 
@@ -284,17 +321,9 @@ speculate(Solution & solution) {
     }
 
     for (auto & context : speculation_roots) {
-      speculate_iterate(context, solution);
+      speculate_iterate(context);
     }
   }
-}
-
-bool
-speculate_playing_marks(Solution & solution) {
-  LOG_DEBUG("speculate marks: step_count: {}, status: {}\n",
-            solution.step_count_,
-            to_string(solution.status_));
-  return false;
 }
 
 bool

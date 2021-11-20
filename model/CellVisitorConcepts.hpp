@@ -4,10 +4,12 @@
 #include "Coord.hpp"
 #include "Direction.hpp"
 #include <concepts>
+#include <cstdint>
 
 namespace model {
 
-enum VisitStatus { KEEP_VISITING, STOP_VISITING };
+enum class VisitStatus : std::uint8_t { STOP_VISITING, KEEP_VISITING };
+using enum VisitStatus;
 
 // Non-directional visitors don't have a direction. They are used with
 // visit-algorithms that are not "linear", but involve mult-direction scans,

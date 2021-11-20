@@ -212,6 +212,7 @@ find_satisfied_wall_having_open_faces(model::BasicBoard const & board) {
       }
       return model::KEEP_VISITING;
     });
+
     return result ? model::STOP_VISITING : model::KEEP_VISITING;
   });
   return result;

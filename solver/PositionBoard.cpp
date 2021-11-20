@@ -10,7 +10,8 @@ using model::CellState;
 using model::Coord;
 using model::Direction;
 
-PositionBoard::PositionBoard(model::BasicBoard const & current) {
+PositionBoard::PositionBoard(model::BasicBoard const & current)
+    : board_(current) {
   board().visit_board([&](model::Coord coord, auto cell) {
     if (model::is_illumable(cell)) {
       needs_illum_count_++;

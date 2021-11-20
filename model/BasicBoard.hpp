@@ -192,7 +192,7 @@ BasicBoard::visit_cell(Direction               direction,
                        int                     i,
                        CellVisitorSome auto && visitor) const {
   assert(get_flat_idx(coord) == i);
-  return visitor(coord, cells_[i]);
+  return visitor(coord, cells_[i]) == model::KEEP_VISITING;
 }
 
 inline bool
@@ -250,7 +250,7 @@ BasicBoard::visit_board_if(CellVisitor auto &&        visitor,
   for (int r = 0, c = 0, i = 0; r < height_; ++i) {
     Coord coord{r, c};
     if (visit_cell_pred(coord, cells_[i])) {
-      if (visit_cell(Direction::None, coord, i, visitor) == STOP_VISITING) {
+      if (not visit_cell(Direction::None, coord, i, visitor)) {
         return false;
       }
     }
@@ -293,7 +293,7 @@ BasicBoard::visit_straight_line(Direction                 dir,
       update_index(idx);
     }
   }
-  return KEEP_VISITING;
+  return true;
 }
 
 inline bool
