@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -7,7 +8,7 @@
 
 namespace model {
 
-enum class CellState {
+enum class CellState : std::uint16_t {
   Wall0 = (1 << 0),
   Wall1 = (1 << 1),
   Wall2 = (1 << 2),

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "AnalysisBoard.hpp"
 #include "BasicBoard.hpp"
+#include "PositionBoard.hpp"
 #include <optional>
 
 namespace solver {
@@ -45,10 +45,9 @@ struct Solution {
   Solution(model::BasicBoard const & board) : board_(board) {}
   OptBoard       known_solution_;
   SolutionStatus status_      = SolutionStatus::Initial;
-  bool           speculating_ = false;
   int            step_count_  = 0;
   int            error_count_ = 0;
-  AnalysisBoard  board_;
+  PositionBoard  board_;
 };
 
 } // namespace solver

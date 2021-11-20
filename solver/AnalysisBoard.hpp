@@ -2,59 +2,75 @@
 
 #include "BasicBoard.hpp"
 #include "Coord.hpp"
+#include "PositionBoard.hpp"
 #include <vector>
 
 namespace solver {
 
+// Essentially, a stack of PositionBoard, with the PositionBoard interface
+// reflecting the top object
 class AnalysisBoard {
 public:
-  enum class WallState : char { Unsatisfied, Satisfied, Error };
+  using WallState = PositionBoard::WallState;
 
   AnalysisBoard(model::BasicBoard const & current);
-
-  // clones board, applies move, returns all affected cells. Returns bool
-  // indicating request was successful.
-  bool add_bulb(model::Coord);
-  bool add_mark(model::Coord);
-
-  WallState compute_wall_state(model::Coord     wall_coord,
-                               model::CellState wall_cell) const;
 
   // removes most recently cloned board, stats, to previous position
   void clone_position();
   void pop();
 
-  bool is_solved() const;
-  bool has_error() const;
+  // clones board, applies move, returns all affected cells. Returns bool
+  // indicating request was successful.
+  bool
+  add_bulb(model::Coord coord) {
+    return cur().add_bulb(coord);
+  }
+  bool
+  add_mark(model::Coord coord) {
+    return cur().add_mark(coord);
+  }
 
-  int num_cells_needing_illumination() const;
-  int num_walls_with_deps() const;
+  WallState
+  compute_wall_state(model::Coord     wall_coord,
+                     model::CellState wall_cell) const {
+    return cur().compute_wall_state(wall_coord, wall_cell);
+  }
 
-  model::BasicBoard const & board() const;
+  bool
+  is_solved() const {
+    return cur().is_solved();
+  }
+  bool
+  has_error() const {
+    return cur().has_error();
+  }
 
-  void set_has_error(bool);
+  int
+  num_cells_needing_illumination() const {
+    return cur().num_cells_needing_illumination();
+  }
+  int
+  num_walls_with_deps() const {
+    return cur().num_walls_with_deps();
+  }
+
+  model::BasicBoard const &
+  board() const {
+    return cur().board();
+  }
+
+  void
+  set_has_error(bool has_error) {
+    cur().set_has_error(has_error);
+  }
 
 private:
-  struct Position {
-    bool              has_error_             = false;
-    int               needs_illum_count_     = 0;
-    int               walls_with_deps_count_ = 0;
-    model::BasicBoard board_;
-
-    Position(model::BasicBoard const & board) : board_(board) {}
-  };
-
-  Position &          cur();
-  Position const &    cur() const;
-  model::BasicBoard & mut_board();
-
-  void update_wall(model::Coord     wall_coord,
-                   model::CellState wall_cell,
-                   model::CellState play_cell,
-                   bool             is_adjacent_to_play);
+  PositionBoard &       cur();
+  PositionBoard const & cur() const;
+  model::BasicBoard &   mut_board();
 
 private:
-  std::vector<Position> positions_;
+  std::vector<PositionBoard> position_boards_;
 };
 
 } // namespace solver

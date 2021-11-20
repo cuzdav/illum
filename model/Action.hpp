@@ -6,7 +6,7 @@
 
 namespace model {
 
-enum class Action { Add, Remove, ResetGame, StartGame };
+enum class Action : char { Add, Remove, ResetGame, StartGame };
 
 namespace chr {
 constexpr char Add       = '+';

@@ -3,6 +3,8 @@
 #include <cassert>
 #include <cstdint>
 #include <fmt/format.h>
+
+#include <functional>
 #include <iosfwd>
 #include <limits>
 
@@ -40,10 +42,8 @@ private:
 
 } // namespace model
 
-namespace fmt {
-
 template <>
-struct formatter<model::Coord> {
+struct fmt::formatter<model::Coord> {
   template <typename ParseContext>
   constexpr auto
   parse(ParseContext & ctx) {
@@ -57,4 +57,10 @@ struct formatter<model::Coord> {
   }
 };
 
-} // namespace fmt
+template <>
+struct std::hash<::model::Coord> {
+  size_t
+  operator()(::model::Coord const & coord) const {
+    return (size_t(coord.row_) << 1) + size_t(coord.col_);
+  }
+};

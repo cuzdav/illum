@@ -4,9 +4,11 @@
 #include "CellState.hpp"
 #include "Coord.hpp"
 #include <fmt/format.h>
+#include <functional>
 #include <iosfwd>
 #include <string>
 #include <string_view>
+#include <type_traits>
 
 namespace model {
 
@@ -27,10 +29,28 @@ std::string to_string(SingleMove const & move);
 
 } // namespace model
 
-namespace fmt {
+template <>
+struct std::hash<::model::SingleMove> {
+  size_t
+  operator()(const ::model::SingleMove & m) const {
+    static_assert(sizeof(::model::SingleMove) <= sizeof(size_t));
+    static_assert(sizeof(::model::Coord::row_) == 1);
+    static_assert(sizeof(::model::Coord::col_) == 1);
+
+    size_t result = 0;
+    char   buf[5]{};
+    buf[0] = to_char(m.action_);
+    buf[1] = to_char(m.from_);
+    buf[2] = to_char(m.to_);
+    buf[3] = m.coord_.row_;
+    buf[4] = m.coord_.col_;
+    memcpy(&result, buf, sizeof(buf));
+    return result;
+  }
+};
 
 template <>
-struct formatter<model::SingleMove> {
+struct fmt::formatter<::model::SingleMove> {
   template <typename ParseContext>
   constexpr auto
   parse(ParseContext & ctx) {
@@ -48,5 +68,3 @@ struct formatter<model::SingleMove> {
                           to_string(single_move.to_));
   }
 };
-
-} // namespace fmt

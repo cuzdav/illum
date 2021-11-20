@@ -1,4 +1,5 @@
 #include "trivial_moves.hpp"
+#include "Action.hpp"
 #include "CellState.hpp"
 #include "CellVisitorConcepts.hpp"
 #include "Coord.hpp"
@@ -20,14 +21,23 @@ using model::Coord;
 // 3) Mark can *only* see one empty cell in any direction - that cell must have
 //    a bulb.
 
-IsolatedCell
-find_isolated_cell(model::BasicBoard const & board) {
+enum IsolatedResult { MarkCannotBeLit, IsolatedEmpty, IsolatedMark };
+
+// Result handler sig :
+// VisitStatus(Coord bulb_coord, Coord mark_coord, IsolatedResult);
+//
+// * bulb_coord is where the bulb should be played.
+// * mark_coord is only used if MarkCannotBeLit (mark that cannot be
+// illuminated),
+//   or IsolatedMark (mark has only one possible cell that can light it)
+
+void
+find_isolated_impl(model::BasicBoard const & board, auto && resultHandler) {
   IsolatedCell result;
   board.visit_board([&](Coord coord, model::CellState cell) {
     if (is_illumable(cell)) {
-
-      int                  visible_empty_neighbors = 0;
-      std::optional<Coord> empty_cell_location;
+      OptCoord empty_cell_location;
+      int      visible_empty_neighbors = 0;
       board.visit_rows_cols_outward(coord,
                                     [&](Coord coord, model::CellState cell) {
                                       if (is_empty(cell)) {
@@ -38,37 +48,86 @@ find_isolated_cell(model::BasicBoard const & board) {
 
       if (visible_empty_neighbors == 0) {
         if (is_empty(cell)) {
-          LOG_DEBUG("[FORCED ] ADD Bulb: {} isolated Empty cell\n", coord);
-          result.emplace<model::SingleMove>(model::Action::Add,
-                                            model::CellState::Empty, // from
-                                            model::CellState::Bulb,  // to
-                                            coord);
+          return resultHandler(coord, coord, IsolatedEmpty);
         }
         else {
-          LOG_DEBUG("[FORCED ] {} isolated Mark is contradition\n", coord);
-          result.emplace<IsolatedMarkCoordinate>(coord);
+          return resultHandler(coord, coord, MarkCannotBeLit);
         }
-        return model::STOP_VISITING;
       }
       else if (is_mark(cell) and visible_empty_neighbors == 1) {
-        LOG_DEBUG(
-            "[FORCED ] ADD Bulb: {} Mark can only be illuminated by this "
-            "cell\n",
-            *empty_cell_location);
-        result.emplace<model::SingleMove>(model::Action::Add,
-                                          model::CellState::Empty, // from
-                                          model::CellState::Bulb,  // to
-                                          *empty_cell_location);
+        return resultHandler(*empty_cell_location, coord, IsolatedMark);
       }
     }
     return model::KEEP_VISITING;
   });
-  return result;
 }
 
-OptCoord
-find_wall_with_deps_equalling_open_faces(model::BasicBoard const & board) {
-  OptCoord result;
+// find a single instance of an isolated mark or empty cell, and return it in
+// the variant
+IsolatedCell
+find_isolated_cell(model::BasicBoard const & board) {
+  IsolatedCell retval;
+  find_isolated_impl(
+      board, [&](Coord bulb_coord, Coord mark_coord, IsolatedResult result) {
+        switch (result) {
+          case MarkCannotBeLit:
+            LOG_DEBUG("[FORCED ] Mark at {} cannot be illuminated\n",
+                      mark_coord);
+            retval.emplace<IsolatedMarkCoordinate>(mark_coord);
+            break;
+          case IsolatedEmpty:
+            LOG_DEBUG("[FORCED ] ADD Bulb: {} isolated Empty cell\n",
+                      bulb_coord);
+            retval.emplace<model::SingleMove>(model::Action::Add,
+                                              model::CellState::Empty, // from
+                                              model::CellState::Bulb,  // to
+                                              bulb_coord);
+            break;
+          case IsolatedMark:
+            LOG_DEBUG(
+                "[FORCED ] ADD Bulb: {} Mark at {} must be illuminated by "
+                "this\n",
+                bulb_coord,
+                mark_coord);
+
+            retval.emplace<model::SingleMove>(model::Action::Add,
+                                              model::CellState::Empty, // from
+                                              model::CellState::Bulb,  // to
+                                              bulb_coord);
+            break;
+        }
+        return model::STOP_VISITING;
+      });
+  return retval;
+}
+
+// find all isolated cells and add to vector
+bool
+find_isolated_cells(model::BasicBoard const & board, Moves & moves) {
+  bool success = true;
+  find_isolated_impl(
+      board, [&](Coord bulb_coord, Coord mark_coord, IsolatedResult result) {
+        switch (result) {
+          case MarkCannotBeLit:
+            success = false;
+            return model::STOP_VISITING;
+
+          case IsolatedEmpty:
+          case IsolatedMark:
+            moves.emplace_back(model::Action::Add,
+                               model::CellState::Empty, // from
+                               model::CellState::Bulb,  // to
+                               bulb_coord);
+            break;
+        }
+        return model::KEEP_VISITING;
+      });
+  return success;
+}
+
+void
+find_wall_deps_equal_faces_impl(model::BasicBoard const & board,
+                                auto &&                   resultHandler) {
   board.visit_board([&](Coord coord, model::CellState cell) {
     if (int deps = num_wall_deps(cell); deps > 0) {
       int empty_count = 0;
@@ -78,19 +137,40 @@ find_wall_with_deps_equalling_open_faces(model::BasicBoard const & board) {
         bulb_count += cell == Bulb;
       });
       if (empty_count == deps - bulb_count) {
-        result = coord;
-        return model::STOP_VISITING;
+        return resultHandler(coord);
       }
     }
     return model::KEEP_VISITING;
   });
-  return result;
 }
 
 OptCoord
-find_wall_with_satisfied_deps_having_open_faces(
-    model::BasicBoard const & board) {
+find_wall_with_deps_equal_open_faces(model::BasicBoard const & board) {
   OptCoord result;
+  find_wall_deps_equal_faces_impl(board, [&](Coord coord) {
+    result = coord;
+    return model::STOP_VISITING;
+  });
+  return result;
+}
+
+void
+find_walls_with_deps_equalling_open_faces(model::BasicBoard const & board,
+                                          Moves &                   moves) {
+  find_wall_deps_equal_faces_impl(board, [&](Coord coord) {
+    board.visit_adjacent(coord, [&](Coord coord, model::CellState cell) {
+      if (is_empty(cell)) {
+        moves.emplace_back(
+            model::Action::Add, cell, model::CellState::Bulb, coord);
+      }
+    });
+    return model::KEEP_VISITING;
+  });
+}
+
+void
+find_satisfied_with_open_faces_impl(model::BasicBoard const & board,
+                                    auto &&                   resultHandler) {
   board.visit_board([&](Coord coord, model::CellState cell) {
     if (int deps = num_wall_deps(cell)) {
       int bulb_count  = 0;
@@ -100,11 +180,39 @@ find_wall_with_satisfied_deps_having_open_faces(
         bulb_count += cell == Bulb;
       });
       if (bulb_count == deps && empty_count > 0) {
-        result = coord;
-        return model::STOP_VISITING;
+        return resultHandler(coord);
       }
     }
     return model::KEEP_VISITING;
+  });
+}
+
+void
+find_satisfied_wall_having_open_faces(model::BasicBoard const & board,
+                                      Moves &                   moves) {
+  find_satisfied_with_open_faces_impl(board, [&](Coord coord) {
+    board.visit_adjacent(coord, [&](Coord coord, auto cell) {
+      if (is_empty(cell)) {
+        moves.emplace_back(
+            model::Action::Add, cell, model::CellState::Bulb, coord);
+      }
+    });
+    return model::KEEP_VISITING;
+  });
+}
+
+OptCoord
+find_satisfied_wall_having_open_faces(model::BasicBoard const & board) {
+  OptCoord result;
+  find_satisfied_with_open_faces_impl(board, [&](Coord coord) {
+    board.visit_adjacent(coord, [&](Coord coord, auto cell) {
+      if (is_empty(cell)) {
+        result = coord;
+        return model::STOP_VISITING;
+      }
+      return model::KEEP_VISITING;
+    });
+    return result ? model::STOP_VISITING : model::KEEP_VISITING;
   });
   return result;
 }
@@ -123,6 +231,13 @@ apply_move(Solution & solution, model::SingleMove single_move) {
     default:
       break;
   }
+}
+
+bool
+find_trivial_moves(model::BasicBoard const & board, Moves & moves) {
+  find_satisfied_wall_having_open_faces(board, moves);
+  find_walls_with_deps_equalling_open_faces(board, moves);
+  return find_isolated_cells(board, moves);
 }
 
 void
@@ -162,7 +277,7 @@ bool
 play_trivial_marks(Solution & solution) {
   solution.step_count_++;
   auto const & board = solution.board_.board();
-  if (OptCoord coord = find_wall_with_satisfied_deps_having_open_faces(board)) {
+  if (OptCoord coord = find_satisfied_wall_having_open_faces(board)) {
     board.visit_adjacent(*coord, [&](Coord coord, auto cell) {
       if (cell == Empty) {
         apply_move(solution,
@@ -182,7 +297,7 @@ play_forced_move(Solution & solution) {
   OptMove next_move;
 
   auto const & board = solution.board_.board();
-  if (OptCoord opt_coord = find_wall_with_deps_equalling_open_faces(board)) {
+  if (OptCoord opt_coord = find_wall_with_deps_equal_open_faces(board)) {
     solution.step_count_++;
     LOG_DEBUG("[FORCED ] ADD Bulb: {} Wall with N deps has N open faces\n",
               *opt_coord);

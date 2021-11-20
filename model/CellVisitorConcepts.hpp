@@ -65,4 +65,11 @@ concept DirectedCellVisitor =
 template <typename T>
 concept OptDirCellVisitor = DirectedCellVisitor<T> || CellVisitor<T>;
 
+// for determining if we should visit a cell or not, for when the visit function
+// queries a predicate before dispatching.
+template <typename T>
+concept CellVisitPredicate = requires(T visitor, CellState cell) {
+  { visitor(Coord{0, 0}, cell) } -> std::same_as<bool>;
+};
+
 } // namespace model

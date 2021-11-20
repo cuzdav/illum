@@ -38,8 +38,8 @@ public:
   // returns false if CellVisitorSome stopped visiting prematurely.
   // Otherwise returns true.
   bool visit_board(CellVisitor auto && visitor) const;
-  bool visit_board(CellVisitor auto &&     visitor,
-                   CellVisitorSome auto && should_visit_pred) const;
+  bool visit_board_if(CellVisitor auto &&        visitor,
+                      CellVisitPredicate auto && should_visit_pred) const;
   bool visit_adjacent(Coord coord, CellVisitor auto && visitor) const;
   bool visit_empty(CellVisitor auto && visitor) const;
 
@@ -240,13 +240,13 @@ BasicBoard::visit_adjacent(Coord coord, CellVisitor auto && visitor) const {
 
 inline bool
 BasicBoard::visit_empty(CellVisitor auto && visitor) const {
-  return visit_board(
-      visitor, [](auto, CellState cell) { return cell == CellState::Empty; });
+  return visit_board_if(visitor,
+                        [](auto, CellState cell) { return is_empty(cell); });
 }
 
 inline bool
-BasicBoard::visit_board(CellVisitor auto &&     visitor,
-                        CellVisitorSome auto && visit_cell_pred) const {
+BasicBoard::visit_board_if(CellVisitor auto &&        visitor,
+                           CellVisitPredicate auto && visit_cell_pred) const {
   for (int r = 0, c = 0, i = 0; r < height_; ++i) {
     Coord coord{r, c};
     if (visit_cell_pred(coord, cells_[i])) {
@@ -264,7 +264,7 @@ BasicBoard::visit_board(CellVisitor auto &&     visitor,
 
 inline bool
 BasicBoard::visit_board(CellVisitor auto && visitor) const {
-  return visit_board(visitor, [](auto, auto) { return KEEP_VISITING; });
+  return visit_board_if(visitor, [](auto, auto) { return true; });
 }
 
 inline bool

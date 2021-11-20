@@ -1,5 +1,6 @@
 add_library(solver
     AnalysisBoard.cpp
+    PositionBoard.cpp
     Solver.cpp
     trivial/trivial_moves.cpp
 )
