@@ -47,13 +47,13 @@ bool find_trivial_moves(model::BasicBoard const & board,
 // ------------ play one move
 
 // both trivial and forced moves
-bool play_any_forced_move(Solution & solution);
+bool enqueue_any_forced_move(Solution & solution);
 
 // trivial marks are forced, but so trivial they don't count for speculation
 // depth.  Play them all.
-bool play_trivial_marks(Solution & solution);
+bool enqueue_trivial_marks(Solution & solution);
 
 // a simple forced move, but is counted for speculation depth.
-bool play_forced_move(Solution & solution);
+bool enqueue_forced_move(Solution & solution);
 
 } // namespace solver

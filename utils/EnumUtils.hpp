@@ -28,11 +28,6 @@ concept Charable = requires(T obj) {
   { to_char(obj) } -> std::convertible_to<char>;
 };
 
-template <typename T>
-concept Underlyingable = requires(T obj) {
-  { +obj } -> std::convertible_to<int>;
-};
-
 template <typename EnumT>
 requires std::is_enum_v<EnumT>
 struct EnumFormatter {
@@ -64,19 +59,16 @@ struct EnumFormatter {
           break;
 
         case 'd':
-          if constexpr (Underlyingable<EnumT>) {
-            type = 'd';
-            ++it;
-          }
+          type = 'd';
+          ++it;
       }
-    }
-
-    if (it != ctx.end() && *it != '}') {
-      throw std::runtime_error("invalid format");
     }
     if (type == '?') {
       throw std::runtime_error(
           "Enum doesn't support operations for given format");
+    }
+    if (it != ctx.end() && *it != '}') {
+      throw std::runtime_error("invalid format");
     }
     return it;
   }
@@ -86,9 +78,13 @@ struct EnumFormatter {
   format(EnumT const & anEnum, FormatContext & ctx) {
     switch (type) {
       case 's':
-        return fmt::format_to(ctx.out(), "{:s}", to_string(anEnum));
+        if constexpr (Stringable<EnumT>) {
+          return fmt::format_to(ctx.out(), "{:s}", to_string(anEnum));
+        }
       case 'c':
-        return fmt::format_to(ctx.out(), "{:c}", to_char(anEnum));
+        if constexpr (Charable<EnumT>) {
+          return fmt::format_to(ctx.out(), "{:c}", to_char(anEnum));
+        }
       case 'd':
         return fmt::format_to(ctx.out(), "{:d}", +anEnum);
     }

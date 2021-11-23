@@ -74,16 +74,4 @@ TEST(SolverTest, wall_with_deps_equal_to_open_faces3) {
   EXPECT_TRUE(solution.board().is_solved());
 }
 
-TEST(SolverTest, wall_with_deps_and_open_face_gets_mark) {
-  model::test::ASCIILevelCreator creator;
-  creator("1*");
-  creator("..");
-
-  model::BasicBoard board;
-  creator.finished(&board);
-  auto solution = solver::solve(board);
-  EXPECT_FALSE(solution.board().is_solved());
-  EXPECT_EQ(model::CellState::Mark, solution.board().board().get_cell({1, 0}));
-}
-
 } // namespace solver::test

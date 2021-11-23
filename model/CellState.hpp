@@ -1,5 +1,7 @@
 #pragma once
+#include "utils/EnumUtils.hpp"
 #include <cstdint>
+#include <fmt/format.h>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -260,3 +262,5 @@ operator<<(std::ostream & os, CellState state) {
 }
 
 } // namespace model
+
+DECLARE_FORMATTER(model::CellState);

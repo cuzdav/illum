@@ -2,12 +2,14 @@
 
 #include "BasicBoard.hpp"
 #include "Coord.hpp"
-#include "DebugLog.hpp"
 #include "PositionBoard.hpp"
 #include "SingleMove.hpp"
+#include "utils/DebugLog.hpp"
+#include "utils/EnumUtils.hpp"
 #include <iostream>
 #include <optional>
 #include <queue>
+#include <stdexcept>
 
 namespace solver {
 
@@ -45,6 +47,20 @@ to_string(SolutionStatus status) {
 }
 
 enum class MoveMotive { FORCED, FOLLOWUP, SPECULATION };
+
+constexpr char const *
+to_string(MoveMotive const & mm) {
+  using enum MoveMotive;
+  switch (mm) {
+    case FORCED:
+      return "FORCED";
+    case FOLLOWUP:
+      return "FOLLOWUP";
+    case SPECULATION:
+      return "SPECULATION";
+  }
+  throw std::runtime_error("Unhandled MoveMotive");
+}
 
 struct AnnotatedMove {
   model::SingleMove next_move;
@@ -112,13 +128,21 @@ public:
   }
 
   bool
-  enqueue_next() {
+  apply_enqueued_next() {
     if (not next_moves_.empty()) {
       board_.apply_move(next_moves_.front().next_move);
       next_moves_.pop();
       return true;
     }
     return false;
+  }
+
+  bool
+  apply_all_enqueued() {
+    bool result = not next_moves_.empty();
+    do {
+    } while (apply_enqueued_next());
+    return result;
   }
 
   SolutionStatus
@@ -146,6 +170,11 @@ public:
     return board_;
   }
 
+  PositionBoard &
+  board() {
+    return board_;
+  }
+
   void
   set_status(SolutionStatus status) {
     status_ = status;
@@ -161,6 +190,21 @@ public:
     step_count_++;
   }
 
+  bool
+  empty_queue() const {
+    return next_moves_.empty();
+  }
+
+  auto const &
+  front() const {
+    return next_moves_.front();
+  }
+
+  void
+  pop() {
+    next_moves_.pop();
+  }
+
 private:
   PositionBoard             board_;
   OptBoard                  known_solution_;
@@ -169,3 +213,6 @@ private:
   int                       step_count_ = 0;
 };
 } // namespace solver
+
+DECLARE_FORMATTER(::solver::MoveMotive);
+DECLARE_FORMATTER(::solver::SolutionStatus);

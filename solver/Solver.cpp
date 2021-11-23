@@ -2,7 +2,6 @@
 #include "BasicBoard.hpp"
 #include "CellState.hpp"
 #include "CellVisitorConcepts.hpp"
-#include "DebugLog.hpp"
 #include "DecisionType.hpp"
 #include "Direction.hpp"
 #include "PositionBoard.hpp"
@@ -10,6 +9,7 @@
 #include "Solution.hpp"
 #include "scope.hpp"
 #include "trivial/trivial_moves.hpp"
+#include "utils/DebugLog.hpp"
 #include <algorithm>
 #include <fmt/core.h>
 #include <optional>
@@ -214,6 +214,7 @@ apply_hatched_move(SpeculationContext & context) {
 
   if (context.board.is_solved()) {
     context.status = SpeculationContext::SOLVED;
+    return true;
   }
   else if (context.board.has_error()) {
     context.status = SpeculationContext::CONTRADICTION;
@@ -398,10 +399,23 @@ speculate(Solution & solution) {
 
 bool
 play_move(Solution & solution) {
+  if (not solution.empty_queue()) {
+    AnnotatedMove next_move = solution.front();
+    LOG_DEBUG("Playing Queued Move: {}, while {}, {}\n",
+              next_move.next_move,
+              to_string(next_move.motive),
+              to_string(next_move.reason));
+    bool result = solution.board().apply_move(next_move.next_move);
+    solution.pop();
+    if (result) {
+      return true;
+    }
+  }
+
   std::cout << "Solution board current:\n"
             << solution.board() << "\n=================" << std::endl;
 
-  if (play_any_forced_move(solution)) {
+  if (enqueue_any_forced_move(solution)) {
     return true;
   }
 

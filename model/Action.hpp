@@ -1,4 +1,5 @@
 #pragma once
+#include "utils/EnumUtils.hpp"
 #include <ostream>
 #include <stdexcept>
 #include <string>
@@ -102,3 +103,20 @@ operator<<(std::ostream & os, Action action) {
 }
 
 } // namespace model
+
+// template <>
+// struct fmt::formatter<model::Action> {
+//   template <typename ParseContext>
+//   constexpr auto
+//   parse(ParseContext & ctx) {
+//     return ctx.begin();
+//   }
+
+//   template <typename FormatContext>
+//   auto
+//   format(model::Action const & action, FormatContext & ctx) {
+//     return fmt::format_to(ctx.out(), "{}", to_string(action));
+//   }
+// };
+
+DECLARE_FORMATTER(model::Action);

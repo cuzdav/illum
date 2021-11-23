@@ -1,4 +1,5 @@
 #include "CellState.hpp"
+#include <fmt/core.h>
 #include <gtest/gtest.h>
 
 namespace model::test {
@@ -78,6 +79,24 @@ TEST(CellStateTest, add_wall_dep_test) {
   ASSERT_EQ(Wall4, add_wall_dep(Wall3));
   ASSERT_EQ(Wall4, add_wall_dep(Wall4));
   ASSERT_EQ(Bulb, add_wall_dep(Bulb));
+}
+
+TEST(CellStateTest, fmt_default) {
+  CellState cell = CellState::Wall3;
+  auto      fmt1 = fmt::format("{}", cell);
+  EXPECT_EQ("Wall3", fmt1);
+}
+
+TEST(CellStateTest, fmt_s) {
+  CellState cell = CellState::Wall3;
+  auto      fmt2 = fmt::format("{:s}", cell);
+  EXPECT_EQ("Wall3", fmt2);
+}
+
+TEST(CellStateTest, fmt_c) {
+  CellState cell = CellState::Wall3;
+  auto      fmt3 = fmt::format("{:c}", cell);
+  EXPECT_EQ("3", fmt3);
 }
 
 } // namespace model::test

@@ -16,7 +16,8 @@ namespace model::test {
 
 class ASCIILevelCreator {
 public:
-  enum class StartPolicy { CallStart, DontCallStart };
+  enum class ResetPolicy { RESET, DONT_RESET };
+  enum class StartPolicy { CALL_START, DONT_CALL_START };
 
   void
   operator()(std::string const & row) {
@@ -32,28 +33,30 @@ public:
 
   void
   finished(BoardModel * model,
-           StartPolicy  start_policy = StartPolicy::CallStart) {
+           StartPolicy  start_policy = StartPolicy::CALL_START) {
     model->reset_game(size(unparsed_rows_), width_);
     finished_impl([model](CellState cell, Coord coord) {
       if (cell != CellState::Empty) {
         model->add(cell, coord);
       }
     });
-    if (start_policy == StartPolicy::CallStart) {
+    if (start_policy == StartPolicy::CALL_START) {
       model->start_game();
     }
     reset();
   }
 
   void
-  finished(BasicBoard * board) {
+  finished(BasicBoard * board, ResetPolicy policy = ResetPolicy::RESET) {
     board->reset(size(unparsed_rows_), width_);
     finished_impl([board](CellState cell, Coord coord) {
       if (cell != CellState::Empty) {
         board->set_cell(coord, cell);
       }
     });
-    reset();
+    if (policy == ResetPolicy::RESET) {
+      reset();
+    }
   }
 
 private:

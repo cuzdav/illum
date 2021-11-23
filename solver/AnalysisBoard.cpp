@@ -1,8 +1,8 @@
 #include "AnalysisBoard.hpp"
 #include "BasicBoard.hpp"
 #include "CellState.hpp"
-#include "DebugLog.hpp"
 #include "Direction.hpp"
+#include "utils/DebugLog.hpp"
 
 namespace solver {
 

@@ -2,9 +2,9 @@
 #include "BasicBoard.hpp"
 #include "CellState.hpp"
 #include "Coord.hpp"
-#include "DebugLog.hpp"
 #include "DecisionType.hpp"
 #include "Direction.hpp"
+#include "utils/DebugLog.hpp"
 #include <iostream>
 
 namespace solver {

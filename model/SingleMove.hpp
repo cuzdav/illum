@@ -32,4 +32,21 @@ template <>
 struct std::hash<::model::SingleMove>;
 
 template <>
-struct fmt::formatter<::model::SingleMove>;
+struct fmt::formatter<::model::SingleMove> {
+  template <typename ParseContext>
+  constexpr auto
+  parse(ParseContext & ctx) {
+    return ctx.begin();
+  }
+
+  template <typename FormatContext>
+  auto
+  format(model::SingleMove const & single_move, FormatContext & ctx) {
+    return fmt::format_to(ctx.out(),
+                          "({}: {}->{} at {})",
+                          to_string(single_move.action_),
+                          to_string(single_move.from_),
+                          to_string(single_move.to_),
+                          single_move.coord_);
+  }
+};

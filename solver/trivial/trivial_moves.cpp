@@ -3,10 +3,10 @@
 #include "CellState.hpp"
 #include "CellVisitorConcepts.hpp"
 #include "Coord.hpp"
-#include "DebugLog.hpp"
 #include "SingleMove.hpp"
 #include "Solution.hpp"
 #include "meta.hpp"
+#include "utils/DebugLog.hpp"
 #include <optional>
 
 namespace solver {
@@ -310,13 +310,13 @@ apply_move(Solution & solution, OptAnnotatedMove opt_move) {
 }
 
 bool
-play_any_forced_move(Solution & solution) {
+enqueue_any_forced_move(Solution & solution) {
   std::cout << "PLAY ANY FORCED MOVE\n";
-  if (play_trivial_marks(solution)) {
+  if (enqueue_trivial_marks(solution)) {
     std::cout << "*** Found trivial marks\n";
     return true;
   }
-  bool result = play_forced_move(solution);
+  bool result = enqueue_forced_move(solution);
 
   std::cout << "... no trivial, any other FORCED MOVEs?  " << result << "\n";
 
@@ -342,7 +342,7 @@ play_any_forced_move(Solution & solution) {
 
 // But new bulbs, or isolated marks, are considered new moves.
 bool
-play_trivial_marks(Solution & solution) {
+enqueue_trivial_marks(Solution & solution) {
   solution.add_step();
   auto const & board = solution.board().board();
   if (OptCoord coord = find_satisfied_wall_having_open_faces(board)) {
@@ -366,12 +366,12 @@ play_trivial_marks(Solution & solution) {
 }
 
 bool
-play_forced_move(Solution & solution) {
+enqueue_forced_move(Solution & solution) {
   OptAnnotatedMove next_move;
   bool             found_error = false;
 
   auto const & board = solution.board().board();
-  std::cout << "play_forced_move BOARD: " << board << std::endl;
+  std::cout << "enqueue_forced_move: " << board << std::endl;
   if (OptCoord opt_coord = find_wall_with_deps_equal_open_faces(board)) {
     solution.add_step();
     board.visit_adjacent(*opt_coord, [&](Coord coord, auto cell) {
@@ -422,7 +422,7 @@ play_forced_move(Solution & solution) {
     apply_move(solution, *next_move);
     return true;
   }
-  std::cout << "Returning false (play_forced_move)\n";
+  std::cout << "Returning false (enqueue_forced_move)\n";
   return false;
 }
 

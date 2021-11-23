@@ -1,8 +1,8 @@
 #include "ASCIILevelCreator.hpp"
 #include "BasicBoard.hpp"
-#include "DebugLog.hpp"
 #include "Solution.hpp"
 #include "Solver.hpp"
+#include "utils/DebugLog.hpp"
 #include <gtest/gtest.h>
 #include <iostream>
 

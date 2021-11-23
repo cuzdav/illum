@@ -36,25 +36,25 @@ TEST(TrivialMovesTest, find_isolated_cell) {
               Action::Add, CellState::Empty, CellState::Bulb, Coord{0, 1}},
           DecisionType::ISOLATED_EMPTY_SQUARE,
           MoveMotive::FORCED,
-          Coord{1, 1}}),
+          Coord{0, 1}}),
       VariantWith<AnnotatedMove>(AnnotatedMove{
           SingleMove{
               Action::Add, CellState::Empty, CellState::Bulb, Coord{1, 0}},
           DecisionType::ISOLATED_EMPTY_SQUARE,
           MoveMotive::FORCED,
-          Coord{1, 1}}),
+          Coord{1, 0}}),
       VariantWith<AnnotatedMove>(AnnotatedMove{
           SingleMove{
               Action::Add, CellState::Empty, CellState::Bulb, Coord{1, 2}},
           DecisionType::ISOLATED_EMPTY_SQUARE,
           MoveMotive::FORCED,
-          Coord{1, 1}}),
+          Coord{1, 2}}),
       VariantWith<AnnotatedMove>(AnnotatedMove{
           SingleMove{
               Action::Add, CellState::Empty, CellState::Bulb, Coord{2, 1}},
           DecisionType::ISOLATED_EMPTY_SQUARE,
           MoveMotive::FORCED,
-          Coord{1, 1}}));
+          Coord{2, 1}}));
 
   // === MOVE 1 ===
   ASSERT_THAT(result, is_a_valid_move);
@@ -105,6 +105,26 @@ TEST(TrivialMovesTest, test_find_wall_with_deps_equal_open_faces) {
   OptCoord result = find_wall_with_deps_equal_open_faces(basic_board);
 
   EXPECT_THAT(result, Eq(Coord{1, 1}));
+}
+
+TEST(TrivialMovesTest, wall_with_deps_and_open_face_gets_mark) {
+  model::test::ASCIILevelCreator creator;
+  creator("1*");
+  creator(".+");
+
+  model::BasicBoard board;
+  creator.finished(&board);
+  Solution solution(board);
+
+  auto result = enqueue_any_forced_move(solution);
+  EXPECT_TRUE(result);
+
+  result = solution.apply_all_enqueued();
+  EXPECT_TRUE(result);
+
+  EXPECT_FALSE(solution.is_solved());
+  EXPECT_FALSE(solution.has_error());
+  EXPECT_EQ(model::CellState::Mark, solution.board().board().get_cell({1, 0}));
 }
 
 } // namespace solver::test
