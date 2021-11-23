@@ -40,6 +40,11 @@ operator&(CellState lhs, CellState rhs) {
 // friendly
 
 constexpr bool
+is_playable(CellState cell) {
+  return cell == (cell & (CellState::Bulb | CellState::Mark));
+}
+
+constexpr bool
 is_illumable(CellState cell) {
   return cell == (cell & (CellState::Empty | CellState::Mark));
 }

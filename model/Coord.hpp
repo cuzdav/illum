@@ -7,6 +7,7 @@
 #include <functional>
 #include <iosfwd>
 #include <limits>
+#include <optional>
 
 namespace model {
 
@@ -39,6 +40,8 @@ private:
     return static_cast<int>(x);
   }
 };
+
+using OptCoord = std::optional<model::Coord>;
 
 } // namespace model
 

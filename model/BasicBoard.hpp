@@ -3,6 +3,7 @@
 #include "CellVisitorConcepts.hpp"
 #include "Coord.hpp"
 #include <array>
+#include <fmt/format.h>
 #include <iosfwd>
 #include <optional>
 #include <stdexcept>
@@ -10,6 +11,7 @@
 namespace model {
 
 class BasicBoard {
+
 public:
   static int constexpr MAX_GRID_EDGE = 25;
   static int constexpr MAX_CELLS     = MAX_GRID_EDGE * MAX_GRID_EDGE;
@@ -60,6 +62,10 @@ public:
                                OptDirCellVisitor auto && visitor) const;
 
   friend std::ostream & operator<<(std::ostream &, BasicBoard const &);
+  CellState             get_cell_flat_unchecked(int) const;
+  OptCoord              get_last_move_coord() const;
+
+  auto operator<=>(BasicBoard const &) const = default;
 
 private:
   int get_flat_idx(Coord coord) const;
@@ -94,6 +100,7 @@ private:
   int                              height_ = 0;
   int                              width_  = 0;
   std::array<CellState, MAX_CELLS> cells_;
+  OptCoord                         last_move_coord_;
 };
 
 inline bool
@@ -121,6 +128,7 @@ BasicBoard::reset(int height, int width) {
   if (height_ < 0 || width_ < 0 || height_ * width_ >= cells_.size()) {
     throw std::runtime_error("Invalid dimensions");
   }
+  last_move_coord_.reset();
 }
 
 inline bool
@@ -144,10 +152,23 @@ BasicBoard::get_opt_cell(Coord coord) const {
   return std::nullopt;
 }
 
+inline CellState
+BasicBoard::get_cell_flat_unchecked(int idx) const {
+  return cells_[idx];
+}
+
+inline OptCoord
+BasicBoard::get_last_move_coord() const {
+  return last_move_coord_;
+}
+
 inline bool
 BasicBoard::set_cell(Coord coord, CellState state) {
   if (auto idx = get_flat_idx(coord); idx != -1) {
     cells_[idx] = state;
+    if (is_playable(state)) {
+      last_move_coord_ = coord;
+    }
     return true;
   }
   return false;
@@ -379,3 +400,6 @@ BasicBoard::visit_perpendicular(Coord                     coord,
 }
 
 } // namespace model
+
+template <>
+struct fmt::formatter<::model::BasicBoard>;

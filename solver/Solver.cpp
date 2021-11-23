@@ -3,6 +3,7 @@
 #include "CellState.hpp"
 #include "CellVisitorConcepts.hpp"
 #include "DebugLog.hpp"
+#include "DecisionType.hpp"
 #include "Direction.hpp"
 #include "PositionBoard.hpp"
 #include "SingleMove.hpp"
@@ -10,6 +11,7 @@
 #include "scope.hpp"
 #include "trivial/trivial_moves.hpp"
 #include <algorithm>
+#include <fmt/core.h>
 #include <optional>
 #include <unordered_map>
 #include <utility>
@@ -41,142 +43,98 @@ struct SpeculationContext {
   using SpeculationContextUPtr = std::unique_ptr<SpeculationContext>;
   using ChildPaths = std::unordered_map<Coord, SpeculationContextUPtr>;
 
-  int                       depth;
-  Solution *                solution;
-  PositionBoard             board;
-  std::optional<SingleMove> my_move;
-  Status                    status;
-  std::vector<SingleMove>   unexplored_forced_moves;
-  ChildPaths                child_paths;
+  int                          depth;
+  Solution *                   solution;
+  PositionBoard                board;
+  std::optional<AnnotatedMove> annotated_move;
+  Status                       status;
+  AnnotatedMoves               unexplored_forced_moves;
+  ChildPaths                   child_paths;
 };
 
-void speculate_iterate(SpeculationContext & context);
+char const *
+to_string(SpeculationContext::Status s) {
+  switch (s) {
+    case SpeculationContext::HATCHED:
+      return "HATCHED";
+    case SpeculationContext::STILL_SPECULATING:
+      return "STILL_SPECULATING";
+    case SpeculationContext::DEADEND:
+      return "DEADEND";
+    case SpeculationContext::SOLVED:
+      return "SOLVED";
+    case SpeculationContext::CONTRADICTION:
+      return "CONTRADICTION";
+    default:
+      return "(unknown SpeculationContext::Status)";
+  }
+}
+
+std::ostream &
+operator<<(std::ostream & os, SpeculationContext::Status s) {
+  return os << to_string(s);
+}
+
+std::ostream &
+operator<<(std::ostream & os, SpeculationContext const & sc) {
+
+  os << "Context:[\n\t"
+        "depth:    "
+     << sc.depth << "\n"
+     << "solution: "
+     << "<solution>\n"
+     << "board:    " << sc.board << "next_move:  ";
+
+  if (sc.annotated_move.has_value()) {
+    os << *sc.annotated_move << "\n";
+  }
+  os << "status:   " << sc.status << "\n"
+     << "<vector>: {redacted}\n"
+     << "children: " << sc.child_paths.size() << "\n]";
+  return os;
+}
+
+bool speculate_iterate(SpeculationContext & context);
 
 // SpeculationResult
 int
 speculate_impl(SpeculationContext & context) {
   return 0;
 }
-//   if (context.board.is_solved()) {
-//     retval = {context.my_move, context.depth,
-//     SpeculationResult::HAS_SOLUTION}; if (++found_solution_count > 1) {
-//       retval = {context.my_move,
-//                 context.depth,
-//                 SpeculationResult::FOUND_CONTRADICTION};
-//       return model::STOP_VISITING;
-//     }
-//     else {
-//       // first solution so far...
-//       top_level_moves.push_back(context);
-//       return model::KEEP_VISITING;
-//     }
-//   }
-//   else if (context.board.has_error()) {
-//     // already done!
-//     retval = {
-//         context.my_move, context.depth,
-//         SpeculationResult::FOUND_CONTRADICTION};
-//     return model::STOP_VISITING;
-//   }
-
-//   // Ok not done, does this position have more investigation necessary?
-//   // If placing the bulb left some forcing moves, then we must keep going.
-//   // Otherwise, forget this move it.
-//   find_trivial_moves()
-// });
-
-// auto &       position_board = solution.board_;
-// auto const & basic_board    = position_board.board();
-
-// SpeculationContext context{
-//     .depth = 0, .solution = solution, .board = position_board};
-
-// if (spec_context.unexplored_forced_moves.empty()) {
-//   LOG_DEBUG("{:>{}}[Depth {:>2}] Speculation begin\n",
-//             spec_context.depth,
-//             " ",
-//             spec_context.depth);
-//   // initialize our state since we are just starting out
-//   basic_board.visit_empty([&](Coord coord, CellState cell) {
-
-//   });
-// }
-
-// Solution::OptBoard one_solution;
-// bool               played_move = false;
-// auto &             basic_board = solution.board_.board();
-//  basic_board.visit_empty([&](Coord coord, CellState) {
-// Speculative move
-// solution.step_count_++;
-// solution.board_.clone_position();
-
-//   LOG_DEBUG("[SPECULATE-BULB] Playing ({},{})\n", coord.row_,
-//   coord.col_); solution.board_.add_bulb(coord);
-
-//   if (solution.board_.has_error()) {
-
-//     // This is actually success - we found a contradiction with this
-//     // move
-//     LOG_DEBUG(
-//         "[SPECULATE-BULB] Contradiction, so  ({},{}) must be a "
-//         "mark\n",
-//         coord.row_,
-//         coord.col_);
-//     solution.board_.pop();
-//     solution.board_.add_mark(coord);
-//     played_move = true;
-//     return model::STOP_VISITING;
-//   }
-//   else if (solution.board_.is_solved()) {
-//     if (not one_solution.has_value()) {
-//       one_solution.emplace(solution.board_.board());
-//       solution.board_.pop();
-//       // keep visiting to see if there are no more solutions
-//       // if we finish and this is the only one, that's success.
-//       return model::KEEP_VISITING;
-//     }
-//     else if (solution.board_.board() != *one_solution) {
-//       // multiple different solutions?  Uh oh.
-//       solution.board_.pop();
-//       solution.status_ = SolutionStatus::Ambiguous;
-//       return model::STOP_VISITING;
-//     }
-//   }
-//   solution.board_.pop();
-//   return model::KEEP_VISITING;
-// });
-// LOG_DEBUG("Done visiting empty spaces (speculate) steps={} {}\n",
-//           solution.step_count_,
-//           to_string(solution.status_));
-// if (one_solution.has_value() &&
-//     solution.status_ == SolutionStatus::Progressing) {
-//   solution.status_         = SolutionStatus::Solved;
-//   solution.known_solution_ = *one_solution;
-//   return true;
-// }
-// return played_move;
 
 struct SpeculationAnalysis {
-  int                  num_solutions = 0;
-  SpeculationContext * contradiction = nullptr;
+  size_t               num_solutions         = 0;
+  size_t               num_still_speculating = 0;
+  size_t               num_hatchlings        = 0;
+  SpeculationContext * contradiction         = nullptr;
 };
 
 using SpeculationContexts = std::vector<SpeculationContext>;
 
 SpeculationAnalysis
-speculation_prepare(SpeculationContexts & contexts) {
+speculation_setup(SpeculationContexts & contexts) {
   std::erase_if(contexts, [](auto & context) {
     return context.status == SpeculationContext::DEADEND;
   });
 
   SpeculationAnalysis analysis;
   for (SpeculationContext & context : contexts) {
-    if (context.board.has_error()) {
-      analysis.contradiction = &context;
-      break;
-    }
-    if (context.board.is_solved()) {
-      ++analysis.num_solutions;
+    switch (context.status) {
+      case SpeculationContext::CONTRADICTION:
+        analysis.contradiction = &context;
+        return analysis;
+
+      case SpeculationContext::SOLVED:
+        ++analysis.num_solutions;
+        break;
+
+      case SpeculationContext::STILL_SPECULATING:
+        ++analysis.num_still_speculating;
+        break;
+
+      case SpeculationContext::HATCHED:
+        ++analysis.num_hatchlings;
+        break;
     }
   }
   return analysis;
@@ -184,39 +142,76 @@ speculation_prepare(SpeculationContexts & contexts) {
 
 void
 handle_contradiction(SpeculationContext & context, Solution & solution) {
-  Coord coord = context.my_move->coord_;
-  LOG_DEBUG("[SPECULATE-BULB] Contradiction, so {} must be a mark\n", coord);
-  if (context.my_move->to_ == CellState::Bulb) {
-    // if bulb caused contradiction, it must be a mark
-    solution.board_.add_mark(coord);
+  assert(context.annotated_move.has_value());
+
+  auto move = *context.annotated_move;
+  if (move.next_move.to_ == CellState::Bulb) {
+    LOG_DEBUG(
+        "[CONTRADICTION] Bulb at {} caused a contradiction; must be a "
+        "mark\n",
+        move.next_move.coord_);
+    solution.enqueue_mark(move.next_move.coord_,
+                          move.reason,
+                          MoveMotive::SPECULATION,
+                          context.board.get_ref_location());
   }
   else {
     // if mark caused contradiction, it must be a bulb
-    solution.board_.add_bulb(coord);
+    solution.enqueue_bulb(move.next_move.coord_,
+                          move.reason,
+                          MoveMotive::SPECULATION,
+                          context.board.get_ref_location());
   }
 }
 
 SpeculationContexts
 init_root_speculation_contexts(Solution & solution) {
   SpeculationContexts speculation_roots;
-  speculation_roots.reserve(solution.board_.board().width() *
-                            solution.board_.board().height());
+  speculation_roots.reserve(solution.board().width() *
+                            solution.board().height());
 
-  // NOTE: just-hatched contexts do NOT have the move applied to their board yet
-  solution.board_.board().visit_empty([&](Coord coord, CellState cell) {
-    speculation_roots.emplace_back(
-        0,
-        &solution,
-        solution.board_.board(),
-        SingleMove{
-            model::Action::Add, CellState::Empty, CellState::Bulb, coord},
-        SpeculationContext::HATCHED);
+  // NOTE: just-hatched contexts do NOT have the move applied to their
+  // board yet
+
+  // first speculate on bulbs
+  solution.board().visit_empty([&](Coord coord, CellState cell) {
+    speculation_roots.emplace_back(0,
+                                   &solution,
+                                   solution.board(),
+                                   AnnotatedMove{SingleMove{model::Action::Add,
+                                                            CellState::Empty,
+                                                            CellState::Bulb,
+                                                            coord},
+                                                 DecisionType::SPECULATION,
+                                                 MoveMotive::SPECULATION},
+                                   SpeculationContext::HATCHED);
+  });
+
+  // then speculate on marks
+  solution.board().visit_empty([&](Coord coord, CellState cell) {
+    speculation_roots.emplace_back(0,
+                                   &solution,
+                                   solution.board(),
+                                   AnnotatedMove{SingleMove{model::Action::Add,
+                                                            CellState::Empty,
+                                                            CellState::Mark,
+                                                            coord},
+                                                 DecisionType::SPECULATION,
+                                                 MoveMotive::SPECULATION},
+                                   SpeculationContext::HATCHED);
   });
   return speculation_roots;
 }
 
 bool
-update_after_spec_move(SpeculationContext & context) {
+apply_hatched_move(SpeculationContext & context) {
+  assert(context.annotated_move.has_value());
+
+  context.board.apply_move(context.annotated_move->next_move);
+  std::cout << "//\n// apply_hatched_move(SpeculationContext & context)\n// "
+            << context.annotated_move->next_move << "\n//" << context.board
+            << std::endl;
+
   if (context.board.is_solved()) {
     context.status = SpeculationContext::SOLVED;
   }
@@ -224,37 +219,60 @@ update_after_spec_move(SpeculationContext & context) {
     context.status = SpeculationContext::CONTRADICTION;
     return true;
   }
-  else if (find_trivial_moves(context.board.board(),
-                              context.unexplored_forced_moves)) {
-    std::cout << "find_trivial_moves() returned true.  Size of moves is: "
-              << context.unexplored_forced_moves.size() << std::endl;
-
-    if (context.unexplored_forced_moves.empty()) {
-      context.status = SpeculationContext::DEADEND;
-    }
-    else {
-      for (auto & move : context.unexplored_forced_moves) {
-        context.child_paths.insert(std::pair{
-            move.coord_,
-            std::make_unique<SpeculationContext>(context.depth + 1,
-                                                 context.solution,
-                                                 context.board,
-                                                 move,
-                                                 SpeculationContext::HATCHED)});
-      }
-      context.unexplored_forced_moves.clear();
-      context.status = SpeculationContext::STILL_SPECULATING;
-    }
+  else if (not find_trivial_moves(context.board.board(),
+                                  context.unexplored_forced_moves)) {
+    // false does not mean it failed to find moves, but that it found a mark
+    // that is not illuminable
+    context.status = SpeculationContext::CONTRADICTION;
+    return true;
   }
+
+  /////////////////////////////////////////
+  // DEBUG
+  std::cout << "find_trivial_moves() Size of moves is: "
+            << context.unexplored_forced_moves.size() << "\n"
+            << context.board << "\n";
+  for (auto & m : context.unexplored_forced_moves) {
+    std::cout << m << std::endl;
+  }
+  /////////////////////////////////////////
+
+  if (context.unexplored_forced_moves.empty()) {
+    std::cout << "Deadend\n";
+    context.status = SpeculationContext::DEADEND;
+  }
+  else {
+    for (auto & move : context.unexplored_forced_moves) {
+      context.child_paths.insert(std::pair{
+          move.next_move.coord_,
+          std::make_unique<SpeculationContext>(context.depth + 1,
+                                               context.solution,
+                                               context.board,
+                                               move,
+                                               SpeculationContext::HATCHED)});
+    }
+    context.unexplored_forced_moves.clear();
+    context.status = SpeculationContext::STILL_SPECULATING;
+  }
+
   return false;
 }
 
 void
 speculate_into_children(SpeculationContext & context) {
+  std::cout << "Speculate into children:\n";
+  for (auto & [child_coord, child_context] : context.child_paths) {
+    std::cout << child_context << " "
+              << (child_context ? to_string(child_context->status) : "")
+              << std::endl;
+  }
+
+  PositionBoard * solution_board = nullptr;
+
+  int solved_count = 0;
   for (auto & [child_coord, child_context] : context.child_paths) {
     if (child_context) {
       speculate_iterate(*child_context);
-      int solved_count = 0;
       switch (child_context->status) {
         case SpeculationContext::STILL_SPECULATING:
           break;
@@ -262,27 +280,39 @@ speculate_into_children(SpeculationContext & context) {
           context.child_paths.erase(child_coord);
           break;
         case SpeculationContext::SOLVED:
-          if (++solved_count > 1) {
-            context.status = SpeculationContext::CONTRADICTION;
-            context.board.set_has_error(true);
-          }
+          ++solved_count;
           break;
+        case SpeculationContext::CONTRADICTION:
+          context.status = SpeculationContext::CONTRADICTION;
+          break;
+
         case SpeculationContext::HATCHED:
           throw std::runtime_error(
               "BUG: Should never be hatched after iterating child.");
       }
     }
+    if (context.status == SpeculationContext::CONTRADICTION) {
+      break;
+    }
+  }
+
+  // if one of my children is a solution, then all of my children should be
+  // (same) solution, and then I'm a solution.
+  if ((solved_count > 0) && (solved_count == context.child_paths.size())) {
+    context.status = SpeculationContext::SOLVED;
   }
 }
 
-// do the recursion...
-void
+// top level evaluation of a single speculation tree
+bool
 speculate_iterate(SpeculationContext & context) {
   switch (context.status) {
     case SpeculationContext::HATCHED:
-      context.board.apply_move(*context.my_move);
-      update_after_spec_move(context);
+      apply_hatched_move(context);
       break;
+
+    case SpeculationContext::CONTRADICTION:
+      return true;
 
     case SpeculationContext::STILL_SPECULATING:
       speculate_into_children(context);
@@ -290,47 +320,87 @@ speculate_iterate(SpeculationContext & context) {
 
     case SpeculationContext::SOLVED:
     case SpeculationContext::DEADEND:
-    case SpeculationContext::CONTRADICTION:
       break;
   }
+  return false;
 }
 
 bool
 speculate(Solution & solution) {
+  std::cout << "***\n";
+  std::cout << "*** TOP OF SPECULATE \n";
+  std::cout << "***\n";
+
   SpeculationContexts speculation_roots =
       init_root_speculation_contexts(solution);
 
-  while (true) {
-    SpeculationAnalysis analysis = speculation_prepare(speculation_roots);
+  assert(solution.is_solved() == false);
+  if (solution.has_error()) {
+    std::cout << "Board has error: " << solution.board() << std::endl;
+  }
+  assert(solution.has_error() == false);
+
+  bool keep_going = true;
+  while (keep_going) {
+    std::cout << "--- top of speculate infinite loop: numroots: "
+              << speculation_roots.size() << "\n";
+
+    SpeculationAnalysis analysis = speculation_setup(speculation_roots);
+
+    std::cout << "--- after setup, numroots: " << speculation_roots.size()
+              << "\n";
+
+    if (speculation_roots.empty()) {
+      // all deadends
+      std::cout << "--- all children are deadends\n";
+      solution.set_status(SolutionStatus::Impossible);
+      return false;
+    }
+
+    ///////////////////////////////// DEBUG BEGIN
+
+    // std::cout << "num children: " << speculation_roots.size() << "\n";
+    // std::cout << "analysis: contradiction: " <<
+    // (bool)analysis.contradiction
+    //           << "\n";
+    // std::cout << "          num solutions:" << analysis.num_solutions <<
+    // "\n"; int dbg = 0; for (auto & ctx : speculation_roots) {
+    //   std::cout << dbg++ << ": state: " << ctx.status << "\n";
+    //   std::cout << "has num_children:" << ctx.child_paths.size() << "\n";
+    //   std::cout << "board: " << ctx.board << "\n";
+    // }
+    ///////////////////////////////// DEBUG END
+
     if (analysis.contradiction != nullptr) {
       auto & context = *analysis.contradiction;
-      if (context.my_move) {
+      if (context.annotated_move) {
+        // if my child is a contradiction, its move is invalid and can be
+        // recorded as what not to do
         handle_contradiction(context, solution);
         return true;
       }
       else {
-        solution.status_ = SolutionStatus::Impossible;
+        // contradiction in child did not involve a move, so *I* am invalid
+        solution.set_status(SolutionStatus::Impossible);
         return false;
       }
     }
-    if (speculation_roots.empty()) {
-      // all deadends
-      return false;
-    }
-    if (analysis.num_solutions > 1) {
-      // too many solutions; invalid position
-      solution.status_ = SolutionStatus::Ambiguous;
-      return false;
-    }
 
-    for (auto & context : speculation_roots) {
-      speculate_iterate(context);
+    keep_going = analysis.num_still_speculating + analysis.num_hatchlings > 0;
+    if (keep_going) {
+      for (auto & context : speculation_roots) {
+        speculate_iterate(context);
+      }
     }
   }
+  return false;
 }
 
 bool
 play_move(Solution & solution) {
+  std::cout << "Solution board current:\n"
+            << solution.board() << "\n=================" << std::endl;
+
   if (play_any_forced_move(solution)) {
     return true;
   }
@@ -339,25 +409,33 @@ play_move(Solution & solution) {
     return true;
   }
 
-  solution.status_ = SolutionStatus::FailedFindingMove;
+  solution.set_status(SolutionStatus::FailedFindingMove);
+  return false;
+}
+
+bool
+check_if_done(Solution & solution) {
+  if (solution.is_solved()) {
+    LOG_DEBUG("play_single_move: Solved! steps={}\n",
+              solution.get_step_count());
+    solution.set_status(SolutionStatus::Solved);
+    return true;
+  }
+  else if (solution.has_error()) {
+    LOG_DEBUG("play_single_move: ERROR! steps={}\n", solution.get_step_count());
+    solution.set_status(SolutionStatus::Impossible);
+    return true;
+  }
   return false;
 }
 
 bool
 play_single_move(Solution & solution) {
-  if (solution.board_.is_solved()) {
-    LOG_DEBUG("play_single_move: Solved! steps={}\n", solution.step_count_);
-    solution.status_         = SolutionStatus::Solved;
-    solution.known_solution_ = solution.board_.board();
+  if (check_if_done(solution)) {
     return true;
   }
-  else if (solution.board_.has_error()) {
-    LOG_DEBUG("play_single_move: ERROR! steps={}\n", solution.step_count_);
-    solution.status_ = SolutionStatus::Impossible;
+  if (play_move(solution)) {
     return true;
-  }
-  else {
-    return play_move(solution);
   }
   return false;
 }
@@ -365,23 +443,25 @@ play_single_move(Solution & solution) {
 void
 find_solution(Solution & solution) {
   do {
-    solution.step_count_++;
+    std::cout << "--- top of find_solution loop\n";
+    solution.add_step();
     if (not play_single_move(solution)) {
       break;
     }
-  } while (solution.status_ == SolutionStatus::Progressing &&
-           solution.step_count_ < MAX_SOLVE_STEPS);
+  } while (solution.get_status() == SolutionStatus::Progressing &&
+           solution.get_step_count() < MAX_SOLVE_STEPS);
 }
 
 Solution
-solve(model::BasicBoard const & board) {
-  Solution solution(board);
-  solution.status_ = SolutionStatus::Progressing;
+solve(model::BasicBoard const &        board,
+      std::optional<model::BasicBoard> known_solution) {
+  Solution solution(board, known_solution);
+  solution.set_status(SolutionStatus::Progressing);
 
   find_solution(solution);
 
-  if (solution.status_ == SolutionStatus::Progressing) {
-    solution.status_ = SolutionStatus::Terminated;
+  if (solution.get_status() == SolutionStatus::Progressing) {
+    solution.set_status(SolutionStatus::Terminated);
   }
 
   return solution;

@@ -19,10 +19,10 @@ TEST(SolverSpeculationTest, simple_deductions1) {
   model::BasicBoard board;
   creator.finished(&board);
   auto solution = solver::solve(board);
-  EXPECT_TRUE(solution.board_.is_solved());
+  EXPECT_TRUE(solution.board().is_solved());
 
-  std::cout << to_string(solution.status_) << std::endl;
-  std::cout << solution.board_.board() << std::endl;
+  std::cout << to_string(solution.get_status()) << std::endl;
+  std::cout << solution.board().board() << std::endl;
 
   creator("1+*+");
   creator("*+2*");
@@ -30,8 +30,7 @@ TEST(SolverSpeculationTest, simple_deductions1) {
   model::BasicBoard expected;
   creator.finished(&expected);
 
-  ASSERT_TRUE(solution.known_solution_.has_value());
-  ASSERT_EQ(expected, *solution.known_solution_);
+  ASSERT_EQ(expected, solution.board().board());
 }
 
 TEST(SolverSpeculationTest, simple_deductions2) {
@@ -44,7 +43,7 @@ TEST(SolverSpeculationTest, simple_deductions2) {
   model::BasicBoard board;
   creator.finished(&board);
   auto solution = solver::solve(board);
-  ASSERT_TRUE(solution.known_solution_.has_value());
+  ASSERT_TRUE(solution.board().is_solved());
 
   creator("*2*+");
   creator("++++");
@@ -53,7 +52,7 @@ TEST(SolverSpeculationTest, simple_deductions2) {
 
   model::BasicBoard expected;
   creator.finished(&expected);
-  ASSERT_EQ(expected, *solution.known_solution_);
+  ASSERT_EQ(expected, solution.board().board());
 }
 
 TEST(SolverSpeculationTest, realistic_game1) {
@@ -74,7 +73,9 @@ TEST(SolverSpeculationTest, realistic_game1) {
   model::BasicBoard board;
   creator.finished(&board);
   auto solution = solver::solve(board);
-  ASSERT_TRUE(solution.known_solution_.has_value());
+  EXPECT_TRUE(solution.board().is_solved());
+
+  std::cout << "*** Final board state: " << solution.board() << std::endl;
 
   creator("++*+1*++0*");
   creator("*+2*++0++1");
@@ -91,7 +92,7 @@ TEST(SolverSpeculationTest, realistic_game1) {
 
   model::BasicBoard expected;
   creator.finished(&expected);
-  ASSERT_EQ(expected, *solution.known_solution_);
+  EXPECT_EQ(expected, solution.board().board());
 }
 
 TEST(SolverSpeculationTest, realistic_game2) {
@@ -116,9 +117,10 @@ TEST(SolverSpeculationTest, realistic_game2) {
   model::BasicBoard board;
   creator.finished(&board);
   auto solution = solver::solve(board);
-  ASSERT_TRUE(solution.known_solution_.has_value());
 
-  std::cout << *solution.known_solution_ << std::endl;
+  EXPECT_TRUE(solution.board().is_solved());
+
+  std::cout << solution.board().board() << std::endl;
 }
 
 } // namespace solver::test

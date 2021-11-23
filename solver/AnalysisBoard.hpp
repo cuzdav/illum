@@ -2,6 +2,7 @@
 
 #include "BasicBoard.hpp"
 #include "Coord.hpp"
+#include "DecisionType.hpp"
 #include "PositionBoard.hpp"
 #include <vector>
 
@@ -30,7 +31,7 @@ public:
     return cur().add_mark(coord);
   }
 
-  WallState
+  std::pair<WallState, DecisionType>
   compute_wall_state(model::Coord     wall_coord,
                      model::CellState wall_cell) const {
     return cur().compute_wall_state(wall_coord, wall_cell);
