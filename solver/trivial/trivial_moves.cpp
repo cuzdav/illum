@@ -33,14 +33,14 @@ enum IsolatedResult { MarkCannotBeLit, IsolatedEmpty, IsolatedMark };
 
 void
 find_isolated_impl(model::BasicBoard const & board, auto && resultHandler) {
-  std::cout << "FIND ISOLATED IMPL (TOP)\n";
+  // std::cout << "FIND ISOLATED IMPL (TOP)\n";
 
   // either a move (where to place a bulb) or an isolated mark, indicating
   // a mark that cannot be illuminated
   IsolatedCell result;
   board.visit_board([&](Coord coord, model::CellState cell) {
     if (is_illumable(cell)) {
-      std::cout << "Looking at cell: " << cell << "\n";
+      //      std::cout << "Looking at cell: " << cell << "\n";
       OptCoord empty_cell_location;
       int      visible_empty_neighbors = 0;
       board.visit_rows_cols_outward(coord,
@@ -71,23 +71,15 @@ find_isolated_impl(model::BasicBoard const & board, auto && resultHandler) {
 // the variant
 IsolatedCell
 find_isolated_cell(model::BasicBoard const & board) {
-  std::cout << "<<<<<<< FIND ISOLATED CELL (TOP) >>>>>>>>\n";
+  //  std::cout << "<<<<<<< FIND ISOLATED CELL (TOP) >>>>>>>>\n";
   IsolatedCell retval;
   find_isolated_impl(
       board, [&](Coord bulb_coord, Coord mark_coord, IsolatedResult result) {
-        std::cout << ">>> !!! find_isolated: Bulb: " << bulb_coord
-                  << ", mark: " << mark_coord << ": ";
         switch (result) {
           case MarkCannotBeLit:
-            std::cout << "MARK CANNOT BE LIT\n";
-            LOG_DEBUG("[FORCED ] Mark at {} cannot be illuminated\n",
-                      mark_coord);
             retval.emplace<IsolatedMarkCoordinate>(mark_coord);
             break;
           case IsolatedEmpty:
-            std::cout << "Isolatd Empty cell Requires bulb\n";
-            LOG_DEBUG("[FORCED ] ADD Bulb: {} isolated Empty cell\n",
-                      bulb_coord);
             retval =
                 AnnotatedMove{model::SingleMove{model::Action::Add,
                                                 model::CellState::Empty, // from
@@ -98,13 +90,6 @@ find_isolated_cell(model::BasicBoard const & board) {
                               mark_coord};
             break;
           case IsolatedMark:
-            std::cout << "Isolatd mark Requires bulb\n";
-            LOG_DEBUG(
-                "[FORCED ] ADD Bulb: {} Mark at {} must be illuminated by "
-                "this\n",
-                bulb_coord,
-                mark_coord);
-
             retval =
                 AnnotatedMove{model::SingleMove{model::Action::Add,
                                                 model::CellState::Empty, // from
@@ -117,7 +102,7 @@ find_isolated_cell(model::BasicBoard const & board) {
         }
         return model::STOP_VISITING;
       });
-  std::cout << "<<<<<<< FIND ISOLATED CELL (BOTTOM) >>>>>>>>\n";
+  //  std::cout << "<<<<<<< FIND ISOLATED CELL (BOTTOM) >>>>>>>>\n";
   return retval;
 }
 
@@ -199,7 +184,7 @@ find_walls_with_deps_equal_open_faces(model::BasicBoard const & board,
                            DecisionType::WALL_DEPS_EQUAL_OPEN_FACES,
                            MoveMotive::FORCED,
                            coord);
-        std::cout << "Adding move: " << moves.back() << std::endl;
+        //        std::cout << "Adding move: " << moves.back() << std::endl;
       }
     });
     return model::KEEP_VISITING;
@@ -261,43 +246,44 @@ apply_move(Solution & solution, AnnotatedMove const & single_move) {
 
 bool
 find_trivial_moves(model::BasicBoard const & board, AnnotatedMoves & moves) {
-  std::cout << "TOP OF find_trivial_moves" << std::endl;
+  //  std::cout << "TOP OF find_trivial_moves" << std::endl;
 
   find_satisfied_walls_having_open_faces(board, moves);
 
-  std::cout
-      << "[find_trivial_moves 1) satisified with open faces ]: total size="
-      << moves.size() << std::endl;
-  for (auto & m : moves) {
-    std::cout << m << std::endl;
-  }
+  // std::cout
+  //     << "[find_trivial_moves 1) satisified with open faces ]: total size="
+  //     << moves.size() << std::endl;
+  // for (auto & m : moves) {
+  //   std::cout << m << std::endl;
+  // }
 
   find_walls_with_deps_equal_open_faces(board, moves);
 
-  {
-    std::cout << "[find_trivial_moves 2) deps==open]: size=" << moves.size()
-              << std::endl;
-    int i = 0;
-    for (auto & m : moves) {
-      std::cout << i << ": " << m << std::endl;
-    }
-  }
+  // {
+  //   // std::cout << "[find_trivial_moves 2) deps==open]: size=" <<
+  //   moves.size()
+  //   //           << std::endl;
+  //   int i = 0;
+  //   for (auto & m : moves) {
+  //     std::cout << i << ": " << m << std::endl;
+  //   }
+  //  }
 
   bool is_valid = find_isolated_cells(board, moves);
 
-  std::cout << "[find_trivial_moves 3) isolated cell]: size=" << moves.size()
-            << std::endl;
-  for (auto & m : moves) {
-    std::cout << m << std::endl;
-  }
+  // std::cout << "[find_trivial_moves 3) isolated cell]: size=" << moves.size()
+  //           << std::endl;
+  //  for (auto & m : moves) {
+  //    std::cout << m << std::endl;
+  //  }
 
   std::sort(begin(moves), end(moves));
   moves.erase(std::unique(begin(moves), end(moves)), end(moves));
 
-  std::cout << "[find_trivial_moves {end}]: size=" << moves.size() << std::endl;
-  for (auto & m : moves) {
-    std::cout << m << std::endl;
-  }
+  // std::cout << "[find_trivial_moves {end}]: size=" << moves.size() <<
+  // std::endl; for (auto & m : moves) {
+  //   std::cout << m << std::endl;
+  // }
 
   return is_valid;
 }
@@ -311,14 +297,15 @@ apply_move(Solution & solution, OptAnnotatedMove opt_move) {
 
 bool
 enqueue_any_forced_move(Solution & solution) {
-  std::cout << "PLAY ANY FORCED MOVE\n";
+  //  std::cout << "PLAY ANY FORCED MOVE\n";
   if (enqueue_trivial_marks(solution)) {
-    std::cout << "*** Found trivial marks\n";
+    //  std::cout << "*** Found trivial marks\n";
     return true;
   }
   bool result = enqueue_forced_move(solution);
 
-  std::cout << "... no trivial, any other FORCED MOVEs?  " << result << "\n";
+  //  std::cout << "... no trivial, any other FORCED MOVEs?  " << result <<
+  //  "\n";
 
   return result;
 }
@@ -361,7 +348,7 @@ enqueue_trivial_marks(Solution & solution) {
 
     return true;
   }
-  std::cout << "NO trivial marks.\n";
+  //  std::cout << "NO trivial marks.\n";
   return false;
 }
 
@@ -371,14 +358,11 @@ enqueue_forced_move(Solution & solution) {
   bool             found_error = false;
 
   auto const & board = solution.board().board();
-  std::cout << "enqueue_forced_move: " << board << std::endl;
+  //  std::cout << "enqueue_forced_move: " << board << std::endl;
   if (OptCoord opt_coord = find_wall_with_deps_equal_open_faces(board)) {
     solution.add_step();
     board.visit_adjacent(*opt_coord, [&](Coord coord, auto cell) {
       if (cell == Empty) {
-        LOG_DEBUG("[FORCED ] ADD Bulb: {} Wall with N deps has N open faces\n",
-                  coord);
-
         next_move = {model::SingleMove{model::Action::Add,
                                        model::CellState::Empty, // from
                                        model::CellState::Bulb,  // to
@@ -387,7 +371,7 @@ enqueue_forced_move(Solution & solution) {
                      MoveMotive::FORCED,
                      *opt_coord};
 
-        std::cout << "Setting next move to " << *next_move << std::endl;
+        // std::cout << "Setting next move to " << *next_move << std::endl;
 
         return model::STOP_VISITING;
       };
@@ -395,7 +379,7 @@ enqueue_forced_move(Solution & solution) {
     });
   }
   else {
-    std::cout << "CHECKING FOR ISOLATED CELL\n";
+    // std::cout << "CHECKING FOR ISOLATED CELL\n";
 
     auto isolated_cell = find_isolated_cell(board);
 
@@ -406,7 +390,7 @@ enqueue_forced_move(Solution & solution) {
       overloaded{
         [] (std::monostate) {},
         [&](AnnotatedMove const & move) {
-          std::cout << "Setting next move to " << move << std::endl;
+          //          std::cout << "Setting next move to " << move << std::endl;
           next_move = move;
         },
         [&](IsolatedMarkCoordinate const & mark_coord) {
@@ -422,7 +406,7 @@ enqueue_forced_move(Solution & solution) {
     apply_move(solution, *next_move);
     return true;
   }
-  std::cout << "Returning false (enqueue_forced_move)\n";
+  // std::cout << "Returning false (enqueue_forced_move)\n";
   return false;
 }
 

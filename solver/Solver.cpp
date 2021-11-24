@@ -208,9 +208,9 @@ apply_hatched_move(SpeculationContext & context) {
   assert(context.annotated_move.has_value());
 
   context.board.apply_move(context.annotated_move->next_move);
-  std::cout << "//\n// apply_hatched_move(SpeculationContext & context)\n// "
-            << context.annotated_move->next_move << "\n//" << context.board
-            << std::endl;
+  // std::cout << "//\n// apply_hatched_move(SpeculationContext & context)\n// "
+  //           << context.annotated_move->next_move << "\n//" << context.board
+  //           << std::endl;
 
   if (context.board.is_solved()) {
     context.status = SpeculationContext::SOLVED;
@@ -230,16 +230,16 @@ apply_hatched_move(SpeculationContext & context) {
 
   /////////////////////////////////////////
   // DEBUG
-  std::cout << "find_trivial_moves() Size of moves is: "
-            << context.unexplored_forced_moves.size() << "\n"
-            << context.board << "\n";
-  for (auto & m : context.unexplored_forced_moves) {
-    std::cout << m << std::endl;
-  }
+  // std::cout << "find_trivial_moves() Size of moves is: "
+  //           << context.unexplored_forced_moves.size() << "\n"
+  //           << context.board << "\n";
+  // for (auto & m : context.unexplored_forced_moves) {
+  //   std::cout << m << std::endl;
+  // }
   /////////////////////////////////////////
 
   if (context.unexplored_forced_moves.empty()) {
-    std::cout << "Deadend\n";
+    //    std::cout << "Deadend\n";
     context.status = SpeculationContext::DEADEND;
   }
   else {
@@ -261,12 +261,12 @@ apply_hatched_move(SpeculationContext & context) {
 
 void
 speculate_into_children(SpeculationContext & context) {
-  std::cout << "Speculate into children:\n";
-  for (auto & [child_coord, child_context] : context.child_paths) {
-    std::cout << child_context << " "
-              << (child_context ? to_string(child_context->status) : "")
-              << std::endl;
-  }
+  //  std::cout << "Speculate into children:\n";
+  // for (auto & [child_coord, child_context] : context.child_paths) {
+  //   std::cout << child_context << " "
+  //             << (child_context ? to_string(child_context->status) : "")
+  //             << std::endl;
+  // }
 
   PositionBoard * solution_board = nullptr;
 
@@ -336,24 +336,24 @@ speculate(Solution & solution) {
       init_root_speculation_contexts(solution);
 
   assert(solution.is_solved() == false);
-  if (solution.has_error()) {
-    std::cout << "Board has error: " << solution.board() << std::endl;
-  }
+  // if (solution.has_error()) {
+  //   std::cout << "Board has error: " << solution.board() << std::endl;
+  // }
   assert(solution.has_error() == false);
 
   bool keep_going = true;
   while (keep_going) {
-    std::cout << "--- top of speculate infinite loop: numroots: "
-              << speculation_roots.size() << "\n";
+    // std::cout << "--- top of speculate infinite loop: numroots: "
+    //           << speculation_roots.size() << "\n";
 
     SpeculationAnalysis analysis = speculation_setup(speculation_roots);
 
-    std::cout << "--- after setup, numroots: " << speculation_roots.size()
-              << "\n";
+    // std::cout << "--- after setup, numroots: " << speculation_roots.size()
+    //           << "\n";
 
     if (speculation_roots.empty()) {
       // all deadends
-      std::cout << "--- all children are deadends\n";
+      //      std::cout << "--- all children are deadends\n";
       solution.set_status(SolutionStatus::Impossible);
       return false;
     }
@@ -399,21 +399,17 @@ speculate(Solution & solution) {
 
 bool
 play_move(Solution & solution) {
-  if (not solution.empty_queue()) {
-    AnnotatedMove next_move = solution.front();
+  while (not solution.empty_queue()) {
+    auto const & next_move = solution.front();
     LOG_DEBUG("Playing Queued Move: {}, while {}, {}\n",
               next_move.next_move,
               to_string(next_move.motive),
               to_string(next_move.reason));
-    bool result = solution.board().apply_move(next_move.next_move);
-    solution.pop();
-    if (result) {
-      return true;
-    }
+    solution.apply_enqueued_next();
   }
 
-  std::cout << "Solution board current:\n"
-            << solution.board() << "\n=================" << std::endl;
+  // std::cout << "Solution board current:\n"
+  //           << solution.board() << "\n=================" << std::endl;
 
   if (enqueue_any_forced_move(solution)) {
     return true;
@@ -448,6 +444,7 @@ play_single_move(Solution & solution) {
   if (check_if_done(solution)) {
     return true;
   }
+  std::cout << solution.board() << std::endl;
   if (play_move(solution)) {
     return true;
   }
@@ -457,7 +454,7 @@ play_single_move(Solution & solution) {
 void
 find_solution(Solution & solution) {
   do {
-    std::cout << "--- top of find_solution loop\n";
+    //    std::cout << "--- top of find_solution loop\n";
     solution.add_step();
     if (not play_single_move(solution)) {
       break;
