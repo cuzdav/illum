@@ -208,10 +208,6 @@ apply_hatched_move(SpeculationContext & context) {
   assert(context.annotated_move.has_value());
 
   context.board.apply_move(context.annotated_move->next_move);
-  // std::cout << "//\n// apply_hatched_move(SpeculationContext & context)\n// "
-  //           << context.annotated_move->next_move << "\n//" << context.board
-  //           << std::endl;
-
   if (context.board.is_solved()) {
     context.status = SpeculationContext::SOLVED;
     return true;
@@ -228,18 +224,7 @@ apply_hatched_move(SpeculationContext & context) {
     return true;
   }
 
-  /////////////////////////////////////////
-  // DEBUG
-  // std::cout << "find_trivial_moves() Size of moves is: "
-  //           << context.unexplored_forced_moves.size() << "\n"
-  //           << context.board << "\n";
-  // for (auto & m : context.unexplored_forced_moves) {
-  //   std::cout << m << std::endl;
-  // }
-  /////////////////////////////////////////
-
   if (context.unexplored_forced_moves.empty()) {
-    //    std::cout << "Deadend\n";
     context.status = SpeculationContext::DEADEND;
   }
   else {
@@ -261,13 +246,6 @@ apply_hatched_move(SpeculationContext & context) {
 
 void
 speculate_into_children(SpeculationContext & context) {
-  //  std::cout << "Speculate into children:\n";
-  // for (auto & [child_coord, child_context] : context.child_paths) {
-  //   std::cout << child_context << " "
-  //             << (child_context ? to_string(child_context->status) : "")
-  //             << std::endl;
-  // }
-
   PositionBoard * solution_board = nullptr;
 
   int solved_count = 0;
@@ -328,51 +306,20 @@ speculate_iterate(SpeculationContext & context) {
 
 bool
 speculate(Solution & solution) {
-  std::cout << "***\n";
-  std::cout << "*** TOP OF SPECULATE \n";
-  std::cout << "***\n";
-  std::cout << solution.board();
-
   SpeculationContexts speculation_roots =
       init_root_speculation_contexts(solution);
 
   assert(solution.is_solved() == false);
-  // if (solution.has_error()) {
-  //   std::cout << "Board has error: " << solution.board() << std::endl;
-  // }
   assert(solution.has_error() == false);
 
   bool keep_going = true;
   while (keep_going) {
-    // std::cout << "--- top of speculate infinite loop: numroots: "
-    //           << speculation_roots.size() << "\n";
-
     SpeculationAnalysis analysis = speculation_setup(speculation_roots);
-
-    // std::cout << "--- after setup, numroots: " << speculation_roots.size()
-    //           << "\n";
-
     if (speculation_roots.empty()) {
       // all deadends
-      //      std::cout << "--- all children are deadends\n";
       solution.set_status(SolutionStatus::Impossible);
       return false;
     }
-
-    ///////////////////////////////// DEBUG BEGIN
-
-    // std::cout << "num children: " << speculation_roots.size() << "\n";
-    // std::cout << "analysis: contradiction: " <<
-    // (bool)analysis.contradiction
-    //           << "\n";
-    // std::cout << "          num solutions:" << analysis.num_solutions <<
-    // "\n"; int dbg = 0; for (auto & ctx : speculation_roots) {
-    //   std::cout << dbg++ << ": state: " << ctx.status << "\n";
-    //   std::cout << "has num_children:" << ctx.child_paths.size() << "\n";
-    //   std::cout << "board: " << ctx.board << "\n";
-    // }
-    ///////////////////////////////// DEBUG END
-
     if (analysis.contradiction != nullptr) {
       auto & context = *analysis.contradiction;
       if (context.annotated_move) {
