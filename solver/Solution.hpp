@@ -220,5 +220,3 @@ private:
 };
 } // namespace solver
 
-DECLARE_FORMATTER(::solver::MoveMotive);
-DECLARE_FORMATTER(::solver::SolutionStatus);

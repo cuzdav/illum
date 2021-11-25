@@ -12,10 +12,6 @@ operator+(EnumT e) {
   return static_cast<std::underlying_type_t<EnumT>>(e);
 }
 
-#define DECLARE_FORMATTER(EnumT)                                               \
-  template <>                                                                  \
-  struct fmt::formatter<EnumT> : enumutils::EnumFormatter<EnumT> {}
-
 namespace enumutils {
 
 template <typename T>
@@ -28,9 +24,12 @@ concept Charable = requires(T obj) {
   { to_char(obj) } -> std::convertible_to<char>;
 };
 
+} // namespace enumutils
+
 template <typename EnumT>
 requires std::is_enum_v<EnumT>
-struct EnumFormatter {
+struct fmt::formatter<EnumT> {
+
   char type = '?';
 
   template <typename ParseContext>
@@ -38,21 +37,21 @@ struct EnumFormatter {
   parse(ParseContext & ctx) {
     auto it = ctx.begin();
     if (it == ctx.end()) {
-      if constexpr (Stringable<EnumT>) {
+      if constexpr (enumutils::Stringable<EnumT>) {
         type = 's';
       }
     }
     else {
       switch (*it) {
         case 's':
-          if constexpr (Stringable<EnumT>) {
+          if constexpr (enumutils::Stringable<EnumT>) {
             type = 's';
             ++it;
           }
           break;
 
         case 'c':
-          if constexpr (Charable<EnumT>) {
+          if constexpr (enumutils::Charable<EnumT>) {
             type = 'c';
             ++it;
           }
@@ -78,11 +77,11 @@ struct EnumFormatter {
   format(EnumT const & anEnum, FormatContext & ctx) {
     switch (type) {
       case 's':
-        if constexpr (Stringable<EnumT>) {
+        if constexpr (enumutils::Stringable<EnumT>) {
           return fmt::format_to(ctx.out(), "{:s}", to_string(anEnum));
         }
       case 'c':
-        if constexpr (Charable<EnumT>) {
+        if constexpr (enumutils::Charable<EnumT>) {
           return fmt::format_to(ctx.out(), "{:c}", to_char(anEnum));
         }
       case 'd':
@@ -91,5 +90,3 @@ struct EnumFormatter {
     throw std::runtime_error("Unreachable");
   }
 };
-
-} // namespace enumutils

@@ -18,6 +18,20 @@ using model::CellState;
 using model::Coord;
 using model::SingleMove;
 
+TEST(TrivialMovesTest, find_isolated_cell_detects_invalid_mark) {
+  model::test::ASCIILevelCreator creator;
+  creator("0.0");
+  creator("X4.");
+  creator("0.0");
+  model::BasicBoard basic_board;
+  creator.finished(&basic_board);
+
+  AnnotatedMoves moves;
+  OptCoord       invalid_mark_coord = find_isolated_cells(basic_board, moves);
+  ASSERT_TRUE(invalid_mark_coord.has_value());
+  ASSERT_EQ(Coord(0, 1), *invalid_mark_coord);
+}
+
 TEST(TrivialMovesTest, find_isolated_cell) {
   model::test::ASCIILevelCreator creator;
   creator("0.0");
@@ -28,8 +42,8 @@ TEST(TrivialMovesTest, find_isolated_cell) {
 
   AnnotatedMoves moves;
 
-  bool valid_board = find_isolated_cells(basic_board, moves);
-  ASSERT_TRUE(valid_board);
+  OptCoord invalid_mark_coord = find_isolated_cells(basic_board, moves);
+  ASSERT_FALSE(invalid_mark_coord.has_value());
   ASSERT_EQ(4, moves.size());
   ASSERT_THAT(
       moves,

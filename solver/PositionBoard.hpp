@@ -30,6 +30,7 @@ public:
   DecisionType    decision_type() const;
   model::OptCoord get_ref_location() const;
   bool            has_error() const;
+  void            set_has_error(bool, DecisionType = DecisionType::NONE);
 
   bool is_solved() const;
   int  needs_illum_count() const;
@@ -45,8 +46,6 @@ public:
 
   model::BasicBoard const & board() const;
   model::BasicBoard &       mut_board();
-
-  void set_has_error(bool);
 
   auto operator<=>(PositionBoard const &) const = default;
 

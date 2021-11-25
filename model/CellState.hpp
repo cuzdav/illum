@@ -263,4 +263,3 @@ operator<<(std::ostream & os, CellState state) {
 
 } // namespace model
 
-DECLARE_FORMATTER(model::CellState);

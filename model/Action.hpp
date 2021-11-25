@@ -119,4 +119,3 @@ operator<<(std::ostream & os, Action action) {
 //   }
 // };
 
-DECLARE_FORMATTER(model::Action);

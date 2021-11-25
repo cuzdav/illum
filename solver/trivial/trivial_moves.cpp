@@ -36,9 +36,9 @@ insert_if_unique(AnnotatedMoves & moves, AnnotatedMove const & move) {
 // contain a bulb because it is the only way to illuminate the mark.
 // 3) a mark with zero visible empty neighbors -- board is in an invalid state.
 // Returns false if case 3 happened, true otherwise.
-bool
+OptCoord
 find_isolated_cells(model::BasicBoard const & board, AnnotatedMoves & moves) {
-  bool board_is_valid = true;
+  OptCoord unlightable_mark_coord;
 
   // either a move (where to place a bulb) or an isolated mark, indicating
   // a mark that cannot be illuminated
@@ -78,13 +78,13 @@ find_isolated_cells(model::BasicBoard const & board, AnnotatedMoves & moves) {
                             coord});
         }
         else if (visible_empty_neighbors == 0) {
-          // mark has no visible neighbors.  Board
-          board_is_valid = false;
+          // mark has no visible empty neighbors; cannot be illuminated.
+          unlightable_mark_coord = coord;
         }
       }
     }
   });
-  return board_is_valid;
+  return unlightable_mark_coord;
 }
 
 void
@@ -148,17 +148,11 @@ find_satisfied_walls_having_open_faces(model::BasicBoard const & board,
   });
 }
 
-bool
+OptCoord
 find_trivial_moves(model::BasicBoard const & board, AnnotatedMoves & moves) {
   find_satisfied_walls_having_open_faces(board, moves);
   find_walls_with_deps_equal_open_faces(board, moves);
-
-  bool is_valid = find_isolated_cells(board, moves);
-
-  std::sort(begin(moves), end(moves));
-  moves.erase(std::unique(begin(moves), end(moves)), end(moves));
-
-  return is_valid;
+  return find_isolated_cells(board, moves);
 }
 
 } // namespace solver

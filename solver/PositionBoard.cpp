@@ -15,6 +15,9 @@ using model::Direction;
 
 PositionBoard::PositionBoard(model::BasicBoard const & current)
     : board_(current) {
+  // validating an existing board is slightly different from move-by-move,
+  // because we don't know the order of moves, so just look at everything and
+  // accumulate a state.
   board().visit_board([&](model::Coord coord, auto cell) {
     if (model::is_illumable(cell)) {
       needs_illum_count_++;
@@ -98,8 +101,9 @@ PositionBoard::get_ref_location() const {
 }
 
 void
-PositionBoard::set_has_error(bool yn) {
-  has_error_ = yn;
+PositionBoard::set_has_error(bool yn, DecisionType decision_type) {
+  has_error_     = yn;
+  decision_type_ = decision_type;
 }
 
 int

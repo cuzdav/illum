@@ -36,8 +36,9 @@ constexpr int MAX_SOLVE_STEPS = 10000;
 // another solution, which means this path is invalid due to ambiguous results.
 
 // NOTE: a tree of unique ptrs is stupid, but without the indirection it crashes
-// clangd (currently version 14).  Holding SpeculationContext directly
-// immediately kills it, guessing due to incomplete type.)
+// clangd (currently version 14), which ruins productivity. Holding
+// SpeculationContext directly immediately kills it, I guessing due to
+// the incomplete/recursive type.)
 struct SpeculationContext {
   enum Status { HATCHED, STILL_SPECULATING, DEADEND, SOLVED, CONTRADICTION };
   using SpeculationContextUPtr = std::unique_ptr<SpeculationContext>;
@@ -50,6 +51,8 @@ struct SpeculationContext {
   Status                       status;
   AnnotatedMoves               unexplored_forced_moves;
   ChildPaths                   child_paths;
+  DecisionType                 decision_type = DecisionType::NONE;
+  OptCoord                     ref_location;
 };
 
 char const *
@@ -147,20 +150,22 @@ handle_contradiction(SpeculationContext & context, Solution & solution) {
   auto move = *context.annotated_move;
   if (move.next_move.to_ == CellState::Bulb) {
     LOG_DEBUG(
-        "[CONTRADICTION] Bulb at {} caused a contradiction; must be a "
-        "mark\n",
-        move.next_move.coord_);
+        "[CONTRADICTION] Bulb at {} caused a contradiction: {} at {}, so it "
+        "must be a mark\n",
+        move.next_move.coord_,
+        context.decision_type,
+        context.ref_location.value_or(move.next_move.coord_));
     solution.enqueue_mark(move.next_move.coord_,
-                          move.reason,
+                          context.decision_type,
                           MoveMotive::SPECULATION,
-                          context.board.get_ref_location());
+                          context.ref_location);
   }
   else {
     // if mark caused contradiction, it must be a bulb
     solution.enqueue_bulb(move.next_move.coord_,
-                          move.reason,
+                          context.decision_type,
                           MoveMotive::SPECULATION,
-                          context.board.get_ref_location());
+                          context.ref_location);
   }
 }
 
@@ -203,6 +208,11 @@ init_root_speculation_contexts(Solution & solution) {
   return speculation_roots;
 }
 
+// A hatched move is one that has not yet been played, but was setup to be
+// played later. Since we are doing a breadth-first search, each node's
+// children are added one iteration, and "hatch" the next iteration (and are
+// applied). This way we go across the tree, rather than DFS, so we find the
+// shortest path first to reach a contradiction.
 bool
 apply_hatched_move(SpeculationContext & context) {
   assert(context.annotated_move.has_value());
@@ -213,14 +223,17 @@ apply_hatched_move(SpeculationContext & context) {
     return true;
   }
   else if (context.board.has_error()) {
-    context.status = SpeculationContext::CONTRADICTION;
+    context.status        = SpeculationContext::CONTRADICTION;
+    context.decision_type = context.board.decision_type();
+    context.ref_location  = context.board.get_ref_location();
     return true;
   }
-  else if (not find_trivial_moves(context.board.board(),
-                                  context.unexplored_forced_moves)) {
+  else if (auto opt_unlightable_mark = find_trivial_moves(
+               context.board.board(), context.unexplored_forced_moves)) {
     // false does not mean it failed to find moves, but that it found a mark
     // that is not illuminable
     context.status = SpeculationContext::CONTRADICTION;
+    context.annotated_move->reference_location = *opt_unlightable_mark;
     return true;
   }
 
@@ -262,7 +275,9 @@ speculate_into_children(SpeculationContext & context) {
           ++solved_count;
           break;
         case SpeculationContext::CONTRADICTION:
-          context.status = SpeculationContext::CONTRADICTION;
+          context.status        = SpeculationContext::CONTRADICTION;
+          context.decision_type = child_context->decision_type;
+          context.ref_location  = child_context->ref_location;
           break;
 
         case SpeculationContext::HATCHED:
@@ -329,7 +344,8 @@ speculate(Solution & solution) {
         return true;
       }
       else {
-        // contradiction in child did not involve a move, so *I* am invalid
+        // contradiction in child did not involve a move, so *I* am (already)
+        // invalid
         solution.set_status(SolutionStatus::Impossible);
         return false;
       }
@@ -348,7 +364,13 @@ speculate(Solution & solution) {
 bool
 find_moves(Solution & solution) {
   AnnotatedMoves moves;
-  bool board_is_valid = find_trivial_moves(solution.board().board(), moves);
+  if (OptCoord invalid_mark_location =
+          find_trivial_moves(solution.board().board(), moves)) {
+    LOG_DEBUG("Detected a mark that cannot be illuminated at {}\n",
+              *invalid_mark_location);
+    solution.set_status(SolutionStatus::Impossible);
+    return false;
+  }
   for (auto & move : moves) {
     solution.enqueue_move(move);
   }
