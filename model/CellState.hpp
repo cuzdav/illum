@@ -41,16 +41,27 @@ operator&(CellState lhs, CellState rhs) {
 // some of these predicates are super simple, but they are readable, and ADL
 // friendly
 
+// a piece the player can add to the board
 constexpr bool
 is_playable(CellState cell) {
   return cell == (cell & (CellState::Bulb | CellState::Mark));
 }
 
+// a cell that can replace an empty cell (played directly by player, or added as
+// a side effect (i.e. illumination extending from a bulb))
+constexpr bool
+is_dynamic_entity(CellState cell) {
+  return cell == (cell & (CellState::Bulb | CellState::Empty | CellState::Mark |
+                          CellState::Illum));
+}
+
+// a cell that needs illumination, but does not have it
 constexpr bool
 is_illumable(CellState cell) {
   return cell == (cell & (CellState::Empty | CellState::Mark));
 }
 
+// any wall
 constexpr bool
 is_wall(CellState cell) {
   return +cell >= +CellState::Wall0 && +cell <= +CellState::Wall4;
@@ -262,4 +273,3 @@ operator<<(std::ostream & os, CellState state) {
 }
 
 } // namespace model
-

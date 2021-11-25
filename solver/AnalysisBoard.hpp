@@ -12,8 +12,6 @@ namespace solver {
 // reflecting the top object
 class AnalysisBoard {
 public:
-  using WallState = PositionBoard::WallState;
-
   AnalysisBoard(model::BasicBoard const & current);
 
   // removes most recently cloned board, stats, to previous position
@@ -29,12 +27,6 @@ public:
   bool
   add_mark(model::Coord coord) {
     return cur().add_mark(coord);
-  }
-
-  std::pair<WallState, DecisionType>
-  compute_wall_state(model::Coord     wall_coord,
-                     model::CellState wall_cell) const {
-    return cur().compute_wall_state(wall_coord, wall_cell);
   }
 
   bool

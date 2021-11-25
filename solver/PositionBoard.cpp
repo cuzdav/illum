@@ -13,41 +13,37 @@ using model::CellState;
 using model::Coord;
 using model::Direction;
 
-PositionBoard::PositionBoard(model::BasicBoard const & current)
-    : board_(current) {
-  // validating an existing board is slightly different from move-by-move,
-  // because we don't know the order of moves, so just look at everything and
-  // accumulate a state.
-  board().visit_board([&](model::Coord coord, auto cell) {
-    if (model::is_illumable(cell)) {
+PositionBoard::PositionBoard(model::BasicBoard const & current) : board_{} {
+
+  board_.reset(current.height(), current.width());
+
+  // first copy the walls and update counts
+  current.visit_board([&](model::Coord coord, auto cell) {
+    if (model::is_dynamic_entity(cell)) {
       needs_illum_count_++;
     }
-    else if (is_wall_with_deps(cell)) {
-      auto [wallstate, decision_type] = compute_wall_state(coord, cell);
-
-      switch (wallstate) {
-        case WallState::Unsatisfied:
-          walls_with_deps_count_++;
-          break;
-
-        case WallState::Satisfied:
-          break;
-
-        case WallState::Error:
-          has_error_     = true;
-          decision_type_ = decision_type;
-          break;
-      }
-    }
-    else if (is_bulb(cell)) {
-      auto bulb_checker = [&](auto, CellState other) {
-        has_error_ |= is_bulb(other);
-      };
-      // If error between X-Y not caught with X, it will be caught with Y
-      board().visit_col_below(coord, bulb_checker);
-      board().visit_row_right_of(coord, bulb_checker);
+    else if (is_wall(cell)) {
+      walls_with_deps_count_ += model::is_wall_with_deps(cell);
+      board_.set_cell(coord, cell);
     }
   });
+
+  // now just play the moves from their board into ours.
+  current.visit_board([&](model::Coord coord, auto cell) {
+    if (has_error()) {
+      return model::STOP_VISITING;
+    }
+    if (model::is_bulb(cell)) {
+      add_bulb(coord);
+    }
+    else if (is_mark(cell)) {
+      add_mark(coord);
+    }
+    return model::KEEP_VISITING;
+  });
+
+  assert(current.width() == board_.width());
+  assert(current.height() == board_.height());
 }
 
 model::BasicBoard const &
@@ -116,84 +112,52 @@ PositionBoard::walls_with_deps_count() const {
   return walls_with_deps_count_;
 }
 
-std::pair<PositionBoard::WallState, DecisionType>
-PositionBoard::compute_wall_state(model::Coord     wall_coord,
-                                  model::CellState wall_cell) const {
-  int deps = model::num_wall_deps(wall_cell);
-
-  // count empty adjacent cells and bulbs to this wall
-  int empty_neighbors = 0;
-  int bulb_neighbors  = 0;
-  board().visit_adjacent(wall_coord,
-                         [&](model::Coord coord, CellState neighbor) {
-                           bulb_neighbors += neighbor == CellState::Bulb;
-                           empty_neighbors += neighbor == CellState::Empty;
-                         });
-
-  if (bulb_neighbors > deps) {
-    return {WallState::Error, DecisionType::WALL_HAS_TOO_MANY_BULBS};
-  }
-  else if ((deps - bulb_neighbors) > empty_neighbors) {
-
-    return {WallState::Error, DecisionType::WALL_CANNOT_BE_SATISFIED};
-  }
-
-  return {
-      (bulb_neighbors == deps ? WallState::Satisfied : WallState::Unsatisfied),
-      DecisionType::NONE};
-}
-
+// Handles a state change when a light is played:
+// 1) did the light block a face that makes the wall impossible to satisfy?
+// 2) did the bulb over-subscribe the wall?
+// 3) did the bulb just satisfy the wall, and we should reduce our counter?
 void
 PositionBoard::update_wall(model::Coord wall_coord,
                            CellState    wall_cell,
                            CellState    play_cell,
                            bool         coord_is_adjacent_to_play) {
-  // did this play add the final bulb to satisfy the wall deps? If so, account
-  // for it in our stats.
-  if (model::is_wall_with_deps(wall_cell)) {
-    auto [wallstate, decision_type] = compute_wall_state(wall_coord, wall_cell);
+  if (int deps = model::num_wall_deps(wall_cell); deps > 0) {
+    int empty_neighbors = 0;
+    int bulb_neighbors  = 0;
+    board().visit_adjacent(wall_coord,
+                           [&](model::Coord coord, CellState neighbor) {
+                             bulb_neighbors += neighbor == CellState::Bulb;
+                             empty_neighbors += neighbor == CellState::Empty;
+                           });
 
-    switch (wallstate) {
-      case WallState::Satisfied:
-        if (coord_is_adjacent_to_play && play_cell == CellState::Bulb) {
-          walls_with_deps_count_--;
-        }
-        break;
-      case WallState::Unsatisfied:
-        break;
-      case WallState::Error:
-        has_error_     = true;
-        decision_type_ = decision_type;
-        break;
+    if (bulb_neighbors > deps) {
+      has_error_     = true;
+      decision_type_ = DecisionType::WALL_HAS_TOO_MANY_BULBS;
+      ref_location_  = wall_coord;
     }
-  }
-}
-
-bool
-PositionBoard::apply_move(const model::SingleMove & move) {
-  assert(move.action_ == model::Action::Add);
-
-  if (move.to_ == CellState::Bulb) {
-    add_bulb(move.coord_);
-    return true;
-  }
-  if (move.to_ == CellState::Mark) {
-    add_mark(move.coord_);
-    return true;
-  }
-  else {
-    return false;
+    else if ((deps - bulb_neighbors) > empty_neighbors) {
+      has_error_     = true;
+      decision_type_ = DecisionType::WALL_CANNOT_BE_SATISFIED;
+      ref_location_  = wall_coord;
+    }
+    else if (bulb_neighbors == deps && coord_is_adjacent_to_play &&
+             play_cell == CellState::Bulb) {
+      // just-played bulb satisfied this wall, so decrement counter
+      walls_with_deps_count_--;
+    }
   }
 }
 
 bool
 PositionBoard::add_bulb(model::Coord bulb_coord) {
   CellState bulb_target = board().get_cell(bulb_coord);
-  if (not is_empty(bulb_target)) {
+  // A mark's job is to prevent playing a bulb there, so don't allow it.
+  // Otherwise, allow them to play a mistake, but only one.
+  if (bulb_target != (bulb_target & (CellState::Empty | CellState::Illum))) {
     return false;
   }
   mut_board().set_cell(bulb_coord, CellState::Bulb);
-  needs_illum_count_--;
+  needs_illum_count_ -= bulb_target == CellState::Empty;
 
   // update walls immediately adjacent to the bulb
   board().visit_adjacent(
@@ -203,8 +167,7 @@ PositionBoard::add_bulb(model::Coord bulb_coord) {
 
   // now emit light outwards, and see if it affects walls nearby
   board().visit_rows_cols_outward(
-      bulb_coord,
-      [&](model::Direction dir, model::Coord illum_coord, CellState cell) {
+      bulb_coord, [&](model::Coord illum_coord, CellState cell) {
         if (is_illumable(cell)) {
           mut_board().set_cell(illum_coord, model::CellState::Illum);
           needs_illum_count_--;
@@ -238,6 +201,23 @@ PositionBoard::add_mark(model::Coord mark_coord) {
         update_wall(neighbor_coord, neighbor_cell, CellState::Mark, true);
       });
   return true;
+}
+
+bool
+PositionBoard::apply_move(const model::SingleMove & move) {
+  assert(move.action_ == model::Action::Add);
+
+  if (move.to_ == CellState::Bulb) {
+    add_bulb(move.coord_);
+    return true;
+  }
+  if (move.to_ == CellState::Mark) {
+    add_mark(move.coord_);
+    return true;
+  }
+  else {
+    return false;
+  }
 }
 
 std::ostream &

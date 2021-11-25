@@ -11,9 +11,18 @@
 
 namespace solver {
 
+// A position board is a rich wrapper around an underlying basic board. It
+// applies bulbs and marks, and illuminates the cells that bulbs illuminate. It
+// also tracks the validity of the move, the number of cells needing
+// illumination, and the number of walls still having unsatisfied deps.
+// If it detects an error, it tries to record why in the decision type,
+// referring to the ref_location on the board.
+
+// For convenience, the underlying board's rich visit interface is made
+// available here.
+
 class PositionBoard {
 public:
-  enum class WallState : char { Unsatisfied, Satisfied, Error };
   using Coord = model::Coord;
 
   PositionBoard(model::BasicBoard const & board);
@@ -23,9 +32,6 @@ public:
   bool add_bulb(Coord);
   bool add_mark(Coord);
   bool apply_move(model::SingleMove const & move);
-
-  std::pair<WallState, DecisionType>
-  compute_wall_state(Coord wall_coord, model::CellState wall_cell) const;
 
   DecisionType    decision_type() const;
   model::OptCoord get_ref_location() const;

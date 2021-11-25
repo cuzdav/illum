@@ -29,7 +29,7 @@ TEST(TrivialMovesTest, find_isolated_cell_detects_invalid_mark) {
   AnnotatedMoves moves;
   OptCoord       invalid_mark_coord = find_isolated_cells(basic_board, moves);
   ASSERT_TRUE(invalid_mark_coord.has_value());
-  ASSERT_EQ(Coord(0, 1), *invalid_mark_coord);
+  ASSERT_EQ(Coord(1, 0), *invalid_mark_coord);
 }
 
 TEST(TrivialMovesTest, find_isolated_cell) {

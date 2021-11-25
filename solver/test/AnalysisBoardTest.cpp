@@ -375,14 +375,14 @@ TEST(AnalysisBoardTest, adding_bulb_to_nonempty_cell_fails) {
   model::test::ASCIILevelCreator creator;
   creator("+0.1.2+");
   creator("*+++0*+");
-  creator("+.XX..+");
+  creator("+.XX0+*");
 
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
   AnalysisBoard analysis_board(basic_board);
 
   EXPECT_FALSE(analysis_board.has_error());
-  EXPECT_EQ(7, analysis_board.num_cells_needing_illumination());
+  EXPECT_EQ(5, analysis_board.num_cells_needing_illumination());
 
   ASSERT_FALSE(analysis_board.add_bulb({0, 1}));
   ASSERT_FALSE(analysis_board.add_bulb({0, 3}));

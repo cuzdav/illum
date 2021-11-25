@@ -21,9 +21,6 @@ TEST(SolverSpeculationTest, simple_deductions1) {
   auto solution = solver::solve(board);
   EXPECT_TRUE(solution.board().is_solved());
 
-  std::cout << to_string(solution.get_status()) << std::endl;
-  std::cout << solution.board().board() << std::endl;
-
   creator("1+*+");
   creator("*+2*");
 

@@ -19,19 +19,24 @@ struct fmt::formatter<::model::BasicBoard> {
     fmt::format_to(ctx.out(), "Board:\n");
     const int cell_width = 1 + (board.width() > 9);
 
+    // print numbers across top
     fmt::format_to(ctx.out(), "{}{:{}}  ", indent, "", cell_width + 1);
     for (int i = 0; i < board.width(); ++i) {
       fmt::format_to(ctx.out(), "{:^{}}", i, cell_width + 2);
     }
     fmt::format_to(ctx.out(), "\n");
 
+    // print the dashed line
     fmt::format_to(ctx.out(), "{}{: <{}}", indent, "", cell_width + 1);
-    fmt::format_to(ctx.out(), "{:-<{}}", "", (cell_width + 2) * board.width());
+    fmt::format_to(
+        ctx.out(), "{:-<{}}", "", (cell_width + 2) * board.width() + 1);
     fmt::format_to(ctx.out(), "\n");
 
     for (int i = 0, r = board.width(), e = r * board.height(); i < e; ++i) {
       auto state = board.get_cell_flat_unchecked(i);
       if (r == board.width()) {
+
+        // Print the row number on left
         fmt::format_to(
             ctx.out(), "{} {:{}}| ", indent, i / board.width(), cell_width);
       }
@@ -39,9 +44,11 @@ struct fmt::formatter<::model::BasicBoard> {
       if (model::Coord coord{i / board.width(), i % board.width()};
           board.get_last_move_coord() &&
           (board.get_last_move_coord() == coord)) {
+        // print the cell with "last move" marker around it
         fmt::format_to(ctx.out(), "[{:{}c}]", to_char(state), cell_width);
       }
       else {
+        // print the cell as normal
         fmt::format_to(ctx.out(), " {:{}c} ", to_char(state), cell_width);
       }
       if (--r == 0) {
@@ -54,6 +61,7 @@ struct fmt::formatter<::model::BasicBoard> {
 };
 
 namespace model {
+
 std::ostream &
 operator<<(std::ostream & os, BasicBoard const & board) {
   os << fmt::format("{}", board);
