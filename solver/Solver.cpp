@@ -405,9 +405,10 @@ find_moves(Solution & solution) {
   for (auto & move : moves) {
     solution.enqueue_move(move);
   }
-
-  if (speculate(solution)) {
-    return true;
+  if (moves.empty()) {
+    if (speculate(solution)) {
+      return true;
+    }
   }
 
   solution.set_status(SolutionStatus::FailedFindingMove);
