@@ -331,6 +331,7 @@ speculate(Solution & solution) {
   std::cout << "***\n";
   std::cout << "*** TOP OF SPECULATE \n";
   std::cout << "***\n";
+  std::cout << solution.board();
 
   SpeculationContexts speculation_roots =
       init_root_speculation_contexts(solution);
@@ -398,21 +399,11 @@ speculate(Solution & solution) {
 }
 
 bool
-play_move(Solution & solution) {
-  while (not solution.empty_queue()) {
-    auto const & next_move = solution.front();
-    LOG_DEBUG("Playing Queued Move: {}, while {}, {}\n",
-              next_move.next_move,
-              to_string(next_move.motive),
-              to_string(next_move.reason));
-    solution.apply_enqueued_next();
-  }
-
-  // std::cout << "Solution board current:\n"
-  //           << solution.board() << "\n=================" << std::endl;
-
-  if (enqueue_any_forced_move(solution)) {
-    return true;
+find_moves(Solution & solution) {
+  AnnotatedMoves moves;
+  bool board_is_valid = find_trivial_moves(solution.board().board(), moves);
+  for (auto & move : moves) {
+    solution.enqueue_move(move);
   }
 
   if (speculate(solution)) {
@@ -421,6 +412,21 @@ play_move(Solution & solution) {
 
   solution.set_status(SolutionStatus::FailedFindingMove);
   return false;
+}
+
+bool
+play_moves(Solution & solution) {
+  bool played = not solution.empty_queue();
+  ;
+  while (not solution.empty_queue()) {
+    auto const & next_move = solution.front();
+    LOG_DEBUG("Playing Move: {} [{}] {}\n",
+              next_move.next_move,
+              to_string(next_move.motive),
+              to_string(next_move.reason));
+    solution.apply_enqueued_next();
+  }
+  return played;
 }
 
 bool
@@ -439,24 +445,12 @@ check_if_done(Solution & solution) {
   return false;
 }
 
-bool
-play_single_move(Solution & solution) {
-  if (check_if_done(solution)) {
-    return true;
-  }
-  std::cout << solution.board() << std::endl;
-  if (play_move(solution)) {
-    return true;
-  }
-  return false;
-}
-
 void
 find_solution(Solution & solution) {
   do {
-    //    std::cout << "--- top of find_solution loop\n";
     solution.add_step();
-    if (not play_single_move(solution)) {
+    find_moves(solution);
+    if (not play_moves(solution)) {
       break;
     }
   } while (solution.get_status() == SolutionStatus::Progressing &&

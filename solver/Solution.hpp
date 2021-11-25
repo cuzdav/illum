@@ -130,9 +130,12 @@ public:
   bool
   apply_enqueued_next() {
     if (not next_moves_.empty()) {
-      board_.apply_move(next_moves_.front().next_move);
+      auto const next_move = next_moves_.front().next_move;
       next_moves_.pop();
-      return true;
+      if (is_empty(board_.get_cell(next_move.coord_))) {
+        board_.apply_move(next_move);
+        return true;
+      }
     }
     return false;
   }

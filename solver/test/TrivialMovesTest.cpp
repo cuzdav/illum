@@ -26,72 +26,38 @@ TEST(TrivialMovesTest, find_isolated_cell) {
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
 
-  IsolatedCell result = find_isolated_cell(basic_board);
+  AnnotatedMoves moves;
 
-  std::set<AnnotatedMove> moves;
-
-  auto is_a_valid_move = AnyOf(
-      VariantWith<AnnotatedMove>(AnnotatedMove{
-          SingleMove{
-              Action::Add, CellState::Empty, CellState::Bulb, Coord{0, 1}},
-          DecisionType::ISOLATED_EMPTY_SQUARE,
-          MoveMotive::FORCED,
-          Coord{0, 1}}),
-      VariantWith<AnnotatedMove>(AnnotatedMove{
-          SingleMove{
-              Action::Add, CellState::Empty, CellState::Bulb, Coord{1, 0}},
-          DecisionType::ISOLATED_EMPTY_SQUARE,
-          MoveMotive::FORCED,
-          Coord{1, 0}}),
-      VariantWith<AnnotatedMove>(AnnotatedMove{
-          SingleMove{
-              Action::Add, CellState::Empty, CellState::Bulb, Coord{1, 2}},
-          DecisionType::ISOLATED_EMPTY_SQUARE,
-          MoveMotive::FORCED,
-          Coord{1, 2}}),
-      VariantWith<AnnotatedMove>(AnnotatedMove{
-          SingleMove{
-              Action::Add, CellState::Empty, CellState::Bulb, Coord{2, 1}},
-          DecisionType::ISOLATED_EMPTY_SQUARE,
-          MoveMotive::FORCED,
-          Coord{2, 1}}));
-
-  // === MOVE 1 ===
-  ASSERT_THAT(result, is_a_valid_move);
-  AnnotatedMove last_move = std::get<AnnotatedMove>(result);
-  moves.insert(last_move);
-  basic_board.set_cell(last_move.next_move.coord_, last_move.next_move.to_);
-
-  // === MOVE 2 ===
-  result = find_isolated_cell(basic_board);
-  ASSERT_THAT(result, is_a_valid_move);
-
-  last_move = std::get<AnnotatedMove>(result);
-  moves.insert(last_move);
-  basic_board.set_cell(last_move.next_move.coord_, last_move.next_move.to_);
-  EXPECT_THAT(moves.size(), Eq(2));
-
-  // === MOVE 3 ===
-  result = find_isolated_cell(basic_board);
-  ASSERT_THAT(result, is_a_valid_move);
-
-  last_move = std::get<AnnotatedMove>(result);
-  moves.insert(last_move);
-  basic_board.set_cell(last_move.next_move.coord_, last_move.next_move.to_);
-  EXPECT_THAT(moves.size(), Eq(3));
-
-  // === MOVE 4 ===
-  result = find_isolated_cell(basic_board);
-  ASSERT_THAT(result, is_a_valid_move);
-
-  last_move = std::get<AnnotatedMove>(result);
-  moves.insert(last_move);
-  basic_board.set_cell(last_move.next_move.coord_, last_move.next_move.to_);
-  EXPECT_THAT(moves.size(), Eq(4));
-
-  // === (there is no move 5) ===
-  result = find_isolated_cell(basic_board);
-  ASSERT_THAT(result, VariantWith<std::monostate>(std::monostate{}));
+  bool valid_board = find_isolated_cells(basic_board, moves);
+  ASSERT_TRUE(valid_board);
+  ASSERT_EQ(4, moves.size());
+  ASSERT_THAT(
+      moves,
+      UnorderedElementsAre(
+          AnnotatedMove{
+              SingleMove{
+                  Action::Add, CellState::Empty, CellState::Bulb, Coord{0, 1}},
+              DecisionType::ISOLATED_EMPTY_SQUARE,
+              MoveMotive::FORCED,
+              Coord{0, 1}},
+          AnnotatedMove{
+              SingleMove{
+                  Action::Add, CellState::Empty, CellState::Bulb, Coord{1, 0}},
+              DecisionType::ISOLATED_EMPTY_SQUARE,
+              MoveMotive::FORCED,
+              Coord{1, 0}},
+          AnnotatedMove{
+              SingleMove{
+                  Action::Add, CellState::Empty, CellState::Bulb, Coord{1, 2}},
+              DecisionType::ISOLATED_EMPTY_SQUARE,
+              MoveMotive::FORCED,
+              Coord{1, 2}},
+          AnnotatedMove{
+              SingleMove{
+                  Action::Add, CellState::Empty, CellState::Bulb, Coord{2, 1}},
+              DecisionType::ISOLATED_EMPTY_SQUARE,
+              MoveMotive::FORCED,
+              Coord{2, 1}}));
 }
 
 TEST(TrivialMovesTest, test_find_wall_with_deps_equal_open_faces) {
@@ -102,29 +68,38 @@ TEST(TrivialMovesTest, test_find_wall_with_deps_equal_open_faces) {
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
 
-  OptCoord result = find_wall_with_deps_equal_open_faces(basic_board);
-
-  EXPECT_THAT(result, Eq(Coord{1, 1}));
+  AnnotatedMoves moves;
+  find_walls_with_deps_equal_open_faces(basic_board, moves);
+  ASSERT_THAT(1, moves.size());
+  EXPECT_THAT(moves[0],
+              Eq(AnnotatedMove{SingleMove{Action::Add,
+                                          CellState::Empty,
+                                          CellState::Bulb,
+                                          Coord{1, 0}},
+                               DecisionType::WALL_DEPS_EQUAL_OPEN_FACES,
+                               MoveMotive::FORCED,
+                               Coord{1, 1}}));
 }
 
-TEST(TrivialMovesTest, wall_with_deps_and_open_face_gets_mark) {
+TEST(TrivialMovesTest, wall_satisfied_with_open_face_gets_mark) {
   model::test::ASCIILevelCreator creator;
   creator("1*");
   creator(".+");
 
   model::BasicBoard board;
   creator.finished(&board);
-  Solution solution(board);
 
-  auto result = enqueue_any_forced_move(solution);
-  EXPECT_TRUE(result);
+  AnnotatedMoves moves;
+  find_trivial_moves(board, moves);
 
-  result = solution.apply_all_enqueued();
-  EXPECT_TRUE(result);
-
-  EXPECT_FALSE(solution.is_solved());
-  EXPECT_FALSE(solution.has_error());
-  EXPECT_EQ(model::CellState::Mark, solution.board().board().get_cell({1, 0}));
+  EXPECT_THAT(
+      moves,
+      ElementsAre(AnnotatedMove{
+          SingleMove{
+              Action::Add, CellState::Empty, CellState::Mark, Coord{1, 0}},
+          DecisionType::WALL_SATISFIED_HAVING_OPEN_FACES,
+          MoveMotive::FORCED,
+          Coord{0, 0}}));
 }
 
 } // namespace solver::test

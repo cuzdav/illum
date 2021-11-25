@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BasicBoard.hpp"
+#include "CellState.hpp"
 #include "CellVisitorConcepts.hpp"
 #include "Coord.hpp"
 #include "DecisionType.hpp"
@@ -39,6 +40,8 @@ public:
 
   int width() const;
   int height() const;
+
+  model::CellState get_cell(Coord coord) const;
 
   model::BasicBoard const & board() const;
   model::BasicBoard &       mut_board();
@@ -81,6 +84,11 @@ private:
   model::OptCoord   ref_location_;
   model::BasicBoard board_;
 };
+
+inline model::CellState
+PositionBoard::get_cell(model::Coord coord) const {
+  return board_.get_cell(coord);
+}
 
 inline bool
 PositionBoard::visit_board(model::CellVisitor auto && visitor) const {
