@@ -134,6 +134,9 @@ public:
       next_moves_.pop();
       if (is_empty(board_.get_cell(next_move.coord_))) {
         board_.apply_move(next_move);
+        if (is_solved()) {
+          status_ = SolutionStatus::Solved;
+        }
         return true;
       }
     }

@@ -405,10 +405,11 @@ find_moves(Solution & solution) {
   for (auto & move : moves) {
     solution.enqueue_move(move);
   }
-  if (moves.empty()) {
-    if (speculate(solution)) {
-      return true;
-    }
+  if (not moves.empty()) {
+    return true;
+  }
+  if (speculate(solution)) {
+    return true;
   }
 
   solution.set_status(SolutionStatus::FailedFindingMove);
@@ -418,7 +419,6 @@ find_moves(Solution & solution) {
 bool
 play_moves(Solution & solution) {
   bool played = not solution.empty_queue();
-  ;
   while (not solution.empty_queue()) {
     auto const & next_move = solution.front();
     LOG_DEBUG("Playing Move: {} [{}] {}\n",
