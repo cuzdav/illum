@@ -57,7 +57,7 @@ is_dynamic_entity(CellState cell) {
 
 // a cell that needs illumination, but does not have it
 constexpr bool
-is_illumable(CellState cell) {
+is_illuminable(CellState cell) {
   return cell == (cell & (CellState::Empty | CellState::Mark));
 }
 

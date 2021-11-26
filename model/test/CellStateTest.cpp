@@ -36,16 +36,16 @@ TEST(CellStateTest, bitwise) {
   EXPECT_EQ(CellState{}, stateSet & Wall3);
 }
 
-TEST(CellStateTest, is_illumable_test) {
-  ASSERT_TRUE(is_illumable(Empty));
-  ASSERT_TRUE(is_illumable(Mark));
+TEST(CellStateTest, is_illuminable_test) {
+  ASSERT_TRUE(is_illuminable(Empty));
+  ASSERT_TRUE(is_illuminable(Mark));
 
-  ASSERT_FALSE(is_illumable(Wall0));
-  ASSERT_FALSE(is_illumable(Wall1));
-  ASSERT_FALSE(is_illumable(Wall2));
-  ASSERT_FALSE(is_illumable(Wall3));
-  ASSERT_FALSE(is_illumable(Wall4));
-  ASSERT_FALSE(is_illumable(Bulb));
+  ASSERT_FALSE(is_illuminable(Wall0));
+  ASSERT_FALSE(is_illuminable(Wall1));
+  ASSERT_FALSE(is_illuminable(Wall2));
+  ASSERT_FALSE(is_illuminable(Wall3));
+  ASSERT_FALSE(is_illuminable(Wall4));
+  ASSERT_FALSE(is_illuminable(Bulb));
 }
 
 TEST(CellStateTest, num_wall_deps_test) {

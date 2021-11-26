@@ -168,7 +168,7 @@ PositionBoard::add_bulb(model::Coord bulb_coord) {
   // now emit light outwards, and see if it affects walls nearby
   board().visit_rows_cols_outward(
       bulb_coord, [&](model::Coord illum_coord, CellState cell) {
-        if (is_illumable(cell)) {
+        if (is_illuminable(cell)) {
           mut_board().set_cell(illum_coord, model::CellState::Illum);
           needs_illum_count_--;
 

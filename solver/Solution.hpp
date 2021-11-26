@@ -2,6 +2,7 @@
 
 #include "BasicBoard.hpp"
 #include "Coord.hpp"
+#include "DecisionType.hpp"
 #include "PositionBoard.hpp"
 #include "SingleMove.hpp"
 #include "utils/DebugLog.hpp"
@@ -167,8 +168,9 @@ public:
   }
 
   void
-  set_has_error(bool has_error) {
-    board_.set_has_error(has_error);
+  set_has_error(bool         has_error,
+                DecisionType decision_type = DecisionType::NONE) {
+    board_.set_has_error(has_error, decision_type);
   }
 
   PositionBoard const &
@@ -219,4 +221,3 @@ private:
   int                       step_count_ = 0;
 };
 } // namespace solver
-

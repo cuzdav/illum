@@ -14,12 +14,27 @@ using namespace ::testing;
 TEST(SolverSpeculationTest, detects_board_with_multiple_solutions) {
   model::test::ASCIILevelCreator creator;
   creator("..");
+  creator("..");
   model::BasicBoard board;
   creator.finished(&board);
   auto solution = solver::solve(board);
   EXPECT_FALSE(solution.board().is_solved());
   EXPECT_TRUE(solution.board().has_error());
   EXPECT_EQ(DecisionType::VIOLATES_SINGLE_UNIQUE_SOLUTION,
+            solution.board().decision_type());
+  std::cout << board << std::endl;
+}
+
+TEST(SolverSpeculationTest, detects_board_with_unilluminable_marks) {
+  model::test::ASCIILevelCreator creator;
+  creator("XX");
+  creator("XX");
+  model::BasicBoard board;
+  creator.finished(&board);
+  auto solution = solver::solve(board);
+  EXPECT_FALSE(solution.board().is_solved());
+  EXPECT_TRUE(solution.board().has_error());
+  EXPECT_EQ(DecisionType::MARK_CANNOT_BE_ILLUMINATED,
             solution.board().decision_type());
   std::cout << board << std::endl;
 }

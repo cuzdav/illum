@@ -27,6 +27,14 @@ void find_satisfied_walls_having_open_faces(model::BasicBoard const & board,
 void find_walls_with_deps_equal_open_faces(model::BasicBoard const & board,
                                            AnnotatedMoves &          moves);
 
+// If multiple cells in a line can only see that line with no walls-with-deps
+// nearby, then they would cause multiple solutions, so all of them need marks.
+void find_ambiguous_linear_aligned_row_cells(model::BasicBoard const & board,
+                                             AnnotatedMoves &          moves);
+
+void find_ambiguous_linear_aligned_col_cells(model::BasicBoard const & board,
+                                             AnnotatedMoves &          moves);
+
 // one-stop shopping for isolated cells, satisfied walls, and walls that can
 // be satisfied with the same number of bulbs as open faces. While it does not
 // expressly validate the board, it may detect a contradiction and return

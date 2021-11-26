@@ -18,6 +18,7 @@ enum class DecisionType : std::uint8_t {
 
   // contradiction reasons
   BULBS_SEE_EACH_OTHER,
+  MARK_CANNOT_BE_ILLUMINATED,
   WALL_HAS_TOO_MANY_BULBS,
   WALL_CANNOT_BE_SATISFIED,
   VIOLATES_SINGLE_UNIQUE_SOLUTION,
@@ -52,7 +53,10 @@ to_string(DecisionType reason) {
       // contradictions
 
     case BULBS_SEE_EACH_OTHER:
-      return "  BULBS_SEE_EACH_OTHER";
+      return "BULBS_SEE_EACH_OTHER";
+
+    case MARK_CANNOT_BE_ILLUMINATED:
+      return "MARK_CANNOT_BE_ILLUMINATED";
 
     case VIOLATES_SINGLE_UNIQUE_SOLUTION:
       return "VIOLATES_SINGLE_UNIQUE_SOLUTION";

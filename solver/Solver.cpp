@@ -275,9 +275,6 @@ speculate_into_children(SpeculationContext & context) {
       switch (child_context->status) {
         case SpeculationContext::STILL_SPECULATING:
           break;
-        case SpeculationContext::DEADEND:
-          context.child_paths.erase(child_coord);
-          break;
         case SpeculationContext::SOLVED:
           ++solved_count;
           break;
@@ -296,6 +293,10 @@ speculate_into_children(SpeculationContext & context) {
       break;
     }
   }
+
+  std::erase_if(context.child_paths, [](auto const & coord_child) {
+    return coord_child.second->status == SpeculationContext::DEADEND;
+  });
 
   // if one of my children is a solution, then all of my children should be
   // (same) solution, and then I'm a solution.
@@ -382,6 +383,7 @@ find_moves(Solution & solution) {
     LOG_DEBUG("Detected a mark that cannot be illuminated at {}\n",
               *invalid_mark_location);
     solution.set_status(SolutionStatus::Impossible);
+    solution.set_has_error(true, DecisionType::MARK_CANNOT_BE_ILLUMINATED);
     return false;
   }
   for (auto & move : moves) {
