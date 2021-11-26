@@ -5,7 +5,7 @@
 #include "Coord.hpp"
 #include "SingleMove.hpp"
 #include "Solution.hpp"
-#include "trivial/trivial_moves.hpp"
+#include "trivial_moves.hpp"
 #include "gmock/gmock-matchers.h"
 #include "gtest/gtest.h"
 #include <set>

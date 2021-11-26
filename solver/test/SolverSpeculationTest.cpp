@@ -11,6 +11,19 @@ using namespace ::testing;
 
 // These tests requires some reasoning.  First let's do 1 level.
 
+TEST(SolverSpeculationTest, detects_board_with_multiple_solutions) {
+  model::test::ASCIILevelCreator creator;
+  creator("..");
+  model::BasicBoard board;
+  creator.finished(&board);
+  auto solution = solver::solve(board);
+  EXPECT_FALSE(solution.board().is_solved());
+  EXPECT_TRUE(solution.board().has_error());
+  EXPECT_EQ(DecisionType::VIOLATES_SINGLE_UNIQUE_SOLUTION,
+            solution.board().decision_type());
+  std::cout << board << std::endl;
+}
+
 TEST(SolverSpeculationTest, simple_deductions1) {
   model::test::ASCIILevelCreator creator;
   creator("1...");

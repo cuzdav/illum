@@ -8,7 +8,7 @@
 #include "SingleMove.hpp"
 #include "Solution.hpp"
 #include "scope.hpp"
-#include "trivial/trivial_moves.hpp"
+#include "trivial_moves.hpp"
 #include "utils/DebugLog.hpp"
 #include <algorithm>
 #include <fmt/core.h>
@@ -106,7 +106,7 @@ speculate_impl(SpeculationContext & context) {
 }
 
 struct SpeculationAnalysis {
-  size_t               num_solutions         = 0;
+  bool                 multiple_solutions    = false;
   size_t               num_still_speculating = 0;
   size_t               num_hatchlings        = 0;
   SpeculationContext * contradiction         = nullptr;
@@ -120,6 +120,8 @@ speculation_setup(SpeculationContexts & contexts) {
     return context.status == SpeculationContext::DEADEND;
   });
 
+  SpeculationContext * solution = nullptr;
+
   SpeculationAnalysis analysis;
   for (SpeculationContext & context : contexts) {
     switch (context.status) {
@@ -128,7 +130,12 @@ speculation_setup(SpeculationContexts & contexts) {
         return analysis;
 
       case SpeculationContext::SOLVED:
-        ++analysis.num_solutions;
+        if (solution == nullptr) {
+          solution = &context;
+        }
+        else {
+          analysis.multiple_solutions |= context.board != solution->board;
+        }
         break;
 
       case SpeculationContext::STILL_SPECULATING:
@@ -330,6 +337,12 @@ speculate(Solution & solution) {
   bool keep_going = true;
   while (keep_going) {
     SpeculationAnalysis analysis = speculation_setup(speculation_roots);
+    if (analysis.multiple_solutions) {
+      solution.set_status(SolutionStatus::Ambiguous);
+      solution.board().set_has_error(
+          true, DecisionType::VIOLATES_SINGLE_UNIQUE_SOLUTION);
+      return true;
+    }
     if (speculation_roots.empty()) {
       // all deadends
       solution.set_status(SolutionStatus::Impossible);
