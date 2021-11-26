@@ -269,37 +269,40 @@ speculate_into_children(SpeculationContext & context) {
   PositionBoard * solution_board = nullptr;
 
   int solved_count = 0;
-  for (auto & [child_coord, child_context] : context.child_paths) {
-    if (child_context) {
-      speculate_iterate(*child_context);
-      switch (child_context->status) {
-        case SpeculationContext::STILL_SPECULATING:
-          break;
-        case SpeculationContext::SOLVED:
-          ++solved_count;
-          break;
-        case SpeculationContext::CONTRADICTION:
-          context.status        = SpeculationContext::CONTRADICTION;
-          context.decision_type = child_context->decision_type;
-          context.ref_location  = child_context->ref_location;
-          break;
+  for (auto iter = context.child_paths.begin(), end = context.child_paths.end();
+       iter != end;) {
+    auto & [child_coord, child_context] = *iter;
+    speculate_iterate(*child_context);
+    switch (child_context->status) {
+      case SpeculationContext::STILL_SPECULATING:
+        break;
 
-        case SpeculationContext::HATCHED:
-          throw std::runtime_error(
-              "BUG: Should never be hatched after iterating child.");
-      }
+      case SpeculationContext::DEADEND:
+        iter = context.child_paths.erase(iter);
+        continue;
+
+      case SpeculationContext::SOLVED:
+        ++solved_count;
+        break;
+      case SpeculationContext::CONTRADICTION:
+        context.status        = SpeculationContext::CONTRADICTION;
+        context.decision_type = child_context->decision_type;
+        context.ref_location  = child_context->ref_location;
+        break;
+
+      case SpeculationContext::HATCHED:
+        throw std::runtime_error(
+            "BUG: Should never be hatched after iterating child.");
     }
     if (context.status == SpeculationContext::CONTRADICTION) {
       break;
     }
+    ++iter;
   }
 
-  std::erase_if(context.child_paths, [](auto const & coord_child) {
-    return coord_child.second->status == SpeculationContext::DEADEND;
-  });
-
   // if one of my children is a solution, then all of my children should be
-  // (same) solution, and then I'm a solution.
+  // (same) solution, and then I'm a solution. Not all children will solve on
+  // the same iteration, though, since some may take longer to get there.
   if ((solved_count > 0) && (solved_count == context.child_paths.size())) {
     context.status = SpeculationContext::SOLVED;
   }
