@@ -8,6 +8,12 @@
 #include <optional>
 #include <stdexcept>
 
+#ifdef DEBUGLOG
+#define INC_CELL_VISITOR_COUNTER ++visit_cell_counter
+#else
+#define INC_CELL_VISITOR_COUNTER
+#endif
+
 namespace model {
 
 class BasicBoard {
@@ -66,6 +72,8 @@ public:
   OptCoord              get_last_move_coord() const;
 
   auto operator<=>(BasicBoard const &) const = default;
+
+  inline static int visit_cell_counter = 0;
 
 private:
   int get_flat_idx(Coord coord) const;
@@ -212,6 +220,8 @@ BasicBoard::visit_cell(Direction               direction,
                        Coord                   coord,
                        int                     i,
                        CellVisitorSome auto && visitor) const {
+  //  INC_CELL_VISITOR_COUNTER;
+  ++visit_cell_counter;
   assert(get_flat_idx(coord) == i);
   return visitor(coord, cells_[i]) == model::KEEP_VISITING;
 }
@@ -221,6 +231,8 @@ BasicBoard::visit_cell(Direction              direction,
                        Coord                  coord,
                        int                    i,
                        CellVisitorAll auto && visitor) const {
+  //  INC_CELL_VISITOR_COUNTER;
+  ++visit_cell_counter;
   assert(get_flat_idx(coord) == i);
   visitor(coord, cells_[i]);
   return true;
@@ -231,6 +243,8 @@ BasicBoard::visit_cell(Direction                       direction,
                        Coord                           coord,
                        int                             i,
                        DirectedCellVisitorSome auto && visitor) const {
+  //  INC_CELL_VISITOR_COUNTER;
+  ++visit_cell_counter;
   assert(get_flat_idx(coord) == i);
   return visitor(direction, coord, cells_[i]) == KEEP_VISITING;
 }
@@ -240,6 +254,9 @@ BasicBoard::visit_cell(Direction                      direction,
                        Coord                          coord,
                        int                            i,
                        DirectedCellVisitorAll auto && visitor) const {
+  //  INC_CELL_VISITOR_COUNTER;
+  ++visit_cell_counter;
+
   assert(get_flat_idx(coord) == i);
   visitor(direction, coord, cells_[i]);
   return true;
