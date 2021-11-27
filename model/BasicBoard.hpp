@@ -8,10 +8,10 @@
 #include <optional>
 #include <stdexcept>
 
-#ifdef DEBUGLOG
-#define INC_CELL_VISITOR_COUNTER ++visit_cell_counter
+#ifdef DEBUGPROFILE
+#define DEBUGPROFILE_INC_COUNTER(COUNTER) ++COUNTER
 #else
-#define INC_CELL_VISITOR_COUNTER
+#define DEBUGPROFILE_INC_COUNTER(COUNTER)
 #endif
 
 namespace model {
@@ -19,7 +19,7 @@ namespace model {
 class BasicBoard {
 
 public:
-  static int constexpr MAX_GRID_EDGE = 25;
+  static int constexpr MAX_GRID_EDGE = 21;
   static int constexpr MAX_CELLS     = MAX_GRID_EDGE * MAX_GRID_EDGE;
 
   bool operator==(BasicBoard const & other) const;
@@ -73,7 +73,16 @@ public:
 
   auto operator<=>(BasicBoard const &) const = default;
 
-  inline static int visit_cell_counter = 0;
+  inline static int visit_cell_counter              = 0;
+  inline static int visit_board_counter             = 0;
+  inline static int visit_adjacent_counter          = 0;
+  inline static int visit_empty_counter             = 0;
+  inline static int visit_row_left_counter          = 0;
+  inline static int visit_row_right_counter         = 0;
+  inline static int visit_col_up_counter            = 0;
+  inline static int visit_col_down_counter          = 0;
+  inline static int visit_perp_counter              = 0;
+  inline static int visit_rows_cols_outward_counter = 0;
 
 private:
   int get_flat_idx(Coord coord) const;
@@ -220,8 +229,7 @@ BasicBoard::visit_cell(Direction               direction,
                        Coord                   coord,
                        int                     i,
                        CellVisitorSome auto && visitor) const {
-  //  INC_CELL_VISITOR_COUNTER;
-  ++visit_cell_counter;
+  DEBUGPROFILE_INC_COUNTER(visit_cell_counter);
   assert(get_flat_idx(coord) == i);
   return visitor(coord, cells_[i]) == model::KEEP_VISITING;
 }
@@ -231,8 +239,7 @@ BasicBoard::visit_cell(Direction              direction,
                        Coord                  coord,
                        int                    i,
                        CellVisitorAll auto && visitor) const {
-  //  INC_CELL_VISITOR_COUNTER;
-  ++visit_cell_counter;
+  DEBUGPROFILE_INC_COUNTER(visit_cell_counter);
   assert(get_flat_idx(coord) == i);
   visitor(coord, cells_[i]);
   return true;
@@ -243,8 +250,7 @@ BasicBoard::visit_cell(Direction                       direction,
                        Coord                           coord,
                        int                             i,
                        DirectedCellVisitorSome auto && visitor) const {
-  //  INC_CELL_VISITOR_COUNTER;
-  ++visit_cell_counter;
+  DEBUGPROFILE_INC_COUNTER(visit_cell_counter);
   assert(get_flat_idx(coord) == i);
   return visitor(direction, coord, cells_[i]) == KEEP_VISITING;
 }
@@ -254,9 +260,7 @@ BasicBoard::visit_cell(Direction                      direction,
                        Coord                          coord,
                        int                            i,
                        DirectedCellVisitorAll auto && visitor) const {
-  //  INC_CELL_VISITOR_COUNTER;
-  ++visit_cell_counter;
-
+  DEBUGPROFILE_INC_COUNTER(visit_cell_counter);
   assert(get_flat_idx(coord) == i);
   visitor(direction, coord, cells_[i]);
   return true;
@@ -264,6 +268,7 @@ BasicBoard::visit_cell(Direction                      direction,
 
 inline bool
 BasicBoard::visit_adjacent(Coord coord, CellVisitor auto && visitor) const {
+  DEBUGPROFILE_INC_COUNTER(visit_adjacent_counter);
   auto visit = [&](Coord coord) {
     if (int idx = get_flat_idx(coord); idx != -1) {
       return visit_cell(Direction::None, coord, idx, visitor);
@@ -278,6 +283,7 @@ BasicBoard::visit_adjacent(Coord coord, CellVisitor auto && visitor) const {
 
 inline bool
 BasicBoard::visit_empty(CellVisitor auto && visitor) const {
+  DEBUGPROFILE_INC_COUNTER(visit_empty_counter);
   return visit_board_if(visitor,
                         [](auto, CellState cell) { return is_empty(cell); });
 }
@@ -285,6 +291,7 @@ BasicBoard::visit_empty(CellVisitor auto && visitor) const {
 inline bool
 BasicBoard::visit_board_if(CellVisitor auto &&        visitor,
                            CellVisitPredicate auto && visit_cell_pred) const {
+  DEBUGPROFILE_INC_COUNTER(visit_board_counter);
   for (int r = 0, c = 0, i = 0; r < height_; ++i) {
     Coord coord{r, c};
     if (visit_cell_pred(coord, cells_[i])) {
@@ -337,6 +344,7 @@ BasicBoard::visit_straight_line(Direction                 dir,
 inline bool
 BasicBoard::visit_row_left_of(Coord                     coord,
                               OptDirCellVisitor auto && visitor) const {
+  DEBUGPROFILE_INC_COUNTER(visit_row_left_counter);
   auto update_coord = [](Coord & coord) { --coord.col_; };
   auto update_idx   = [](int & idx) { --idx; };
   auto test_coord   = [](Coord coord) { return coord.col_ >= 0; };
@@ -347,6 +355,7 @@ BasicBoard::visit_row_left_of(Coord                     coord,
 inline bool
 BasicBoard::visit_row_right_of(Coord                     coord,
                                OptDirCellVisitor auto && visitor) const {
+  DEBUGPROFILE_INC_COUNTER(visit_row_right_counter);
   auto update_coord = [](Coord & coord) { ++coord.col_; };
   auto update_idx   = [](int & idx) { ++idx; };
   auto test_coord   = [w = width_](Coord coord) { return coord.col_ < w; };
@@ -357,6 +366,7 @@ BasicBoard::visit_row_right_of(Coord                     coord,
 inline bool
 BasicBoard::visit_col_above(Coord                     coord,
                             OptDirCellVisitor auto && visitor) const {
+  DEBUGPROFILE_INC_COUNTER(visit_col_up_counter);
   auto update_coord = [](Coord & coord) { --coord.row_; };
   auto update_idx   = [w = width_](int & idx) { idx -= w; };
   auto test_coord   = [](Coord coord) { return coord.row_ >= 0; };
@@ -367,6 +377,7 @@ BasicBoard::visit_col_above(Coord                     coord,
 inline bool
 BasicBoard::visit_col_below(Coord                     coord,
                             OptDirCellVisitor auto && visitor) const {
+  DEBUGPROFILE_INC_COUNTER(visit_col_down_counter);
   auto update_coord = [](Coord & coord) { ++coord.row_; };
   auto update_idx   = [w = width_](int & idx) { idx += w; };
   auto test_coord   = [h = height_](Coord coord) { return coord.row_ < h; };
@@ -377,6 +388,7 @@ BasicBoard::visit_col_below(Coord                     coord,
 inline void
 BasicBoard::visit_rows_cols_outward(Coord                     coord,
                                     OptDirCellVisitor auto && visitor) const {
+  DEBUGPROFILE_INC_COUNTER(visit_rows_cols_outward_counter);
   visit_row_left_of(coord, visitor);
   visit_row_right_of(coord, visitor);
   visit_col_above(coord, visitor);
@@ -398,6 +410,7 @@ inline void
 BasicBoard::visit_perpendicular(Coord                     coord,
                                 Direction                 dir,
                                 OptDirCellVisitor auto && visitor) const {
+  DEBUGPROFILE_INC_COUNTER(visit_perp_counter);
   switch (dir) {
     case Direction::Left:
     case Direction::Right:

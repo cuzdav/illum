@@ -1,16 +1,19 @@
 #pragma once
 
+#include "AnnotatedMove.hpp"
 #include "BasicBoard.hpp"
 #include "Coord.hpp"
 #include "DecisionType.hpp"
 #include "PositionBoard.hpp"
 #include "SingleMove.hpp"
+#include "SpeculationContext.hpp"
 #include "utils/DebugLog.hpp"
 #include "utils/EnumUtils.hpp"
 #include <iostream>
 #include <optional>
 #include <queue>
 #include <stdexcept>
+#include <vector>
 
 namespace solver {
 
@@ -47,52 +50,18 @@ to_string(SolutionStatus status) {
   return "<Unhandled SolutionStatus>";
 }
 
-enum class MoveMotive { FORCED, FOLLOWUP, SPECULATION };
-
-constexpr char const *
-to_string(MoveMotive const & mm) {
-  using enum MoveMotive;
-  switch (mm) {
-    case FORCED:
-      return "FORCED";
-    case FOLLOWUP:
-      return "FOLLOWUP";
-    case SPECULATION:
-      return "SPECULATION";
-  }
-  throw std::runtime_error("Unhandled MoveMotive");
-}
-
-struct AnnotatedMove {
-  model::SingleMove next_move;
-  DecisionType      reason;
-  MoveMotive        motive;
-  model::OptCoord   reference_location;
-
-  friend auto operator<=>(AnnotatedMove const &,
-                          AnnotatedMove const &) = default;
-};
-
-using OptAnnotatedMove = std::optional<AnnotatedMove>;
-
-inline std::ostream &
-operator<<(std::ostream & os, AnnotatedMove const & solution_move) {
-  os << "{Moving: " << solution_move.next_move << " ==> "
-     << to_string(solution_move.reason);
-  if (solution_move.reference_location.has_value()) {
-    os << " [In reference to " << *solution_move.reference_location << "]";
-  }
-  os << "}";
-  return os;
-}
-
 class Solution {
 public:
   using OptBoard = std::optional<model::BasicBoard>;
 
   Solution(PositionBoard const & board, OptBoard known_solution = std::nullopt)
       : board_(board), known_solution_(known_solution) {
-    // nothing
+
+    auto const size = board.width() * board.height();
+    context_cache_.contexts.reserve(size);
+    context_cache_.active_contexts.reserve(size);
+    context_cache_.contradicting_contexts.reserve(size);
+    context_cache_.solved_contexts.reserve(size);
   }
 
   void
@@ -131,12 +100,23 @@ public:
   bool
   apply_enqueued_next() {
     if (not next_moves_.empty()) {
-      auto const next_move = next_moves_.front().next_move;
+      auto & next = next_moves_.front();
+      LOG_DEBUG("{} {} {} {}\n",
+                next.next_move,
+                next.reason,
+                next.motive,
+                next.reference_location
+                    ? fmt::format("{}", *next.reference_location)
+                    : "");
+      auto const next_move = next.next_move;
       next_moves_.pop();
       if (is_empty(board_.get_cell(next_move.coord_))) {
         board_.apply_move(next_move);
         if (is_solved()) {
           status_ = SolutionStatus::Solved;
+        }
+        else if (has_error()) {
+          status_ = SolutionStatus::Impossible;
         }
         return true;
       }
@@ -213,11 +193,25 @@ public:
     next_moves_.pop();
   }
 
+  struct ContextCache {
+    std::vector<SpeculationContext>   contexts;
+    std::vector<SpeculationContext *> active_contexts;
+    std::vector<SpeculationContext *> contradicting_contexts;
+    std::vector<SpeculationContext *> solved_contexts;
+    std::vector<AnnotatedMove>        forced_moves;
+  };
+
+  ContextCache &
+  get_context_cache() {
+    return context_cache_;
+  }
+
 private:
   PositionBoard             board_;
   OptBoard                  known_solution_;
   std::queue<AnnotatedMove> next_moves_;
   SolutionStatus            status_     = SolutionStatus::Initial;
   int                       step_count_ = 0;
+  ContextCache              context_cache_;
 };
 } // namespace solver

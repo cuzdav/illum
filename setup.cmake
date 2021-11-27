@@ -4,12 +4,21 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # useful for sanitize debugging
 if (ASAN)
+  message("=== DEBUG ADDRESS SANITIZER ENABLED ===")
   set(CMAKE_BUILD_TYPE "Debug")
   set(ASAN_ARGS "-fno-omit-frame-pointer -fsanitize=address")
-  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${ASAN_ARGS}")
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${ASAN_ARGS}")
-  set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} ${ASAN_ARGS}")
+  ADD_DEFINITIONS(${ASAN_ARGS})
 endif()
+
+if (DEBUGPROFILE)
+  message("=== DEBUG PROFILE ENABLED ===")
+  ADD_DEFINITIONS(-DDEBUGPROFILE)
+endif()
+
+if (DEBUGLOG)
+    message("=== DEBUG LOG ENABLED ===")
+    ADD_DEFINITIONS(-DDEBUG)
+endif(DEBUGLOG)
 
 # for clangd and other clang tools
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -56,9 +65,4 @@ FetchContent_MakeAvailable(googletest)
 set(BOOST_REQUESTED_VERSION 1.71)
 find_package(Boost)
 
-# =================================================
-
-IF(DEBUGLOG)
-    ADD_DEFINITIONS(-DDEBUG)
-ENDIF(DEBUGLOG)
 

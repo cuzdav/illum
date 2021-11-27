@@ -86,6 +86,12 @@ PositionBoard::has_error() const {
   return has_error_;
 }
 
+void
+PositionBoard::set_has_error(bool yn, DecisionType decision) {
+  has_error_     = yn;
+  decision_type_ = decision;
+}
+
 DecisionType
 PositionBoard::decision_type() const {
   return decision_type_;
@@ -94,12 +100,6 @@ PositionBoard::decision_type() const {
 model::OptCoord
 PositionBoard::get_ref_location() const {
   return ref_location_;
-}
-
-void
-PositionBoard::set_has_error(bool yn, DecisionType decision_type) {
-  has_error_     = yn;
-  decision_type_ = decision_type;
 }
 
 int

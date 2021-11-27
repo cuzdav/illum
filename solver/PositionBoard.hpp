@@ -25,18 +25,19 @@ class PositionBoard {
 public:
   using Coord = model::Coord;
 
+  PositionBoard() = default;
   PositionBoard(model::BasicBoard const & board);
 
   // clones board, applies move, returns all affected cells. Returns bool
   // indicating request was successful.
   bool add_bulb(Coord);
   bool add_mark(Coord);
-  bool apply_move(model::SingleMove const & move);
+  bool apply_move(model::SingleMove const &);
 
   DecisionType    decision_type() const;
   model::OptCoord get_ref_location() const;
   bool            has_error() const;
-  void            set_has_error(bool, DecisionType = DecisionType::NONE);
+  void            set_has_error(bool, DecisionType);
 
   bool is_solved() const;
   int  needs_illum_count() const;
@@ -87,7 +88,7 @@ private:
   int               walls_with_deps_count_ = 0;
   DecisionType      decision_type_;
   model::OptCoord   ref_location_;
-  model::BasicBoard board_;
+  model::BasicBoard board_{};
 };
 
 inline model::CellState

@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 3.20.3)
 project (Illuminate)
 
 OPTION(DEBUGLOG "Enable debug logging" OFF)
+OPTION(DEBUGPROFILE "Enable cell-visitor counters" OFF)
 OPTION(ASAN "Build linking the address sanitizer" OFF)
 
 include("setup.cmake")

@@ -3,26 +3,47 @@
 #include "Solution.hpp"
 #include "Solver.hpp"
 #include "utils/DebugLog.hpp"
+#include <fmt/core.h>
 #include <gtest/gtest.h>
 #include <iostream>
 
 namespace solver::test {
 using namespace ::testing;
 
+class DebugProfileCounter {
+public:
+  DebugProfileCounter(char const * name, int & value)
+      : name_{name}, value_(value) {
+    value = 0;
+  }
+
+  ~DebugProfileCounter() {
+#if defined(DEBUGPROFILE)
+    fmt::print("{:35s} {:>11d}\n", name_, value_);
+#endif
+  }
+
+private:
+  char const * name_;
+  int &        value_;
+};
+
+#define DEBUGPROFILE_COUNTER(COUNTER)                                          \
+  DebugProfileCounter COUNTER##_ = {#COUNTER, model::BasicBoard::COUNTER}
+
 // These tests requires some reasoning.  First let's do 1 level.
 
 class SolverSpeculationTest : public ::testing::Test {
-public:
-  SolverSpeculationTest() { model::BasicBoard::visit_cell_counter = 0; }
-  ~SolverSpeculationTest() {
-    if (model::BasicBoard::visit_cell_counter > 0) {
-      std::cout << "Took " << model::BasicBoard::visit_cell_counter
-                << " cell visitations.\n";
-    }
-    else {
-      std::cout << "odd, no visitations?\n";
-    }
-  }
+  DEBUGPROFILE_COUNTER(visit_cell_counter);
+  DEBUGPROFILE_COUNTER(visit_board_counter);
+  DEBUGPROFILE_COUNTER(visit_adjacent_counter);
+  DEBUGPROFILE_COUNTER(visit_empty_counter);
+  DEBUGPROFILE_COUNTER(visit_row_left_counter);
+  DEBUGPROFILE_COUNTER(visit_row_right_counter);
+  DEBUGPROFILE_COUNTER(visit_col_up_counter);
+  DEBUGPROFILE_COUNTER(visit_col_down_counter);
+  DEBUGPROFILE_COUNTER(visit_perp_counter);
+  DEBUGPROFILE_COUNTER(visit_rows_cols_outward_counter);
 };
 
 TEST_F(SolverSpeculationTest, detects_board_with_multiple_solutions) {

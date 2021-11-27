@@ -52,11 +52,6 @@ public:
     return cur().board();
   }
 
-  void
-  set_has_error(bool has_error) {
-    cur().set_has_error(has_error);
-  }
-
 private:
   PositionBoard &       cur();
   PositionBoard const & cur() const;

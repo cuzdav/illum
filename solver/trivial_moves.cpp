@@ -198,11 +198,14 @@ find_ambiguous_linear_aligned_col_cells(model::BasicBoard const & board,
         board.visit_adjacent(coord, [&](Coord, CellState cell) {
           constrained |= model::is_wall_with_deps(cell);
         });
-        board.visit_perpendicular(
-            coord, Direction::Down, [&](Coord, CellState cell) {
-              constrained |= model::is_illuminable(cell);
-              return constrained ? model::STOP_VISITING : model::KEEP_VISITING;
-            });
+        if (not constrained) {
+          board.visit_perpendicular(
+              coord, Direction::Down, [&](Coord, CellState cell) {
+                constrained |= model::is_illuminable(cell);
+                return constrained ? model::STOP_VISITING
+                                   : model::KEEP_VISITING;
+              });
+        }
         if (not constrained) {
           if (prev) {
             add_mark(moves,
@@ -285,9 +288,15 @@ find_satisfied_walls_having_open_faces(model::BasicBoard const & board,
 OptCoord
 find_trivial_moves(model::BasicBoard const & board, AnnotatedMoves & moves) {
   find_satisfied_walls_having_open_faces(board, moves);
-  find_walls_with_deps_equal_open_faces(board, moves);
-  find_ambiguous_linear_aligned_row_cells(board, moves);
-  find_ambiguous_linear_aligned_col_cells(board, moves);
+  if (moves.empty()) {
+    find_walls_with_deps_equal_open_faces(board, moves);
+  }
+  if (moves.empty()) {
+    find_ambiguous_linear_aligned_row_cells(board, moves);
+  }
+  if (moves.empty()) {
+    find_ambiguous_linear_aligned_col_cells(board, moves);
+  }
   return find_isolated_cells(board, moves);
 }
 
