@@ -60,7 +60,7 @@ TEST(TrivialMovesTest, find_isolated_cell) {
                   MoveMotive::FORCED)));
 }
 
-TEST(TrivialMovesTest, test_find_wall_with_deps_equal_open_faces) {
+TEST(TrivialMovesTest, find_find_around_walls_with_deps1) {
   model::test::ASCIILevelCreator creator;
   creator(".00");
   creator(".10");
@@ -69,7 +69,7 @@ TEST(TrivialMovesTest, test_find_wall_with_deps_equal_open_faces) {
   creator.finished(&basic_board);
 
   AnnotatedMoves moves;
-  find_walls_with_deps_equal_open_faces(basic_board, moves);
+  find_around_walls_with_deps(basic_board, moves);
   ASSERT_THAT(1, moves.size());
   EXPECT_THAT(moves[0],
               Eq(bulb_at({1, 0},
@@ -78,7 +78,7 @@ TEST(TrivialMovesTest, test_find_wall_with_deps_equal_open_faces) {
                          Coord{1, 1})));
 }
 
-TEST(TrivialMovesTest, wall_satisfied_with_open_face_gets_mark) {
+TEST(TrivialMovesTest, find_find_around_walls_with_deps2) {
   model::test::ASCIILevelCreator creator;
   creator("1*");
   creator(".+");

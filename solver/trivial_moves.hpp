@@ -18,14 +18,10 @@ using AnnotatedMoves   = std::vector<AnnotatedMove>;
 OptCoord find_isolated_cells(model::BasicBoard const & board,
                              AnnotatedMoves &          moves);
 
-// returns moves to illuminate empty spaces around satisfied walls
-void find_satisfied_walls_having_open_faces(model::BasicBoard const & board,
-                                            AnnotatedMoves &          moves);
-
 // returns moves to add bulbs around walls where all open faces must contain
-// bulbs
-void find_walls_with_deps_equal_open_faces(model::BasicBoard const & board,
-                                           AnnotatedMoves &          moves);
+// bulbs, and corner marks where a bulb would leave wall unsatisfiable.
+void find_around_walls_with_deps(model::BasicBoard const & board,
+                                 AnnotatedMoves &          moves);
 
 // If multiple cells in a line can only see that line with no walls-with-deps
 // nearby, then they would cause multiple solutions, so all of them need marks.

@@ -9,6 +9,7 @@
 #include "meta.hpp"
 #include "utils/DebugLog.hpp"
 #include <algorithm>
+#include <array>
 #include <optional>
 
 namespace solver {
@@ -232,17 +233,23 @@ find_ambiguous_linear_aligned_col_cells(model::BasicBoard const & board,
   }
 }
 
+// for performance, merges 2 algos into 1:
+// find_walls_with_deps_equal_open_faces()
+// find_satisfied_walls_having_open_faces() same metadata and structure, cells
+// of interest. Only difference between the 2 algos is the inner if.
 void
-find_walls_with_deps_equal_open_faces(model::BasicBoard const & board,
-                                      AnnotatedMoves &          moves) {
+find_around_walls_with_deps(model::BasicBoard const & board,
+                            AnnotatedMoves &          moves) {
   board.visit_board([&](Coord wall_coord, CellState cell) {
     if (int deps = num_wall_deps(cell); deps > 0) {
       int empty_count = 0;
       int bulb_count  = 0;
-      board.visit_adjacent(wall_coord, [&](Coord, auto cell) {
+      board.visit_adjacent(wall_coord, [&](Coord coord, auto cell) {
         empty_count += cell == Empty;
         bulb_count += cell == Bulb;
       });
+
+      // all empty faces around wall must be bulbs
       if (empty_count > 0 && (empty_count == deps - bulb_count)) {
         board.visit_adjacent(wall_coord, [&](Coord adj_coord, auto cell) {
           if (is_empty(cell)) {
@@ -254,43 +261,25 @@ find_walls_with_deps_equal_open_faces(model::BasicBoard const & board,
           }
         });
       }
-    }
-  });
-}
-
-void
-find_satisfied_walls_having_open_faces(model::BasicBoard const & board,
-                                       AnnotatedMoves &          moves) {
-  board.visit_board([&](Coord coord, CellState cell) {
-    if (int deps = num_wall_deps(cell)) {
-      int bulb_count  = 0;
-      int empty_count = 0;
-      board.visit_adjacent(coord, [&](Coord, auto cell) {
-        empty_count += cell == Empty;
-        bulb_count += cell == Bulb;
-      });
-      if (bulb_count == deps && empty_count > 0) {
-        board.visit_adjacent(coord, [&](Coord adj_coord, auto cell) {
+      // all empty faces around wall must be marks (wall satisfied)
+      if (empty_count > 0 && bulb_count == deps) {
+        board.visit_adjacent(wall_coord, [&](Coord adj_coord, auto cell) {
           if (is_empty(cell)) {
             add_mark(moves,
                      adj_coord,
                      DecisionType::WALL_SATISFIED_HAVING_OPEN_FACES,
                      MoveMotive::FORCED,
-                     coord);
+                     wall_coord);
           }
         });
       }
     }
-    return model::KEEP_VISITING;
   });
 }
 
 OptCoord
 find_trivial_moves(model::BasicBoard const & board, AnnotatedMoves & moves) {
-  find_satisfied_walls_having_open_faces(board, moves);
-  if (moves.empty()) {
-    find_walls_with_deps_equal_open_faces(board, moves);
-  }
+  find_around_walls_with_deps(board, moves);
   if (moves.empty()) {
     find_ambiguous_linear_aligned_row_cells(board, moves);
   }

@@ -16,12 +16,23 @@ public:
   std::int8_t row_;
   std::int8_t col_;
 
+  constexpr Coord() : row_{-1}, col_{-1} {}
   constexpr Coord(int row, int col) : row_{narrow(row)}, col_{narrow(col)} {}
 
   constexpr bool
   in_range(int height, int width) const {
     return row_ >= 0 && widen(row_) < height && col_ >= 0 &&
            widen(col_) < width;
+  }
+
+  friend Coord
+  operator+(Coord lhs, Coord rhs) {
+    return {lhs.row_ + rhs.row_, lhs.col_ + rhs.col_};
+  }
+
+  friend Coord
+  operator-(Coord lhs, Coord rhs) {
+    return {lhs.row_ - rhs.row_, lhs.col_ - rhs.col_};
   }
 
   friend auto operator<=>(Coord lhs, Coord rhs) = default;

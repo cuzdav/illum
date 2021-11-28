@@ -61,6 +61,7 @@ public:
        visit_board_if(model::CellVisitor auto &&        visitor,
                       model::CellVisitPredicate auto && should_visit_pred) const;
   bool visit_adjacent(Coord coord, model::CellVisitor auto && visitor) const;
+  bool visit_adj_corners(Coord coord, model::CellVisitor auto && visitor) const;
   bool visit_empty(model::CellVisitor auto && visitor) const;
   bool visit_row_left_of(Coord                            coord,
                          model::OptDirCellVisitor auto && visitor) const;
@@ -112,6 +113,12 @@ inline bool
 PositionBoard::visit_adjacent(Coord                      coord,
                               model::CellVisitor auto && visitor) const {
   return board_.visit_adjacent(coord, std::forward<decltype(visitor)>(visitor));
+}
+inline bool
+PositionBoard::visit_adj_corners(Coord                      coord,
+                                 model::CellVisitor auto && visitor) const {
+  return board_.visit_adj_corners(coord,
+                                  std::forward<decltype(visitor)>(visitor));
 }
 inline bool
 PositionBoard::visit_empty(model::CellVisitor auto && visitor) const {

@@ -48,7 +48,14 @@ public:
   bool visit_board(CellVisitor auto && visitor) const;
   bool visit_board_if(CellVisitor auto &&        visitor,
                       CellVisitPredicate auto && should_visit_pred) const;
+
+  // visit the immediately adjacent squares around coord, guaranteed in
+  // counter-clockwise order: UP, LEFT, DOWN, RIGHT
   bool visit_adjacent(Coord coord, CellVisitor auto && visitor) const;
+
+  // visit the (diagonal) corners of wall, guaranteed in counter-clockwise
+  // order: Quadrant I, II, III, IV
+  bool visit_adj_corners(Coord coord, CellVisitor auto && visitor) const;
   bool visit_empty(CellVisitor auto && visitor) const;
 
   // will stop _after_ visiting a wall, or if visitor returns false
@@ -76,6 +83,7 @@ public:
   inline static int visit_cell_counter              = 0;
   inline static int visit_board_counter             = 0;
   inline static int visit_adjacent_counter          = 0;
+  inline static int visit_adj_corners_counter       = 0;
   inline static int visit_empty_counter             = 0;
   inline static int visit_row_left_counter          = 0;
   inline static int visit_row_right_counter         = 0;
@@ -277,8 +285,23 @@ BasicBoard::visit_adjacent(Coord coord, CellVisitor auto && visitor) const {
   };
 
   auto [row, col] = coord;
-  return visit({row + 1, col}) && visit({row - 1, col}) &&
-         visit({row, col - 1}) && visit({row, col + 1});
+  return visit({row - 1, col}) && visit({row, col - 1}) &&
+         visit({row + 1, col}) && visit({row, col + 1});
+}
+
+inline bool
+BasicBoard::visit_adj_corners(Coord coord, CellVisitor auto && visitor) const {
+  DEBUGPROFILE_INC_COUNTER(visit_adj_corners_counter);
+  auto visit = [&](Coord coord) {
+    if (int idx = get_flat_idx(coord); idx != -1) {
+      return visit_cell(Direction::None, coord, idx, visitor);
+    }
+    return true;
+  };
+
+  auto [row, col] = coord;
+  return visit({row - 1, col + 1}) && visit({row - 1, col - 1}) &&
+         visit({row + 1, col - 1}) && visit({row + 1, col + 1});
 }
 
 inline bool

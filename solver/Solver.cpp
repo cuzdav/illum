@@ -67,7 +67,9 @@ init_speculation_contexts(Solution & solution) {
   return context_cache;
 }
 
-bool
+// returns depth of solution (approx some indicator of difficulty) or 0 if not
+// found
+size_t
 speculate(Solution & solution) {
   assert(solution.is_solved() == false);
   assert(solution.has_error() == false);
@@ -90,8 +92,10 @@ speculate(Solution & solution) {
     }
   };
 
+  std::size_t depth = 0;
   // apply one batch of forced moves to all boards until we learn something.
   while (not active.empty()) {
+    depth++;
     for (auto iter = active.begin(); iter != active.end();) {
       SpeculationContext & context = **iter;
       forced.clear();
@@ -138,9 +142,9 @@ speculate(Solution & solution) {
                              : CellState::Bulb;
       solution.enqueue_move(move);
     }
-    return true;
+    return depth;
   }
-  return false;
+  return 0;
 }
 
 bool
@@ -160,7 +164,9 @@ find_moves(Solution & solution) {
   if (not moves.empty()) {
     return true;
   }
-  if (speculate(solution)) {
+
+  if (size_t depth = speculate(solution)) {
+    std::cout << " ==> DEPTH=" << depth << "\n";
     return true;
   }
 
@@ -184,22 +190,6 @@ play_moves(Solution & solution) {
     std::cout << solution.board() << std::endl;
   }
   return played;
-}
-
-bool
-check_if_done(Solution & solution) {
-  if (solution.is_solved()) {
-    LOG_DEBUG("play_single_move: Solved! steps={}\n",
-              solution.get_step_count());
-    solution.set_status(SolutionStatus::Solved);
-    return true;
-  }
-  else if (solution.has_error()) {
-    LOG_DEBUG("play_single_move: ERROR! steps={}\n", solution.get_step_count());
-    solution.set_status(SolutionStatus::Impossible);
-    return true;
-  }
-  return false;
 }
 
 void
