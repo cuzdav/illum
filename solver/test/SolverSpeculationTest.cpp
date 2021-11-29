@@ -37,6 +37,8 @@ class SolverSpeculationTest : public ::testing::Test {
   DEBUGPROFILE_COUNTER(visit_cell_counter);
   DEBUGPROFILE_COUNTER(visit_board_counter);
   DEBUGPROFILE_COUNTER(visit_adjacent_counter);
+  DEBUGPROFILE_COUNTER(visit_adj_corners_counter);
+  DEBUGPROFILE_COUNTER(visit_adj_flank_counter);
   DEBUGPROFILE_COUNTER(visit_empty_counter);
   DEBUGPROFILE_COUNTER(visit_row_left_counter);
   DEBUGPROFILE_COUNTER(visit_row_right_counter);
@@ -218,6 +220,27 @@ TEST_F(SolverSpeculationTest, realistic_game4) {
   creator("..2...");
   creator(".3.0..");
   creator(".....0");
+
+  model::BasicBoard board;
+  creator.finished(&board);
+  auto solution = solver::solve(board);
+
+  EXPECT_TRUE(solution.board().is_solved());
+
+  std::cout << solution.board().board() << std::endl;
+}
+
+TEST_F(SolverSpeculationTest, realistic_game5) {
+  model::test::ASCIILevelCreator creator;
+  creator(".........");
+  creator(".2.....0.");
+  creator("1.3.0.0.0");
+  creator(".0.....1.");
+  creator("..3...0..");
+  creator(".0.....0.");
+  creator("3.0.2.2.0");
+  creator(".2.....0.");
+  creator(".........");
 
   model::BasicBoard board;
   creator.finished(&board);

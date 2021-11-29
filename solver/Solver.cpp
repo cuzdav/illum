@@ -93,8 +93,7 @@ speculate(Solution & solution) {
   };
 
   std::size_t depth = 1;
-  //  if (contradictions.empty()) {
-  // apply one batch of forced moves to all boards until we learn something.
+  //  apply one batch of forced moves to all boards until we learn something.
   while (not active.empty()) {
     depth++;
     for (auto iter = active.begin(); iter != active.end();) {
@@ -133,7 +132,6 @@ speculate(Solution & solution) {
       }
     }
   }
-  //}
 
   if (not contradictions.empty()) {
     for (int contradiction_idx : contradictions) {

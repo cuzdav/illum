@@ -53,6 +53,13 @@ public:
   // counter-clockwise order: UP, LEFT, DOWN, RIGHT
   bool visit_adjacent(Coord coord, CellVisitor auto && visitor) const;
 
+  // visit the single "left" and "right" cells of a coordinate, given a
+  // direction. Still visited in absolute (to the board, not relative to your
+  // direction) order: (UP,DOWN), or (LEFT,RIGHT)
+  bool visit_adj_flank(Coord               coord,
+                       Direction           dir,
+                       CellVisitor auto && visitor) const;
+
   // visit the (diagonal) corners of wall, guaranteed in counter-clockwise
   // order: Quadrant I, II, III, IV
   bool visit_adj_corners(Coord coord, CellVisitor auto && visitor) const;
@@ -83,6 +90,7 @@ public:
   inline static int visit_cell_counter              = 0;
   inline static int visit_board_counter             = 0;
   inline static int visit_adjacent_counter          = 0;
+  inline static int visit_adj_flank_counter         = 0;
   inline static int visit_adj_corners_counter       = 0;
   inline static int visit_empty_counter             = 0;
   inline static int visit_row_left_counter          = 0;
@@ -287,6 +295,27 @@ BasicBoard::visit_adjacent(Coord coord, CellVisitor auto && visitor) const {
   auto [row, col] = coord;
   return visit({row - 1, col}) && visit({row, col - 1}) &&
          visit({row + 1, col}) && visit({row, col + 1});
+}
+
+inline bool
+BasicBoard::visit_adj_flank(Coord               coord,
+                            Direction           dir,
+                            CellVisitor auto && visitor) const {
+  DEBUGPROFILE_INC_COUNTER(visit_adj_flank_counter);
+  auto visit = [&](Coord coord) {
+    if (int idx = get_flat_idx(coord); idx != -1) {
+      return visit_cell(Direction::None, coord, idx, visitor);
+    }
+    return true;
+  };
+
+  auto [row, col] = coord;
+  if (dir == Direction::Up || dir == Direction::Down) {
+    return visit({row, col - 1}) && visit({row, col + 1});
+  }
+  else {
+    return visit({row - 1, col}) && visit({row + 1, col});
+  }
 }
 
 inline bool

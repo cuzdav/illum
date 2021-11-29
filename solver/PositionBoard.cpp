@@ -167,20 +167,26 @@ PositionBoard::add_bulb(model::Coord bulb_coord) {
 
   // now emit light outwards, and see if it affects walls nearby
   board().visit_rows_cols_outward(
-      bulb_coord, [&](model::Coord illum_coord, CellState cell) {
+      bulb_coord, [&](Direction dir, model::Coord coord, CellState cell) {
         if (is_illuminable(cell)) {
-          mut_board().set_cell(illum_coord, model::CellState::Illum);
+          mut_board().set_cell(coord, model::CellState::Illum);
           needs_illum_count_--;
 
-          // illuminating a cell adjacent to a wall with deps affects it
-          board().visit_adjacent(
-              illum_coord, [&](model::Coord adj_coord, CellState neighbor) {
+          // illuminating a cell adjacent to a wall with deps affects it. Only
+          // check left/right (flank) because looking ahead is redundant since
+          // we are walking in that direction anyway and will process when we
+          // get there. Don't look behind because it's already processed.
+          board().visit_adj_flank(
+              coord, dir, [&](model::Coord adj_coord, CellState neighbor) {
                 update_wall(adj_coord, neighbor, CellState::Illum, false);
               });
         }
-        else if (cell == CellState::Bulb) {
+        else if (is_bulb(cell)) {
           decision_type_ = DecisionType::BULBS_SEE_EACH_OTHER;
           has_error_     = true;
+        }
+        else if (is_wall_with_deps(cell)) {
+          update_wall(coord, cell, CellState::Illum, false);
         }
       });
 
