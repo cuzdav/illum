@@ -7,6 +7,7 @@
 #include "PositionBoard.hpp"
 #include "SingleMove.hpp"
 #include "SpeculationContext.hpp"
+#include "trivial_moves.hpp"
 #include "utils/DebugLog.hpp"
 #include "utils/EnumUtils.hpp"
 #include <iostream>
@@ -55,13 +56,13 @@ public:
   using OptBoard = std::optional<model::BasicBoard>;
 
   Solution(PositionBoard const & board, OptBoard known_solution = std::nullopt)
-      : board_(board), known_solution_(known_solution) {
-
+      : board_(board)
+      , known_solution_(known_solution)
+      , board_analysis_(create_board_analysis(board.board())) {
     auto const size = board.width() * board.height();
     context_cache_.contexts.reserve(size);
-    context_cache_.active_contexts.reserve(size);
-    context_cache_.contradicting_contexts.reserve(size);
-    context_cache_.solved_contexts.reserve(size);
+    context_cache_.active_context_idxs.reserve(size);
+    context_cache_.contradicting_context_idxs.reserve(size);
   }
 
   void
@@ -173,6 +174,11 @@ public:
     return step_count_;
   }
 
+  BoardAnalysis const *
+  get_board_analysis() const {
+    return board_analysis_.get();
+  }
+
   void
   add_step() {
     step_count_++;
@@ -194,11 +200,10 @@ public:
   }
 
   struct ContextCache {
-    std::vector<SpeculationContext>   contexts;
-    std::vector<SpeculationContext *> active_contexts;
-    std::vector<SpeculationContext *> contradicting_contexts;
-    std::vector<SpeculationContext *> solved_contexts;
-    std::vector<AnnotatedMove>        forced_moves;
+    std::vector<SpeculationContext> contexts;
+    std::vector<int>                active_context_idxs;
+    std::vector<int>                contradicting_context_idxs;
+    std::vector<AnnotatedMove>      forced_moves;
   };
 
   ContextCache &
@@ -207,11 +212,12 @@ public:
   }
 
 private:
-  PositionBoard             board_;
-  OptBoard                  known_solution_;
-  std::queue<AnnotatedMove> next_moves_;
-  SolutionStatus            status_     = SolutionStatus::Initial;
-  int                       step_count_ = 0;
-  ContextCache              context_cache_;
+  PositionBoard                  board_;
+  OptBoard                       known_solution_;
+  std::queue<AnnotatedMove>      next_moves_;
+  SolutionStatus                 status_     = SolutionStatus::Initial;
+  int                            step_count_ = 0;
+  ContextCache                   context_cache_;
+  std::unique_ptr<BoardAnalysis> board_analysis_;
 };
 } // namespace solver

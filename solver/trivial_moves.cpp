@@ -10,6 +10,7 @@
 #include "utils/DebugLog.hpp"
 #include <algorithm>
 #include <array>
+#include <memory>
 #include <optional>
 
 namespace solver {
@@ -78,7 +79,6 @@ add_mark(AnnotatedMoves & moves,
 OptCoord
 find_isolated_cells(model::BasicBoard const & board, AnnotatedMoves & moves) {
   OptCoord unlightable_mark_coord;
-
   // either a move (where to place a bulb) or an isolated mark, indicating
   // a mark that cannot be illuminated
   board.visit_board([&](Coord coord, CellState cell) {
@@ -233,53 +233,68 @@ find_ambiguous_linear_aligned_col_cells(model::BasicBoard const & board,
   }
 }
 
-// for performance, merges 2 algos into 1:
-// find_walls_with_deps_equal_open_faces()
-// find_satisfied_walls_having_open_faces() same metadata and structure, cells
-// of interest. Only difference between the 2 algos is the inner if.
-void
-find_around_walls_with_deps(model::BasicBoard const & board,
-                            AnnotatedMoves &          moves) {
+std::unique_ptr<BoardAnalysis>
+create_board_analysis(model::BasicBoard const & board) {
+  std::unique_ptr result = std::make_unique<BoardAnalysis>();
+  result->walls_with_deps.reserve(16);
   board.visit_board([&](Coord wall_coord, CellState cell) {
     if (int deps = num_wall_deps(cell); deps > 0) {
-      int empty_count = 0;
-      int bulb_count  = 0;
-      board.visit_adjacent(wall_coord, [&](Coord coord, auto cell) {
-        empty_count += cell == Empty;
-        bulb_count += cell == Bulb;
-      });
-
-      // all empty faces around wall must be bulbs
-      if (empty_count > 0 && (empty_count == deps - bulb_count)) {
-        board.visit_adjacent(wall_coord, [&](Coord adj_coord, auto cell) {
-          if (is_empty(cell)) {
-            add_bulb(moves,
-                     adj_coord,
-                     DecisionType::WALL_DEPS_EQUAL_OPEN_FACES,
-                     MoveMotive::FORCED,
-                     wall_coord);
-          }
-        });
-      }
-      // all empty faces around wall must be marks (wall satisfied)
-      if (empty_count > 0 && bulb_count == deps) {
-        board.visit_adjacent(wall_coord, [&](Coord adj_coord, auto cell) {
-          if (is_empty(cell)) {
-            add_mark(moves,
-                     adj_coord,
-                     DecisionType::WALL_SATISFIED_HAVING_OPEN_FACES,
-                     MoveMotive::FORCED,
-                     wall_coord);
-          }
-        });
-      }
+      result->walls_with_deps.push_back(wall_coord);
     }
   });
+  return result;
+}
+
+// for performance, merges 2 algos into 1:
+// find_walls_with_deps_equal_open_faces()
+// find_satisfied_walls_having_open_faces() same metadata and structure,
+// cells of interest. Only difference between the 2 algos is the inner if.
+void
+find_around_walls_with_deps(model::BasicBoard const & board,
+                            BoardAnalysis const *     board_analysis,
+                            AnnotatedMoves &          moves) {
+  for (Coord wall_coord : board_analysis->walls_with_deps) {
+    CellState cell        = board.get_cell(wall_coord);
+    int       empty_count = 0;
+    int       bulb_count  = 0;
+    int       deps        = num_wall_deps(cell);
+    board.visit_adjacent(wall_coord, [&](Coord coord, auto cell) {
+      empty_count += cell == Empty;
+      bulb_count += cell == Bulb;
+    });
+
+    // all empty faces around wall must be bulbs
+    if (empty_count > 0 && (empty_count == deps - bulb_count)) {
+      board.visit_adjacent(wall_coord, [&](Coord adj_coord, auto cell) {
+        if (is_empty(cell)) {
+          add_bulb(moves,
+                   adj_coord,
+                   DecisionType::WALL_DEPS_EQUAL_OPEN_FACES,
+                   MoveMotive::FORCED,
+                   wall_coord);
+        }
+      });
+    }
+    // all empty faces around wall must be marks (wall satisfied)
+    if (empty_count > 0 && bulb_count == deps) {
+      board.visit_adjacent(wall_coord, [&](Coord adj_coord, auto cell) {
+        if (is_empty(cell)) {
+          add_mark(moves,
+                   adj_coord,
+                   DecisionType::WALL_SATISFIED_HAVING_OPEN_FACES,
+                   MoveMotive::FORCED,
+                   wall_coord);
+        }
+      });
+    }
+  }
 }
 
 OptCoord
-find_trivial_moves(model::BasicBoard const & board, AnnotatedMoves & moves) {
-  find_around_walls_with_deps(board, moves);
+find_trivial_moves(model::BasicBoard const & board,
+                   BoardAnalysis const *     board_analysis,
+                   AnnotatedMoves &          moves) {
+  find_around_walls_with_deps(board, board_analysis, moves);
   if (moves.empty()) {
     find_ambiguous_linear_aligned_row_cells(board, moves);
   }

@@ -67,9 +67,10 @@ TEST(TrivialMovesTest, find_find_around_walls_with_deps1) {
   creator("000");
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
+  std::unique_ptr board_analysis = create_board_analysis(basic_board);
 
   AnnotatedMoves moves;
-  find_around_walls_with_deps(basic_board, moves);
+  find_around_walls_with_deps(basic_board, board_analysis.get(), moves);
   ASSERT_THAT(1, moves.size());
   EXPECT_THAT(moves[0],
               Eq(bulb_at({1, 0},
@@ -85,9 +86,9 @@ TEST(TrivialMovesTest, find_find_around_walls_with_deps2) {
 
   model::BasicBoard board;
   creator.finished(&board);
-
-  AnnotatedMoves moves;
-  find_trivial_moves(board, moves);
+  std::unique_ptr board_analysis = create_board_analysis(board);
+  AnnotatedMoves  moves;
+  find_trivial_moves(board, board_analysis.get(), moves);
 
   EXPECT_THAT(
       moves,

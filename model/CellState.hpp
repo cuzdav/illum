@@ -47,8 +47,9 @@ is_playable(CellState cell) {
   return cell == (cell & (CellState::Bulb | CellState::Mark));
 }
 
-// a cell that can replace an empty cell (played directly by player, or added as
-// a side effect (i.e. illumination extending from a bulb))
+// a cell that can change during the course of play, either played directly by
+// player, or added/removed as a side effect (i.e. illumination extending from a
+// bulb adds illumination))
 constexpr bool
 is_dynamic_entity(CellState cell) {
   return cell == (cell & (CellState::Bulb | CellState::Empty | CellState::Mark |
@@ -99,7 +100,7 @@ remove_wall_dep(CellState cell) {
 constexpr CellState
 add_wall_dep(CellState cell) {
   // Wall4 is the max
-  if (+cell < +CellState::Wall4) {
+  if (+cell >= +CellState::Wall0 && +cell < +CellState::Wall4) {
     return CellState(+cell << 1);
   }
   return cell;

@@ -40,27 +40,26 @@ init_speculation_contexts(Solution & solution) {
 
   Solution::ContextCache & context_cache = solution.get_context_cache();
   context_cache.contexts.clear();
-  context_cache.active_contexts.clear();
-  context_cache.contradicting_contexts.clear();
+  context_cache.active_context_idxs.clear();
+  context_cache.contradicting_context_idxs.clear();
 
   solution.board().visit_empty([&](Coord coord, CellState cell) {
     for (CellState state : {CellState::Bulb, CellState::Mark}) {
+
+      size_t idx     = context_cache.contexts.size();
       auto & context = context_cache.contexts.emplace_back(
           0,
           solution.board(),
-          SingleMove{
-              model::Action::Add, CellState::Empty, CellState::Bulb, coord});
+          SingleMove{model::Action::Add, CellState::Empty, state, coord});
 
       context.board.apply_move(context.first_move);
 
-      if (context.board.is_solved()) {
-        context_cache.solved_contexts.push_back(&context);
-      }
-      else if (context.board.has_error()) {
-        context_cache.contradicting_contexts.push_back(&context);
+      if (context.board.has_error()) {
+        assert(&context_cache.contexts[idx] == &context);
+        context_cache.contradicting_context_idxs.push_back(idx);
       }
       else {
-        context_cache.active_contexts.push_back(&context);
+        context_cache.active_context_idxs.push_back(idx);
       }
     }
   });
@@ -74,9 +73,10 @@ speculate(Solution & solution) {
   assert(solution.is_solved() == false);
   assert(solution.has_error() == false);
 
-  // creates N child boards with a different speculative move applied to each.
+  // creates N child boards with a different speculative move applied to
+  // each.
   Solution::ContextCache & cache = init_speculation_contexts(solution);
-  auto & [_, active, contradictions, solved, forced] = cache;
+  auto & [contexts, active, contradictions, forced] = cache;
 
   auto remove_from_active = [&](auto active_iter) {
     // pop_back invalidates iterators to back, and to end.  So be mindful that
@@ -92,14 +92,16 @@ speculate(Solution & solution) {
     }
   };
 
-  std::size_t depth = 0;
+  std::size_t depth = 1;
+  //  if (contradictions.empty()) {
   // apply one batch of forced moves to all boards until we learn something.
   while (not active.empty()) {
     depth++;
     for (auto iter = active.begin(); iter != active.end();) {
-      SpeculationContext & context = **iter;
+      SpeculationContext & context = contexts[*iter];
       forced.clear();
-      find_trivial_moves(context.board.board(), forced);
+      find_trivial_moves(
+          context.board.board(), solution.get_board_analysis(), forced);
 
       // no forced moves is a dead-end
       if (forced.empty()) {
@@ -113,14 +115,14 @@ speculate(Solution & solution) {
         context.board.apply_move(move.next_move);
         if (context.board.has_error()) {
           contradictions.push_back(*iter);
-          (*iter)->decision_type = move.reason;
-          (*iter)->ref_location  = move.reference_location;
-          iter                   = remove_from_active(iter);
-          inc_iter               = false;
+          SpeculationContext & context = contexts[(*iter)];
+          context.decision_type        = move.reason;
+          context.ref_location         = move.reference_location;
+          iter                         = remove_from_active(iter);
+          inc_iter                     = false;
           break;
         }
         else if (context.board.is_solved()) {
-          solved.push_back(*iter);
           iter     = remove_from_active(iter);
           inc_iter = false;
           break;
@@ -131,12 +133,11 @@ speculate(Solution & solution) {
       }
     }
   }
+  //}
 
-  // TODO: find the shortest contradiction first by building a graph and doing
-  // shortest path on them.  But for now, just take them in order of discovery.
   if (not contradictions.empty()) {
-    for (auto * contradiction : contradictions) {
-      AnnotatedMove move{contradiction->first_move};
+    for (int contradiction_idx : contradictions) {
+      AnnotatedMove move{contexts[contradiction_idx].first_move};
       move.next_move.to_ = (move.next_move.to_ == CellState::Bulb)
                              ? CellState::Mark
                              : CellState::Bulb;
@@ -150,8 +151,8 @@ speculate(Solution & solution) {
 bool
 find_moves(Solution & solution) {
   AnnotatedMoves moves;
-  if (OptCoord invalid_mark_location =
-          find_trivial_moves(solution.board().board(), moves)) {
+  if (OptCoord invalid_mark_location = find_trivial_moves(
+          solution.board().board(), solution.get_board_analysis(), moves)) {
     LOG_DEBUG("Detected a mark that cannot be illuminated at {}\n",
               *invalid_mark_location);
     solution.set_status(SolutionStatus::Impossible);
@@ -166,7 +167,6 @@ find_moves(Solution & solution) {
   }
 
   if (size_t depth = speculate(solution)) {
-    std::cout << " ==> DEPTH=" << depth << "\n";
     return true;
   }
 
@@ -186,8 +186,6 @@ play_moves(Solution & solution) {
               to_string(next_move.motive),
               to_string(next_move.reason));
     solution.apply_enqueued_next();
-
-    std::cout << solution.board() << std::endl;
   }
   return played;
 }

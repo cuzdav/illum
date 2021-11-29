@@ -2,12 +2,16 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+
 # useful for sanitize debugging
 if (ASAN)
   message("=== DEBUG ADDRESS SANITIZER ENABLED ===")
   set(CMAKE_BUILD_TYPE "Debug")
   set(ASAN_ARGS "-fno-omit-frame-pointer -fsanitize=address")
-  ADD_DEFINITIONS(${ASAN_ARGS})
+  set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} ${ASAN_ARGS}")
+  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${ASAN_ARGS}")
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${ASAN_ARGS}")
+#  ADD_DEFINITIONS(${ASAN_ARGS})
 endif()
 
 if (DEBUGPROFILE)
@@ -23,6 +27,7 @@ endif(DEBUGLOG)
 # for clangd and other clang tools
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+include(CTest)
 include(FetchContent)
 
 FetchContent_Declare(
