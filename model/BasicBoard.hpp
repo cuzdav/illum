@@ -75,9 +75,15 @@ public:
                            Direction                 dir,
                            OptDirCellVisitor auto && visitor) const;
 
-  // visitor will always visit every direction. If it is a CellVisitorSome
-  // and returns false, it will stop for the current direction, but still
-  // visit other directions.
+  // visit upwards and downwards from given coord, starting each direction
+  // adjacent to coord, going outward.
+  void visit_row_outward(Coord coord, OptDirCellVisitor auto && visitor) const;
+  // visit left and right from given coord, starting each direction
+  // adjacent to coord, going outward.
+  void visit_col_outward(Coord coord, OptDirCellVisitor auto && visitor) const;
+
+  // visitor will always visit every direction.  Essentially combines
+  // visit_row_outward and visit_col_outward
   void visit_rows_cols_outward(Coord                     coord,
                                OptDirCellVisitor auto && visitor) const;
 
@@ -99,6 +105,8 @@ public:
   inline static int visit_col_down_counter          = 0;
   inline static int visit_perp_counter              = 0;
   inline static int visit_rows_cols_outward_counter = 0;
+  inline static int visit_row_outward_counter       = 0;
+  inline static int visit_col_outward_counter       = 0;
 
 private:
   int get_flat_idx(Coord coord) const;
@@ -438,13 +446,27 @@ BasicBoard::visit_col_below(Coord                     coord,
 }
 
 inline void
+BasicBoard::visit_row_outward(Coord                     coord,
+                              OptDirCellVisitor auto && visitor) const {
+  DEBUGPROFILE_INC_COUNTER(visit_row_outward_counter);
+  visit_row_left_of(coord, visitor);
+  visit_row_right_of(coord, visitor);
+}
+
+inline void
+BasicBoard::visit_col_outward(Coord                     coord,
+                              OptDirCellVisitor auto && visitor) const {
+  DEBUGPROFILE_INC_COUNTER(visit_col_outward_counter);
+  visit_col_above(coord, visitor);
+  visit_col_below(coord, visitor);
+}
+
+inline void
 BasicBoard::visit_rows_cols_outward(Coord                     coord,
                                     OptDirCellVisitor auto && visitor) const {
   DEBUGPROFILE_INC_COUNTER(visit_rows_cols_outward_counter);
-  visit_row_left_of(coord, visitor);
-  visit_row_right_of(coord, visitor);
-  visit_col_above(coord, visitor);
-  visit_col_below(coord, visitor);
+  visit_row_outward(coord, visitor);
+  visit_col_outward(coord, visitor);
 }
 
 // Provide the direction you are scanning the board, and a coordinate, and it
