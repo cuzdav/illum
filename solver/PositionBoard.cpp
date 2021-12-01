@@ -87,9 +87,10 @@ PositionBoard::has_error() const {
 }
 
 void
-PositionBoard::set_has_error(bool yn, DecisionType decision) {
+PositionBoard::set_has_error(bool yn, DecisionType decision, Coord location) {
   has_error_     = yn;
   decision_type_ = decision;
+  ref_location_  = location;
 }
 
 DecisionType
@@ -122,6 +123,7 @@ PositionBoard::update_wall(model::Coord wall_coord,
                            CellState    play_cell,
                            bool         coord_is_adjacent_to_play) {
   if (int deps = model::num_wall_deps(wall_cell); deps > 0) {
+
     int empty_neighbors = 0;
     int bulb_neighbors  = 0;
     board().visit_adjacent(wall_coord,
@@ -184,6 +186,7 @@ PositionBoard::add_bulb(model::Coord bulb_coord) {
         else if (is_bulb(cell)) {
           decision_type_ = DecisionType::BULBS_SEE_EACH_OTHER;
           has_error_     = true;
+          ref_location_  = bulb_coord;
         }
         else if (is_wall_with_deps(cell)) {
           update_wall(coord, cell, CellState::Illum, false);

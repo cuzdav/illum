@@ -150,8 +150,9 @@ public:
 
   void
   set_has_error(bool         has_error,
-                DecisionType decision_type = DecisionType::NONE) {
-    board_.set_has_error(has_error, decision_type);
+                DecisionType decision_type,
+                model::Coord location) {
+    board_.set_has_error(has_error, decision_type, location);
   }
 
   PositionBoard const &

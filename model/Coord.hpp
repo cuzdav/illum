@@ -72,6 +72,26 @@ struct fmt::formatter<model::Coord> {
 };
 
 template <>
+struct fmt::formatter<model::OptCoord> {
+  template <typename ParseContext>
+  constexpr auto
+  parse(ParseContext & ctx) {
+    return ctx.begin();
+  }
+
+  template <typename FormatContext>
+  auto
+  format(model::OptCoord const & coord, FormatContext & ctx) {
+    if (coord) {
+      return fmt::format_to(ctx.out(), "[r:{},c:{}]", coord->row_, coord->col_);
+    }
+    else {
+      return fmt::format_to(ctx.out(), "(none)");
+    }
+  }
+};
+
+template <>
 struct std::hash<::model::Coord> {
   size_t
   operator()(::model::Coord const & coord) const {

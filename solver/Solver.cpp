@@ -154,7 +154,8 @@ find_moves(Solution & solution) {
     LOG_DEBUG("Detected a mark that cannot be illuminated at {}\n",
               *invalid_mark_location);
     solution.set_status(SolutionStatus::Impossible);
-    solution.set_has_error(true, DecisionType::MARK_CANNOT_BE_ILLUMINATED);
+    solution.set_has_error(
+        true, DecisionType::MARK_CANNOT_BE_ILLUMINATED, *invalid_mark_location);
     return false;
   }
   for (auto & move : moves) {
@@ -169,8 +170,8 @@ find_moves(Solution & solution) {
   }
 
   solution.set_status(SolutionStatus::FailedFindingMove);
-  solution.board().set_has_error(true,
-                                 DecisionType::VIOLATES_SINGLE_UNIQUE_SOLUTION);
+  solution.board().set_has_error(
+      true, DecisionType::VIOLATES_SINGLE_UNIQUE_SOLUTION, {0, 0});
   return false;
 }
 
@@ -184,6 +185,8 @@ play_moves(Solution & solution) {
               to_string(next_move.motive),
               to_string(next_move.reason));
     solution.apply_enqueued_next();
+
+    // std::cout << solution.board() << std::endl;
   }
   return played;
 }
@@ -198,6 +201,13 @@ find_solution(Solution & solution) {
     }
   } while (solution.get_status() == SolutionStatus::Progressing &&
            solution.get_step_count() < MAX_SOLVE_STEPS);
+
+  if (solution.has_error()) {
+    OptCoord opt_coord = solution.board().get_ref_location();
+    LOG_DEBUG("Board contains an error: {}, at: {}\n",
+              solution.board().decision_type(),
+              opt_coord);
+  }
 }
 
 Solution
