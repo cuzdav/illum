@@ -1,6 +1,5 @@
 #include "trivial_moves.hpp"
 #include "Action.hpp"
-#include "BasicBoard.hpp"
 #include "CellState.hpp"
 #include "CellVisitorConcepts.hpp"
 #include "Coord.hpp"
@@ -68,15 +67,164 @@ add_mark(AnnotatedMoves & moves,
   add_cell(moves, CellState::Mark, where, why, motive, ref_location);
 }
 
+int
+get_col_span_empty_count(Coord                              coord,
+                         model::BasicBoard const &          board,
+                         std::vector<CellSpanCount> const & col_span_cache) {
+  auto col_span_iter = std::lower_bound(
+      begin(col_span_cache),
+      end(col_span_cache),
+      coord,
+      [&](CellSpanCount const & cell_span_count, Coord coord) {
+        return cell_span_count.span_start_coord.col_ < coord.col_;
+      });
+
+  int count = -1;
+  while (col_span_iter != end(col_span_cache) &&
+         col_span_iter->span_start_coord.col_ <= coord.col_ &&
+         col_span_iter->span_start_coord.row_ <= coord.row_) {
+    assert(col_span_iter->span_start_coord.col_ == coord.col_);
+    count = col_span_iter->count;
+    ++col_span_iter;
+  }
+
+  if (count != -1) {
+    return count;
+  }
+
+  throw std::runtime_error(fmt::format(
+      "Should not be possible; no column span associated with {}", coord));
+}
+
+std::vector<CellSpanCount> &
+init_row_span_cache(model::BasicBoard const & board,
+                    BoardAnalysis *           board_analysis) {
+  // count all of the row spans... that is, for each contiguous range of
+  // (empty|mark) cells, count the empties, and store them in the sorted
+  // vector keyed by the coordinate of the FIRST cell in the span. Whenever
+  // any other type of cell is seen, it ends that segment.
+  auto & row_span_cache = board_analysis->row_span_cache;
+  row_span_cache.clear();
+  int flat_idx = 0;
+  for (int row = 0; row < board.height(); ++row) {
+    bool in_span = false;
+    for (int col = 0; col < board.width(); ++col, flat_idx++) {
+      CellState cell = board.get_cell_flat_unchecked(flat_idx);
+      if (model::is_translucent(cell)) {
+        if (not in_span) {
+          in_span = true;
+          row_span_cache.push_back(CellSpanCount{Coord{row, col}, 0});
+        }
+        if (model::is_empty(cell)) {
+          row_span_cache.back().count++;
+        }
+      }
+      else {
+        in_span = false;
+      }
+    }
+  }
+  return row_span_cache;
+}
+
+std::vector<CellSpanCount> &
+init_col_span_cache(model::BasicBoard const & board,
+                    BoardAnalysis *           board_analysis) {
+
+  auto & col_span_cache = board_analysis->col_span_cache;
+  col_span_cache.clear();
+  for (int col = 0; col < board.width(); ++col) {
+    bool in_span  = false;
+    int  flat_idx = col;
+    for (int row = 0; row < board.height(); ++row, flat_idx += board.width()) {
+      CellState cell = board.get_cell_flat_unchecked(flat_idx);
+      if (model::is_translucent(cell)) {
+        if (not in_span) {
+          in_span = true;
+          col_span_cache.push_back(CellSpanCount{Coord{row, col}, 0});
+        }
+        if (model::is_empty(cell)) {
+          col_span_cache.back().count++;
+        }
+      }
+      else {
+        in_span = false;
+      }
+    }
+  }
+  return col_span_cache;
+}
+
 } // namespace
 
-// This generates the same results as the find_isolated_cells() call, but is
-// less efficient because it continues to scan over the same rows and columns
-// over and over, where the other one, which is more complicated, tracks where
-// it has already scanned for "the impossible" and avoids rescanning it.
+// Three cases found:
+// 1) an empty cell with no visible empty neighbors. It must contain a bulb
+// because it cannot otherwise be illuminated.
+// 2) a mark that has exactly one visible empty neighbor. That empty cell must
+// contain a bulb because it is the only way to illuminate the mark.
+// 3) a mark with zero visible empty neighbors -- board is in an invalid
+// state. Returns false if case 3 happened, true otherwise.
 OptCoord
-find_isolated_cells_old(model::BasicBoard const & board,
-                        AnnotatedMoves &          moves) {
+find_isolated_cells2(model::BasicBoard const & board,
+                     BoardAnalysis *           board_analysis,
+                     AnnotatedMoves &          moves) {
+
+  auto & row_span_cache = init_row_span_cache(board, board_analysis);
+  auto & col_span_cache = init_col_span_cache(board, board_analysis);
+
+  // now walk the board, and find any isolated empty cells, or marks, using
+  // the caches we just populated. Just find the row span and column span it
+  // is in, and sum them up to know the number of empties in all its
+  // directions, and account for what the cell is itself.
+  OptCoord unlightable_mark_coord;
+  for (auto & cur_row_span : row_span_cache) {
+    board.visit_row_right_of(
+        cur_row_span.span_start_coord,
+        [&](Coord coord, CellState cell) {
+          if (not is_illuminable(cell)) {
+            return;
+          }
+          const int row_col_empty_count =
+              cur_row_span.count +
+              get_col_span_empty_count(coord, board, col_span_cache);
+
+          if (is_empty(cell) && row_col_empty_count == 2) {
+            add_bulb(moves,
+                     coord,
+                     DecisionType::ISOLATED_EMPTY_SQUARE,
+                     MoveMotive::FORCED);
+          }
+          else if (is_mark(cell)) {
+            if (row_col_empty_count == 1) {
+              // this is an isolated mark but we don't know where
+              // its empty cell is. Find it.
+              board.visit_rows_cols_outward(
+                  coord, [&](auto adj_coord, auto adj_cell) {
+                    if (is_empty(adj_cell)) {
+                      add_bulb(moves,
+                               adj_coord,
+                               DecisionType::ISOLATED_MARK,
+                               MoveMotive::FORCED,
+                               coord);
+                      return model::STOP_VISITING;
+                    }
+                    return model::KEEP_VISITING;
+                  });
+            }
+            else if (row_col_empty_count == 0) {
+              unlightable_mark_coord = coord;
+            }
+          }
+        },
+        (model::BasicBoard::VisitPolicy::VISIT_START_COORD |
+         model::BasicBoard::VisitPolicy::SKIP_TERMINATING_WALL));
+  }
+  return unlightable_mark_coord;
+}
+
+OptCoord
+find_isolated_cells_orig(model::BasicBoard const & board,
+                         AnnotatedMoves &          moves) {
   OptCoord unlightable_mark_coord;
   // either a move (where to place a bulb) or an isolated mark, indicating
   // a mark that cannot be illuminated
@@ -115,140 +263,11 @@ find_isolated_cells_old(model::BasicBoard const & board,
   return unlightable_mark_coord;
 }
 
-// Three cases found:
-// 1) an empty cell with no visible empty neighbors. It must contain a bulb
-// because it cannot otherwise be illuminated.
-// 2) a mark that has exactly one visible empty neighbor. That empty cell must
-// contain a bulb because it is the only way to illuminate the mark.
-// 3) a mark with zero visible empty neighbors -- board is in an invalid state.
-// Returns false if case 3 happened, true otherwise.
-
-// Algorithm has been optimized, which increases complexity, so here's what it
-// does:
-// 1) scans the board for each cell that is illuminable (empty or a mark),
-
-// 2) then looks in each direction outward, like a castle moves in chess,
-// counting the number of empty cells it sees until it runs into a wall (or
-// edge of board)
-
-// 3) Since we are looking for isolated empty cells (no visible empty neighbors
-// in any direction) or isolated marks (exactly 1 empty neighbor in all
-// directions combined), then if we see 2 or more empty cells in either the row
-// or column we know that it's impossible to find the scenario we're looking
-// for. Therefore, remember how far "down" the column we have seen
-// (max_unisolated_row_seen_for_col), or how far "across" this row we have seen,
-// because as long as we are still in that column or row, we WONT find a
-// solution, so we can skip it.
-
-// It is worth noting that visit_board() is guaranteed to scan the board
-// row-wise, starting at the top of board scanning across, then the next row,
-// etc. We must store a "how far down" for each column, but only need a single
-// "how far across" metric for the current row.
-
 OptCoord
-find_isolated_cells(model::BasicBoard const & board, AnnotatedMoves & moves) {
-
-  // track rows/cols already seen that are known to not be isolated.
-  // We can skip visiting those.
-  OptCoord unlightable_mark_coord;
-  int      max_unisolated_row_seen_for_col[model::BasicBoard::MAX_GRID_EDGE]{};
-  int      max_unisolated_col_seen_for_row = 0;
-  int      cur_row                         = 0;
-
-  board.visit_board([&](Coord coord, CellState cell) {
-    // only consider an empty cell or a mark
-    if (not model::is_illuminable(cell)) {
-      return;
-    }
-    if (coord.row_ > cur_row) {
-      cur_row                         = coord.row_;
-      max_unisolated_col_seen_for_row = 0;
-    }
-
-    int      max_col         = 0;
-    int      max_row         = 0;
-    int      empty_row_cells = is_empty(cell);
-    int      empty_col_cells = is_empty(cell);
-    OptCoord empty_neighbor_location;
-
-    // only scan if we are past the previous range of known row
-    // with too many empties to possibly have an isolated cell.
-    if (cur_row >= max_unisolated_row_seen_for_col[coord.col_]) {
-      board.visit_col_outward(coord, [&](Coord coord, CellState cell) {
-        if (coord.row_ > max_row) {
-          max_row = coord.row_;
-        }
-        if (is_empty(cell)) {
-          empty_col_cells++;
-          empty_neighbor_location = coord;
-        }
-        if (empty_col_cells >= 2) {
-          max_unisolated_row_seen_for_col[coord.col_] = max_row;
-        }
-      });
-    }
-    else {
-      // skipped col because this is known. Doesn't matter the
-      // value, as long as it's >= 2.
-      empty_col_cells = 2;
-    }
-
-    // only scan if we are past the previous range of known col
-    // with too many empties to possibly have an isolated cell.
-    if (coord.col_ >= max_unisolated_col_seen_for_row) {
-      board.visit_row_outward(coord, [&](Coord coord, CellState cell) {
-        if (coord.col_ > max_col) {
-          max_col = coord.col_;
-        }
-        if (is_empty(cell)) {
-          empty_row_cells++;
-          empty_neighbor_location = coord;
-        }
-        if (empty_row_cells >= 2) {
-          max_unisolated_col_seen_for_row = max_col;
-        }
-      });
-    }
-    else {
-      // skipped row because this is known to have at least 2
-      // empties. Doesn't matter the value, as long as it's
-      // >= 2.
-      empty_row_cells = 2;
-    }
-
-    const int empty_row_col_cells = empty_row_cells + empty_col_cells;
-
-    // an empty at coord is counted twice: once each in row and
-    // col, so if the sum is 2, this empty is the only one in
-    // this row and col.
-    if (is_empty(cell) && empty_row_col_cells == 2) {
-      add_bulb(moves,
-               coord,
-               DecisionType::ISOLATED_EMPTY_SQUARE,
-               MoveMotive::FORCED);
-      // if we placed a bulb, then update the range of
-      // unisolated marks
-      max_unisolated_row_seen_for_col[coord.col_] = max_row;
-      max_unisolated_col_seen_for_row             = max_col;
-    }
-    else if (is_mark(cell)) {
-      // mark has exactly one empty neighbor; that empty must
-      // be a bulb
-      if (empty_row_col_cells == 1) {
-        add_bulb(moves,
-                 *empty_neighbor_location,
-                 DecisionType::ISOLATED_MARK,
-                 MoveMotive::FORCED,
-                 coord);
-      }
-      else if (empty_row_col_cells == 0) {
-        // mark has no visible empty neighbors; cannot be
-        // illuminated.
-        unlightable_mark_coord = coord;
-      }
-    }
-  });
-  return unlightable_mark_coord;
+find_isolated_cells(model::BasicBoard const & board,
+                    BoardAnalysis *           board_analysis,
+                    AnnotatedMoves &          moves) {
+  return find_isolated_cells2(board, board_analysis, moves);
 }
 
 void
@@ -256,8 +275,8 @@ find_ambiguous_linear_aligned_row_cells(model::BasicBoard const & board,
                                         AnnotatedMoves &          moves) {
   // for any co-linear cells that have no cross-visible illuminable cells
   // Example: The empty cells below the '0' walls are inter-changeable for
-  // where the bulb could go, leading to multiple solutions and ambiguity. So
-  // they must be marks.``
+  // where the bulb could go, leading to multiple solutions and ambiguity.
+  // So they must be marks.``
 
   //      00.
   //      ...
@@ -272,8 +291,8 @@ find_ambiguous_linear_aligned_row_cells(model::BasicBoard const & board,
   // and then there is only one place to play to illuminate the marks:
   // Coord(1,2), which also solves it.
 
-  // This algorithm tests every separate horizontal row section in a single
-  // pass of the board.
+  // This algorithm tests every separate horizontal row section in a
+  // single pass of the board.
   int row = 0;
   int col = -1;
   while (row < board.height()) {
@@ -370,14 +389,15 @@ find_ambiguous_linear_aligned_col_cells(model::BasicBoard const & board,
 
 std::unique_ptr<BoardAnalysis>
 create_board_analysis(model::BasicBoard const & board) {
-  std::unique_ptr result = std::make_unique<BoardAnalysis>();
-  result->walls_with_deps.reserve(16);
+  std::vector<model::Coord> walls_with_deps;
+  walls_with_deps.reserve(16);
   board.visit_board([&](Coord wall_coord, CellState cell) {
     if (int deps = num_wall_deps(cell); deps > 0) {
-      result->walls_with_deps.push_back(wall_coord);
+      walls_with_deps.push_back(wall_coord);
     }
   });
-  return result;
+
+  return std::make_unique<BoardAnalysis>(walls_with_deps);
 }
 
 // for performance, merges 2 algos into 1:
@@ -386,7 +406,7 @@ create_board_analysis(model::BasicBoard const & board) {
 // cells of interest. Only difference between the 2 algos is the inner if.
 void
 find_around_walls_with_deps(model::BasicBoard const & board,
-                            BoardAnalysis const *     board_analysis,
+                            BoardAnalysis *           board_analysis,
                             AnnotatedMoves &          moves) {
   for (Coord wall_coord : board_analysis->walls_with_deps) {
     CellState cell        = board.get_cell(wall_coord);
@@ -427,7 +447,7 @@ find_around_walls_with_deps(model::BasicBoard const & board,
 
 OptCoord
 find_trivial_moves(model::BasicBoard const & board,
-                   BoardAnalysis const *     board_analysis,
+                   BoardAnalysis *           board_analysis,
                    AnnotatedMoves &          moves) {
   find_around_walls_with_deps(board, board_analysis, moves);
   if (moves.empty()) {
@@ -436,7 +456,7 @@ find_trivial_moves(model::BasicBoard const & board,
   if (moves.empty()) {
     find_ambiguous_linear_aligned_col_cells(board, moves);
   }
-  return find_isolated_cells(board, moves);
+  return find_isolated_cells(board, board_analysis, moves);
 }
 
 } // namespace solver

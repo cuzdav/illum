@@ -62,6 +62,13 @@ is_illuminable(CellState cell) {
   return cell == (cell & (CellState::Empty | CellState::Mark));
 }
 
+// a cell that a beam of light can pass through
+constexpr bool
+is_translucent(CellState cell) {
+  return cell ==
+         (cell & (CellState::Empty | CellState::Mark | CellState::Illum));
+}
+
 // any wall
 constexpr bool
 is_wall(CellState cell) {

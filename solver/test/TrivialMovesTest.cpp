@@ -26,9 +26,11 @@ TEST(TrivialMovesTest, find_isolated_cell_detects_invalid_mark) {
   creator("0.0");
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
+  std::unique_ptr board_analysis = create_board_analysis(basic_board);
 
   AnnotatedMoves moves;
-  OptCoord       invalid_mark_coord = find_isolated_cells(basic_board, moves);
+  OptCoord       invalid_mark_coord =
+      find_isolated_cells(basic_board, board_analysis.get(), moves);
   ASSERT_TRUE(invalid_mark_coord.has_value());
   ASSERT_EQ(Coord(1, 0), *invalid_mark_coord);
 }
@@ -40,10 +42,12 @@ TEST(TrivialMovesTest, find_isolated_cell) {
   creator("0.0");
   model::BasicBoard basic_board;
   creator.finished(&basic_board);
+  std::unique_ptr board_analysis = create_board_analysis(basic_board);
 
   AnnotatedMoves moves;
 
-  OptCoord invalid_mark_coord = find_isolated_cells(basic_board, moves);
+  OptCoord invalid_mark_coord =
+      find_isolated_cells(basic_board, board_analysis.get(), moves);
   ASSERT_FALSE(invalid_mark_coord.has_value());
   ASSERT_EQ(4, moves.size());
   ASSERT_THAT(
@@ -60,7 +64,7 @@ TEST(TrivialMovesTest, find_isolated_cell) {
                   MoveMotive::FORCED)));
 }
 
-TEST(TrivialMovesTest, find_find_around_walls_with_deps1) {
+TEST(TrivialMovesTest, find_around_walls_with_deps1) {
   model::test::ASCIILevelCreator creator;
   creator(".00");
   creator(".10");
@@ -79,10 +83,10 @@ TEST(TrivialMovesTest, find_find_around_walls_with_deps1) {
                          Coord{1, 1})));
 }
 
-TEST(TrivialMovesTest, find_find_around_walls_with_deps2) {
+TEST(TrivialMovesTest, find_around_walls_with_deps2) {
   model::test::ASCIILevelCreator creator;
-  creator("1*");
-  creator(".+");
+  creator("01*");
+  creator("..0");
 
   model::BasicBoard board;
   creator.finished(&board);
@@ -92,10 +96,10 @@ TEST(TrivialMovesTest, find_find_around_walls_with_deps2) {
 
   EXPECT_THAT(
       moves,
-      ElementsAre(mark_at({1, 0},
+      ElementsAre(mark_at({1, 1},
                           DecisionType::WALL_SATISFIED_HAVING_OPEN_FACES,
                           MoveMotive::FORCED,
-                          Coord{0, 0})));
+                          Coord{0, 1})));
 }
 
 TEST(TrivialMovesTest, ambigus_cells_in_rows) {

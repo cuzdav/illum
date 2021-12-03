@@ -2,6 +2,8 @@
 #include "CellState.hpp"
 #include "CellVisitorConcepts.hpp"
 #include "Coord.hpp"
+#include "utils/EnumUtils.hpp"
+
 #include <array>
 #include <fmt/format.h>
 #include <iosfwd>
@@ -21,6 +23,20 @@ class BasicBoard {
 public:
   static int constexpr MAX_GRID_EDGE = 21;
   static int constexpr MAX_CELLS     = MAX_GRID_EDGE * MAX_GRID_EDGE;
+
+  enum class VisitPolicy {
+    DEFAULT               = 0,
+    VISIT_START_COORD     = 1,
+    SKIP_TERMINATING_WALL = 2,
+  };
+  friend auto
+  operator+(VisitPolicy e) {
+    return static_cast<int>(e);
+  }
+  friend VisitPolicy
+  operator|(VisitPolicy v1, VisitPolicy v2) {
+    return VisitPolicy(+v1 | +v2);
+  }
 
   bool operator==(BasicBoard const & other) const;
 
@@ -60,30 +76,31 @@ public:
                        Direction           dir,
                        CellVisitor auto && visitor) const;
 
-  // visit the (diagonal) corners of wall, guaranteed in counter-clockwise
-  // order: Quadrant I, II, III, IV
-  bool visit_adj_corners(Coord coord, CellVisitor auto && visitor) const;
+  // visit all currently empty cells (unless prematurely stopped)
   bool visit_empty(CellVisitor auto && visitor) const;
 
   // will stop _after_ visiting a wall, or if visitor returns false
-  bool visit_row_left_of(Coord coord, OptDirCellVisitor auto && visitor) const;
-  bool visit_row_right_of(Coord coord, OptDirCellVisitor auto && visitor) const;
-  bool visit_col_above(Coord coord, OptDirCellVisitor auto && visitor) const;
-  bool visit_col_below(Coord coord, OptDirCellVisitor auto && visitor) const;
+  // Does not visit coord unless VISIT_STARTING_COOED is passed in.
+  bool visit_row_left_of(Coord                     coord,
+                         OptDirCellVisitor auto && visitor,
+                         VisitPolicy = VisitPolicy::DEFAULT) const;
+  bool visit_row_right_of(Coord                     coord,
+                          OptDirCellVisitor auto && visitor,
+                          VisitPolicy = VisitPolicy::DEFAULT) const;
+  bool visit_col_above(Coord                     coord,
+                       OptDirCellVisitor auto && visitor,
+                       VisitPolicy = VisitPolicy::DEFAULT) const;
+  bool visit_col_below(Coord                     coord,
+                       OptDirCellVisitor auto && visitor,
+                       VisitPolicy = VisitPolicy::DEFAULT) const;
 
   void visit_perpendicular(Coord                     coord,
                            Direction                 dir,
                            OptDirCellVisitor auto && visitor) const;
 
-  // visit upwards and downwards from given coord, starting each direction
-  // adjacent to coord, going outward.
-  void visit_row_outward(Coord coord, OptDirCellVisitor auto && visitor) const;
-  // visit left and right from given coord, starting each direction
-  // adjacent to coord, going outward.
-  void visit_col_outward(Coord coord, OptDirCellVisitor auto && visitor) const;
-
-  // visitor will always visit every direction.  Essentially combines
-  // visit_row_outward and visit_col_outward
+  // visitor will always visit every direction. If it is a CellVisitorSome
+  // and returns false, it will stop for the current direction, but still
+  // visit other directions.
   void visit_rows_cols_outward(Coord                     coord,
                                OptDirCellVisitor auto && visitor) const;
 
@@ -97,7 +114,6 @@ public:
   inline static int visit_board_counter             = 0;
   inline static int visit_adjacent_counter          = 0;
   inline static int visit_adj_flank_counter         = 0;
-  inline static int visit_adj_corners_counter       = 0;
   inline static int visit_empty_counter             = 0;
   inline static int visit_row_left_counter          = 0;
   inline static int visit_row_right_counter         = 0;
@@ -105,8 +121,6 @@ public:
   inline static int visit_col_down_counter          = 0;
   inline static int visit_perp_counter              = 0;
   inline static int visit_rows_cols_outward_counter = 0;
-  inline static int visit_row_outward_counter       = 0;
-  inline static int visit_col_outward_counter       = 0;
 
 private:
   int get_flat_idx(Coord coord) const;
@@ -135,7 +149,8 @@ private:
       auto &&   update_coord, // modify row or col by one
       auto &&   update_index, // +/- 1 for left/right +/- width for up/down
       auto &&   test_coord, // check if reached end of range (0 or height/width)
-      OptDirCellVisitor auto && visitor) const;
+      OptDirCellVisitor auto && visitor,
+      VisitPolicy) const;
 
 private:
   int                              height_ = 0;
@@ -327,21 +342,6 @@ BasicBoard::visit_adj_flank(Coord               coord,
 }
 
 inline bool
-BasicBoard::visit_adj_corners(Coord coord, CellVisitor auto && visitor) const {
-  DEBUGPROFILE_INC_COUNTER(visit_adj_corners_counter);
-  auto visit = [&](Coord coord) {
-    if (int idx = get_flat_idx(coord); idx != -1) {
-      return visit_cell(Direction::None, coord, idx, visitor);
-    }
-    return true;
-  };
-
-  auto [row, col] = coord;
-  return visit({row - 1, col + 1}) && visit({row - 1, col - 1}) &&
-         visit({row + 1, col - 1}) && visit({row + 1, col + 1});
-}
-
-inline bool
 BasicBoard::visit_empty(CellVisitor auto && visitor) const {
   DEBUGPROFILE_INC_COUNTER(visit_empty_counter);
   return visit_board_if(visitor,
@@ -378,95 +378,115 @@ BasicBoard::visit_straight_line(Direction                 dir,
                                 auto &&                   update_coord,
                                 auto &&                   update_index,
                                 auto &&                   test_coord,
-                                OptDirCellVisitor auto && visitor) const {
-  // initial movement, since we are scanning above, to the right of, etc., the
-  // starting point.
-  update_coord(coord);
+                                OptDirCellVisitor auto && visitor,
+                                BasicBoard::VisitPolicy   visit_policy) const {
+  // initial movement normally skips the starting point, since we are scanning
+  // above, to the right of, etc. starting point. But it can optionally be
+  // visited
+  if ((+visit_policy & +VisitPolicy::VISIT_START_COORD) == 0) {
+    update_coord(coord);
+  }
 
   int idx = get_flat_idx(coord);
-  if (idx >= 0) {
-    // reached end of line?
-    while (test_coord(coord)) {
+  if (idx < 0) {
+    return true;
+  }
+  bool const should_visit_wall =
+      (+visit_policy & +VisitPolicy::SKIP_TERMINATING_WALL) == 0;
+
+  while (test_coord(coord)) {
+    bool const hit_wall = is_wall(cells_[idx]);
+    if (not hit_wall || should_visit_wall) {
       if (not visit_cell(dir, coord, idx, visitor)) {
         return false;
       }
-      if (is_wall(cells_[idx])) {
-        break;
-      }
-      // post iteration update.  Change coord, compute new flat index
-      update_coord(coord);
-      update_index(idx);
     }
+    if (hit_wall) {
+      break;
+    }
+    // post iteration update.  Change coord, compute new flat index
+    update_coord(coord);
+    update_index(idx);
   }
   return true;
 }
 
 inline bool
 BasicBoard::visit_row_left_of(Coord                     coord,
-                              OptDirCellVisitor auto && visitor) const {
+                              OptDirCellVisitor auto && visitor,
+                              VisitPolicy               visit_policy) const {
   DEBUGPROFILE_INC_COUNTER(visit_row_left_counter);
   auto update_coord = [](Coord & coord) { --coord.col_; };
   auto update_idx   = [](int & idx) { --idx; };
   auto test_coord   = [](Coord coord) { return coord.col_ >= 0; };
-  return visit_straight_line(
-      Direction::Left, coord, update_coord, update_idx, test_coord, visitor);
+  return visit_straight_line(Direction::Left,
+                             coord,
+                             update_coord,
+                             update_idx,
+                             test_coord,
+                             visitor,
+                             visit_policy);
 }
 
 inline bool
 BasicBoard::visit_row_right_of(Coord                     coord,
-                               OptDirCellVisitor auto && visitor) const {
+                               OptDirCellVisitor auto && visitor,
+                               VisitPolicy               visit_policy) const {
   DEBUGPROFILE_INC_COUNTER(visit_row_right_counter);
   auto update_coord = [](Coord & coord) { ++coord.col_; };
   auto update_idx   = [](int & idx) { ++idx; };
   auto test_coord   = [w = width_](Coord coord) { return coord.col_ < w; };
-  return visit_straight_line(
-      Direction::Right, coord, update_coord, update_idx, test_coord, visitor);
+  return visit_straight_line(Direction::Right,
+                             coord,
+                             update_coord,
+                             update_idx,
+                             test_coord,
+                             visitor,
+                             visit_policy);
 }
 
 inline bool
 BasicBoard::visit_col_above(Coord                     coord,
-                            OptDirCellVisitor auto && visitor) const {
+                            OptDirCellVisitor auto && visitor,
+                            VisitPolicy               visit_policy) const {
   DEBUGPROFILE_INC_COUNTER(visit_col_up_counter);
   auto update_coord = [](Coord & coord) { --coord.row_; };
   auto update_idx   = [w = width_](int & idx) { idx -= w; };
   auto test_coord   = [](Coord coord) { return coord.row_ >= 0; };
-  return visit_straight_line(
-      Direction::Up, coord, update_coord, update_idx, test_coord, visitor);
+  return visit_straight_line(Direction::Up,
+                             coord,
+                             update_coord,
+                             update_idx,
+                             test_coord,
+                             visitor,
+                             visit_policy);
 }
 
 inline bool
 BasicBoard::visit_col_below(Coord                     coord,
-                            OptDirCellVisitor auto && visitor) const {
+                            OptDirCellVisitor auto && visitor,
+                            VisitPolicy               visit_policy) const {
   DEBUGPROFILE_INC_COUNTER(visit_col_down_counter);
   auto update_coord = [](Coord & coord) { ++coord.row_; };
   auto update_idx   = [w = width_](int & idx) { idx += w; };
   auto test_coord   = [h = height_](Coord coord) { return coord.row_ < h; };
-  return visit_straight_line(
-      Direction::Down, coord, update_coord, update_idx, test_coord, visitor);
-}
-
-inline void
-BasicBoard::visit_row_outward(Coord                     coord,
-                              OptDirCellVisitor auto && visitor) const {
-  DEBUGPROFILE_INC_COUNTER(visit_row_outward_counter);
-  visit_row_left_of(coord, visitor);
-  visit_row_right_of(coord, visitor);
-}
-
-inline void
-BasicBoard::visit_col_outward(Coord                     coord,
-                              OptDirCellVisitor auto && visitor) const {
-  DEBUGPROFILE_INC_COUNTER(visit_col_outward_counter);
-  visit_col_above(coord, visitor);
-  visit_col_below(coord, visitor);
+  return visit_straight_line(Direction::Down,
+                             coord,
+                             update_coord,
+                             update_idx,
+                             test_coord,
+                             visitor,
+                             visit_policy);
 }
 
 inline void
 BasicBoard::visit_rows_cols_outward(Coord                     coord,
                                     OptDirCellVisitor auto && visitor) const {
   DEBUGPROFILE_INC_COUNTER(visit_rows_cols_outward_counter);
-  visit_row_outward(coord, visitor);
-  visit_col_outward(coord, visitor);
+  visit_row_left_of(coord, visitor);
+  visit_row_right_of(coord, visitor);
+  visit_col_above(coord, visitor);
+  visit_col_below(coord, visitor);
 }
 
 // Provide the direction you are scanning the board, and a coordinate, and it
@@ -507,3 +527,5 @@ BasicBoard::visit_perpendicular(Coord                     coord,
 
 template <>
 struct fmt::formatter<::model::BasicBoard>;
+
+//  LocalWords:  OptDirCellVisitor

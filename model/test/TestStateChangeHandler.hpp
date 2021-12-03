@@ -60,8 +60,10 @@ public:
   }
 
   void
-  on_state_change(Action action, CellState from_state, CellState to_state,
-                  Coord coord) override {
+  on_state_change(Action    action,
+                  CellState from_state,
+                  CellState to_state,
+                  Coord     coord) override {
     using enum model::Action;
     using enum model::CellState;
 
@@ -72,46 +74,51 @@ public:
 
     switch (action) {
 
-    case Add:
-    case Remove: {
-      if (games_.empty()) {
-        throw std::runtime_error("Add/Remove without reset called first");
-      }
-      auto & game = cur();
-      if (not coord.in_range(game.height_, game.width_)) {
-        throw std::out_of_range(
-            fmt::format("({},{}) out of bounds: Allowed range is ({},{})",
-                        coord.row_,
-                        coord.col_,
-                        game.height_,
-                        game.width_));
-      }
-      game.moves_.push_back({action, from_state, to_state, coord});
-      break;
-    }
+      case Add:
+      case Remove:
+        {
+          if (games_.empty()) {
+            throw std::runtime_error("Add/Remove without reset called first");
+          }
+          auto & game = cur();
+          if (not coord.in_range(game.height_, game.width_)) {
+            throw std::out_of_range(
+                fmt::format("({},{}) out of bounds: Allowed range is ({},{})",
+                            coord.row_,
+                            coord.col_,
+                            game.height_,
+                            game.width_));
+          }
+          game.moves_.push_back({action, from_state, to_state, coord});
+          break;
+        }
 
-    case ResetGame: {
-      Rows rows(coord.row_);
-      for (auto & r : rows) {
-        r.resize(coord.col_);
-      }
+      case ResetGame:
+        {
+          Rows rows(coord.row_);
+          for (auto & r : rows) {
+            r.resize(coord.col_);
+          }
 
-      auto [height, width] = coord;
-      games_.emplace_back(
-          height,
-          width,
-          std::move(rows),
-          std::vector<SingleMove>{{action, from_state, to_state, coord}});
-      break;
-    }
+          auto [height, width] = coord;
+          games_.push_back(
+              GameState{height,
+                        width,
+                        std::move(rows),
+                        std::vector<SingleMove>{
+                            SingleMove{action, from_state, to_state, coord}}});
+          break;
+        }
 
-    case StartGame: {
-      auto & game = cur();
-      game.moves_.push_back({action, from_state, to_state, coord});
-      break;
-    }
+      case StartGame:
+        {
+          auto & game = cur();
+          game.moves_.push_back({action, from_state, to_state, coord});
+          break;
+        }
 
-    default: throw std::runtime_error("Unknown State");
+      default:
+        throw std::runtime_error("Unknown State");
     }
   }
 

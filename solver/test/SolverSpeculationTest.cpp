@@ -37,7 +37,6 @@ class SolverSpeculationTest : public ::testing::Test {
   DEBUGPROFILE_COUNTER(visit_cell_counter);
   DEBUGPROFILE_COUNTER(visit_board_counter);
   DEBUGPROFILE_COUNTER(visit_adjacent_counter);
-  DEBUGPROFILE_COUNTER(visit_adj_corners_counter);
   DEBUGPROFILE_COUNTER(visit_adj_flank_counter);
   DEBUGPROFILE_COUNTER(visit_empty_counter);
   DEBUGPROFILE_COUNTER(visit_row_left_counter);
@@ -46,8 +45,6 @@ class SolverSpeculationTest : public ::testing::Test {
   DEBUGPROFILE_COUNTER(visit_col_down_counter);
   DEBUGPROFILE_COUNTER(visit_perp_counter);
   DEBUGPROFILE_COUNTER(visit_rows_cols_outward_counter);
-  DEBUGPROFILE_COUNTER(visit_row_outward_counter);
-  DEBUGPROFILE_COUNTER(visit_col_outward_counter);
 };
 
 TEST_F(SolverSpeculationTest, detects_board_with_multiple_solutions) {

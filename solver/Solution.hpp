@@ -175,8 +175,8 @@ public:
     return step_count_;
   }
 
-  BoardAnalysis const *
-  get_board_analysis() const {
+  BoardAnalysis *
+  get_board_analysis() {
     return board_analysis_.get();
   }
 

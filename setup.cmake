@@ -48,10 +48,16 @@ FetchContent_Declare(
 )
 
 # google tests do not build cleanly.  Disable some warnings.
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set (GTEST_COMPILE_OPTS -Wno-undef)
+else()
+  set (GTEST_COMPILE_OPTS -Wno-undef -Wno-maybe-uninitialized)
+endif()
+
 set_property(
     DIRECTORY ${googletest_SOURCE_DIR}
     APPEND
-    PROPERTY COMPILE_OPTIONS -Wno-undef -Wno-maybe-uninitialized
+    PROPERTY COMPILE_OPTIONS ${GTEST_COMPILE_OPTS}
 )
 
 macro(package_add_test TESTNAME)

@@ -76,7 +76,11 @@ speculate(Solution & solution) {
   // creates N child boards with a different speculative move applied to
   // each.
   Solution::ContextCache & cache = init_speculation_contexts(solution);
-  auto & [contexts, active, contradictions, forced] = cache;
+  auto & [contexts, active_, contradictions, forced] = cache;
+
+  // clang does not allow references to local bindings yet, (so "active_" above
+  // cannot be used in lambda capture)
+  auto & active = cache.active_context_idxs;
 
   auto remove_from_active = [&](auto active_iter) {
     // pop_back invalidates iterators to back, and to end.  So be mindful that
