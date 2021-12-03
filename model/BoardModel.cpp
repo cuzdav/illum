@@ -129,7 +129,8 @@ BoardModel::reset_game(BasicBoard const & initial_board) {
     if (cell != CellState::Empty) {
       if ((cell & (CellState::Illum | CellState::Bulb | CellState::Mark)) ==
           cell) {
-        deferred.emplace_back(Action::Add, CellState::Empty, cell, coord);
+        deferred.push_back(
+            SingleMove{Action::Add, CellState::Empty, cell, coord});
       }
       else {
         moves_.push_back({Action::Add, CellState::Empty, cell, coord});
