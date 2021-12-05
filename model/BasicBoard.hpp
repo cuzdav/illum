@@ -38,6 +38,9 @@ public:
     return VisitPolicy(+v1 | +v2);
   }
 
+  BasicBoard() = default;
+  BasicBoard(int height, int width) { reset(height, width); }
+
   bool operator==(BasicBoard const & other) const;
 
   void reset(int height, int width);
