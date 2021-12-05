@@ -12,6 +12,29 @@ operator+(EnumT e) {
   return static_cast<std::underlying_type_t<EnumT>>(e);
 }
 
+#define DEFINE_ENUM_BIT_OPERATIONS(ENUM_NAME)                                  \
+  constexpr auto operator+(ENUM_NAME cell) {                                   \
+    using T = std::underlying_type_t<ENUM_NAME>;                               \
+    return static_cast<T>(cell);                                               \
+  }                                                                            \
+  constexpr ENUM_NAME operator|(ENUM_NAME lhs, ENUM_NAME rhs) {                \
+    return ENUM_NAME(+lhs | +rhs);                                             \
+  }                                                                            \
+  constexpr ENUM_NAME & operator|=(ENUM_NAME & lhs, ENUM_NAME rhs) {           \
+    lhs = lhs | rhs;                                                           \
+    return lhs;                                                                \
+  }                                                                            \
+  constexpr ENUM_NAME operator&(ENUM_NAME lhs, ENUM_NAME rhs) {                \
+    return ENUM_NAME(+lhs & +rhs);                                             \
+  }                                                                            \
+  constexpr ENUM_NAME & operator&=(ENUM_NAME & lhs, ENUM_NAME rhs) {           \
+    lhs = lhs & rhs;                                                           \
+    return lhs;                                                                \
+  }                                                                            \
+  constexpr bool contains_all(ENUM_NAME value, ENUM_NAME bits) {               \
+    return (value & bits) == bits;                                             \
+  }
+
 namespace enumutils {
 
 template <typename T>

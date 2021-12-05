@@ -70,14 +70,14 @@ public:
 
   // visit the immediately adjacent squares around coord, guaranteed in
   // counter-clockwise order: UP, LEFT, DOWN, RIGHT
-  bool visit_adjacent(Coord coord, CellVisitor auto && visitor) const;
+  bool visit_adjacent(Coord coord, OptDirCellVisitor auto && visitor) const;
 
   // visit the single "left" and "right" cells of a coordinate, given a
   // direction. Still visited in absolute (to the board, not relative to your
   // direction) order: (UP,DOWN), or (LEFT,RIGHT)
-  bool visit_adj_flank(Coord               coord,
-                       Direction           dir,
-                       CellVisitor auto && visitor) const;
+  bool visit_adj_flank(Coord                     coord,
+                       Direction                 dir,
+                       OptDirCellVisitor auto && visitor) const;
 
   // visit all currently empty cells (unless prematurely stopped)
   bool visit_empty(CellVisitor auto && visitor) const;
@@ -105,7 +105,8 @@ public:
   // and returns false, it will stop for the current direction, but still
   // visit other directions.
   void visit_rows_cols_outward(Coord                     coord,
-                               OptDirCellVisitor auto && visitor) const;
+                               OptDirCellVisitor auto && visitor,
+                               Direction = directiongroups::all) const;
 
   friend std::ostream & operator<<(std::ostream &, BasicBoard const &);
   CellState             get_cell_flat_unchecked(int) const;
@@ -309,7 +310,8 @@ BasicBoard::visit_cell(Direction                      direction,
 }
 
 inline bool
-BasicBoard::visit_adjacent(Coord coord, CellVisitor auto && visitor) const {
+BasicBoard::visit_adjacent(Coord                     coord,
+                           OptDirCellVisitor auto && visitor) const {
   DEBUGPROFILE_INC_COUNTER(visit_adjacent_counter);
   auto visit = [&](Coord coord) {
     if (int idx = get_flat_idx(coord); idx != -1) {
@@ -324,23 +326,25 @@ BasicBoard::visit_adjacent(Coord coord, CellVisitor auto && visitor) const {
 }
 
 inline bool
-BasicBoard::visit_adj_flank(Coord               coord,
-                            Direction           dir,
-                            CellVisitor auto && visitor) const {
+BasicBoard::visit_adj_flank(Coord                     coord,
+                            Direction                 dir,
+                            OptDirCellVisitor auto && visitor) const {
   DEBUGPROFILE_INC_COUNTER(visit_adj_flank_counter);
-  auto visit = [&](Coord coord) {
+  auto visit = [&](Direction dir, Coord coord) {
     if (int idx = get_flat_idx(coord); idx != -1) {
-      return visit_cell(Direction::None, coord, idx, visitor);
+      return visit_cell(dir, coord, idx, visitor);
     }
     return true;
   };
 
   auto [row, col] = coord;
   if (dir == Direction::Up || dir == Direction::Down) {
-    return visit({row, col - 1}) && visit({row, col + 1});
+    return visit(Direction::Left, {row, col - 1}) &&
+           visit(Direction::Right, {row, col + 1});
   }
   else {
-    return visit({row - 1, col}) && visit({row + 1, col});
+    return visit(Direction::Up, {row - 1, col}) &&
+           visit(Direction::Down, {row + 1, col});
   }
 }
 
@@ -484,12 +488,21 @@ BasicBoard::visit_col_below(Coord                     coord,
 
 inline void
 BasicBoard::visit_rows_cols_outward(Coord                     coord,
-                                    OptDirCellVisitor auto && visitor) const {
+                                    OptDirCellVisitor auto && visitor,
+                                    Direction directions) const {
   DEBUGPROFILE_INC_COUNTER(visit_rows_cols_outward_counter);
-  visit_row_left_of(coord, visitor);
-  visit_row_right_of(coord, visitor);
-  visit_col_above(coord, visitor);
-  visit_col_below(coord, visitor);
+  if (contains_all(directions, Direction::Left)) {
+    visit_row_left_of(coord, visitor);
+  }
+  if (contains_all(directions, Direction::Right)) {
+    visit_row_right_of(coord, visitor);
+  }
+  if (contains_all(directions, Direction::Up)) {
+    visit_col_above(coord, visitor);
+  }
+  if (contains_all(directions, Direction::Down)) {
+    visit_col_below(coord, visitor);
+  }
 }
 
 // Provide the direction you are scanning the board, and a coordinate, and it

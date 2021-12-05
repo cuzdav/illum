@@ -13,6 +13,10 @@ using model::CellState;
 using model::Coord;
 using model::Direction;
 
+PositionBoard::PositionBoard(int height, int width) {
+  board_.reset(height, width);
+}
+
 PositionBoard::PositionBoard(model::BasicBoard const & current) : board_{} {
 
   board_.reset(current.height(), current.width());
@@ -20,10 +24,10 @@ PositionBoard::PositionBoard(model::BasicBoard const & current) : board_{} {
   // first copy the walls and update counts
   current.visit_board([&](model::Coord coord, auto cell) {
     if (model::is_dynamic_entity(cell)) {
-      needs_illum_count_++;
+      num_cells_needing_illumination_++;
     }
     else if (is_wall(cell)) {
-      walls_with_deps_count_ += model::is_wall_with_deps(cell);
+      num_walls_with_deps_ += model::is_wall_with_deps(cell);
       board_.set_cell(coord, cell);
     }
   });
@@ -46,6 +50,84 @@ PositionBoard::PositionBoard(model::BasicBoard const & current) : board_{} {
   assert(current.height() == board_.height());
 }
 
+void
+PositionBoard::reevaluate_board_state() {
+  // Recompute the state of the board by replaying from start on a separate
+  // position board at arm's reach, and take its results.
+  //
+  // NOTE: set_cell can mess up the accumulated state (error, num illuminated,
+  // wall deps, etc) of the position board by blindly changing the underlying
+  // board in ways we can't easily track. Creating a new position board with
+  // our underlying is non-destructive way to evaluate our current board
+  // without any changes to our current board or state, and then we can just
+  // take the results.
+  PositionBoard paranoid(board_);
+  has_error_                      = paranoid.has_error_;
+  num_cells_needing_illumination_ = paranoid.num_cells_needing_illumination_;
+  num_walls_with_deps_            = paranoid.num_walls_with_deps_;
+  decision_type_                  = paranoid.decision_type_;
+  ref_location_                   = paranoid.ref_location_;
+  board_                          = paranoid.board_;
+}
+
+bool
+PositionBoard::set_cell(model::Coord     coord,
+                        model::CellState cell,
+                        SetCellPolicy    policy) {
+
+  // for known simple cases, try to not recompute the state unless forced to.
+  // For a policy of FORCE_REEVALUATE_BOARD we can't bypass these shortcuts and
+  // will reevaluate the board unconditionally.
+  if (policy == SetCellPolicy::REEVALUATE_IF_NECESSARY) {
+    // these replace the simple
+    auto orig_cell = board_.get_cell(coord);
+    if (cell == orig_cell) {
+      return true;
+    }
+
+    // changing empty to something known how to handle:
+    if (is_empty(orig_cell)) {
+      switch (cell) {
+        case CellState::Bulb:
+          return add_bulb(coord);
+        case CellState::Mark:
+          return add_mark(coord);
+        default:
+          if (is_wall(cell)) {
+            if (add_wall(coord, cell)) {
+              return true;
+            }
+          }
+          break;
+      }
+    }
+    else if (orig_cell == CellState::Illum && not has_error()) {
+      if (is_wall(cell)) {
+        return add_wall(coord, cell);
+      }
+    }
+
+    // TODO:
+    // removing something known how to handle
+    else if (is_empty(cell)) {
+      switch (orig_cell) {
+        case CellState::Bulb:
+          return remove_bulb(coord);
+          // case CellState::Mark:
+          //   return remove_mark(coord);
+      }
+    }
+  }
+
+  bool result = board_.set_cell(coord, cell);
+
+  // unless explicitly forbidden, we should reevaluate after set_cell
+  if (policy != SetCellPolicy::NO_REEVALUATE_BOARD) {
+    reevaluate_board_state();
+  }
+  return result;
+}
+
 model::BasicBoard const &
 PositionBoard::board() const {
   return board_;
@@ -58,18 +140,24 @@ PositionBoard::mut_board() {
 
 bool
 PositionBoard::is_solved() const {
-  return has_error_ == false && needs_illum_count_ == 0 &&
-         walls_with_deps_count_ == 0;
+  return has_error_ == false && num_walls_with_deps_ == 0 &&
+         num_cells_needing_illumination_ == 0;
+}
+
+bool
+PositionBoard::is_ambiguous() const {
+  return has_error_ &&
+         decision_type_ == DecisionType::VIOLATES_SINGLE_UNIQUE_SOLUTION;
 }
 
 int
 PositionBoard::num_cells_needing_illumination() const {
-  return needs_illum_count_;
+  return num_cells_needing_illumination_;
 }
 
 int
 PositionBoard::num_walls_with_deps() const {
-  return walls_with_deps_count_;
+  return num_walls_with_deps_;
 }
 
 int
@@ -103,25 +191,19 @@ PositionBoard::get_ref_location() const {
   return ref_location_;
 }
 
-int
-PositionBoard::needs_illum_count() const {
-  return needs_illum_count_;
-}
-
-int
-PositionBoard::walls_with_deps_count() const {
-  return walls_with_deps_count_;
-}
-
 // Handles a state change when a light is played:
 // 1) did the light block a face that makes the wall impossible to satisfy?
 // 2) did the bulb over-subscribe the wall?
 // 3) did the bulb just satisfy the wall, and we should reduce our counter?
-void
+
+// NOTE: noops for any non-wall tile, or a Wall0, and considers them satisfied
+bool
 PositionBoard::update_wall(model::Coord wall_coord,
                            CellState    wall_cell,
                            CellState    play_cell,
                            bool         coord_is_adjacent_to_play) {
+  assert(wall_cell == get_cell(wall_coord));
+
   if (int deps = model::num_wall_deps(wall_cell); deps > 0) {
 
     int empty_neighbors = 0;
@@ -145,21 +227,123 @@ PositionBoard::update_wall(model::Coord wall_coord,
     else if (bulb_neighbors == deps && coord_is_adjacent_to_play &&
              play_cell == CellState::Bulb) {
       // just-played bulb satisfied this wall, so decrement counter
-      walls_with_deps_count_--;
+      num_walls_with_deps_--;
+    }
+    return bulb_neighbors == deps;
+  }
+  return true;
+}
+
+void
+PositionBoard::remove_illum_in_direction_from(model::Coord start_at,
+                                              Direction    direction) {
+  visit_rows_cols_outward(
+      start_at,
+      [this, direction](Coord coord, CellState cell) {
+        if (cell == CellState::Illum) {
+          bool has_crossbeam = false;
+          visit_perpendicular(
+              coord, direction, [&](auto, CellState cross_cell) {
+                has_crossbeam |= is_bulb(cross_cell);
+              });
+          if (not has_crossbeam) {
+            board_.set_cell(coord, CellState::Empty);
+            ++num_cells_needing_illumination_;
+          }
+        }
+      },
+      direction);
+}
+
+bool
+PositionBoard::add_wall(model::Coord wall_coord, model::CellState wall_cell) {
+  assert(is_wall(wall_cell));
+  CellState const orig_cell = get_cell(wall_coord);
+  if (not is_empty(orig_cell)) {
+    // When placing a wall in an empty cell, the board state can remain
+    // the same or enter an error state (e.g. wall is unsatisfiable, or
+    // makes a neighbor unsatisfiable.) But can never REMOVE an error
+    // state once set. That's beyond the bookkeeping of this class without
+    // starting clean and building up the state again and visiting the
+    // whole board. (If there are 2 errors, and we fix one, we don't know
+    // it since there's only a bool.) So don't allow cases that could fix
+    // errors, and require the slow rebuilding appraoch. Therefore, if
+    // there is an error, we cannot allow adding a wall except on empty
+    // tiles (or we might report an error that no longer exists.)
+    if (has_error_) {
+      return false;
     }
   }
+
+  board_.set_cell(wall_coord, wall_cell);
+
+  if (model::is_illuminable(orig_cell)) {
+    --num_cells_needing_illumination_;
+  }
+
+  // This wall deps counter logic works even with Wall0, which has no
+  // deps, because Wall0 is pathologically satisfied.
+  num_walls_with_deps_++;
+  bool is_satisfied = update_wall(wall_coord, wall_cell, wall_cell, false);
+  num_walls_with_deps_ -= is_satisfied;
+
+  visit_adjacent(wall_coord, [&](Coord adj_coord, CellState adj_cell) {
+    update_wall(adj_coord, adj_cell, adj_cell, false);
+  });
+
+  // remove illumination we may have blocked by adding a wall,
+  // as long as it's not also illuminated due to a crossbeam of light.
+  //
+  // Starting in this position:
+  // ...+........+.
+  // ++++++++++++*+
+  // ...+........+.
+  // ...*++++++++++
+
+  // Adding a wall:
+  // ...+........+.
+  // ++++++++++++*+
+  // ...+........+.
+  // ...*+++0....+.
+  //
+  // Note it blocks the light except in the column at the right since it's
+  // still illuminated from above.
+
+  //
+  // ALSO: we are not in an error state, so don't have to check or handle
+  // the case where two lights can see each other.
+  //
+  if (orig_cell == CellState::Illum) {
+    // find light source(s)
+    model::Direction light_sources{};
+    visit_rows_cols_outward(
+        wall_coord, [&](Direction dir, Coord coord, CellState cell) {
+          if (is_bulb(cell)) {
+            // clear illumination in other direction from bulb
+            remove_illum_in_direction_from(wall_coord, flip(dir));
+          }
+        });
+  }
+
+  return true;
+}
+
+bool
+PositionBoard::remove_bulb(model::Coord bulb_coord) {
+  CellState bulb_target = get_cell(bulb_coord);
+  return false;
 }
 
 bool
 PositionBoard::add_bulb(model::Coord bulb_coord) {
-  CellState bulb_target = board().get_cell(bulb_coord);
+  CellState bulb_target = get_cell(bulb_coord);
   // A mark's job is to prevent playing a bulb there, so don't allow it.
   // Otherwise, allow them to play a mistake, but only one.
   if (bulb_target != (bulb_target & (CellState::Empty | CellState::Illum))) {
     return false;
   }
   mut_board().set_cell(bulb_coord, CellState::Bulb);
-  needs_illum_count_ -= bulb_target == CellState::Empty;
+  num_cells_needing_illumination_ -= bulb_target == CellState::Empty;
 
   // update walls immediately adjacent to the bulb
   board().visit_adjacent(
@@ -172,7 +356,7 @@ PositionBoard::add_bulb(model::Coord bulb_coord) {
       bulb_coord, [&](Direction dir, model::Coord coord, CellState cell) {
         if (is_illuminable(cell)) {
           mut_board().set_cell(coord, model::CellState::Illum);
-          needs_illum_count_--;
+          num_cells_needing_illumination_--;
 
           // illuminating a cell adjacent to a wall with deps affects it. Only
           // check left/right (flank) because looking ahead is redundant since
@@ -231,11 +415,12 @@ PositionBoard::apply_move(const model::SingleMove & move) {
 
 std::ostream &
 operator<<(std::ostream & os, PositionBoard const & pos_board) {
-  os << "PositionBoard{NeedsIllum=" << pos_board.needs_illum_count()
+  os << "PositionBoard{num_cells_needing_illumination="
+     << pos_board.num_cells_needing_illumination()
+     << ", unsatisfied walls: " << pos_board.num_walls_with_deps()
      << ", Solved=" << pos_board.is_solved()
      << ", HasError=" << pos_board.has_error() << ", " << pos_board.board()
      << "}";
   return os;
 }
-
 } // namespace solver

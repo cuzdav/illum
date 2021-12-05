@@ -5,6 +5,7 @@
 #include "CellVisitorConcepts.hpp"
 #include "Coord.hpp"
 #include "DecisionType.hpp"
+#include "Direction.hpp"
 #include "SingleMove.hpp"
 #include <iosfwd>
 #include <vector>
@@ -23,16 +24,44 @@ namespace solver {
 
 class PositionBoard {
 public:
-  using Coord = model::Coord;
+  using Coord     = model::Coord;
+  using CellState = model::CellState;
 
   PositionBoard() = default;
+  PositionBoard(int height, int width);
   PositionBoard(model::BasicBoard const & board);
 
-  // clones board, applies move, returns all affected cells. Returns bool
-  // indicating request was successful.
+  // Returns bool indicating request was successful.
   bool add_bulb(Coord);
   bool add_mark(Coord);
+  bool add_wall(Coord, CellState); // TODO
+  bool remove_bulb(Coord);         // TODO
+  bool remove_mark(Coord);         // TODO
+  bool remove_wall(Coord);         // TODO
   bool apply_move(model::SingleMove const &);
+
+  // Some set-cell calls can cause the underlying board to get out of sync with
+  // the position board error model, illumination, etc. Normally it will not
+  // reevaluate for moves that are easy to handle (add bulb, add mark, etc.,
+  // since that's supported), but for adding walls, or removing them, or
+  // changing wall deps, etc., the board should be fully reevaluated. However,
+  // if a cluster of changes will happen, we might want to not update until the
+  // last change, for efficiency and to make the whole group more "atomic".
+  enum class SetCellPolicy {
+    FORCE_REEVALUATE_BOARD,
+    NO_REEVALUATE_BOARD,
+    REEVALUATE_IF_NECESSARY
+  };
+  bool set_cell(Coord,
+                CellState,
+                SetCellPolicy = SetCellPolicy::REEVALUATE_IF_NECESSARY);
+  // if any number of calls to set_cell have been made with NO_REEVALUATE_BOARD
+  // policy, then calling reevaluate_board_state can re-sync the PositionBoard
+  // gamestate with the actual underlying board.  Calling this computes the same
+  // thing as set_cell with FORCE_REEVALUATE_BOARD policy.
+  void reevaluate_board_state();
+
+  void reset(int height, int width);
 
   DecisionType    decision_type() const;
   model::OptCoord get_ref_location() const;
@@ -40,16 +69,14 @@ public:
   void            set_has_error(bool, DecisionType, Coord);
 
   bool is_solved() const;
-  int  needs_illum_count() const;
-  int  walls_with_deps_count() const;
-
-  int num_cells_needing_illumination() const;
-  int num_walls_with_deps() const;
+  bool is_ambiguous() const;
+  int  num_cells_needing_illumination() const;
+  int  num_walls_with_deps() const;
 
   int width() const;
   int height() const;
 
-  model::CellState get_cell(Coord coord) const;
+  CellState get_cell(Coord coord) const;
 
   model::BasicBoard const & board() const;
   model::BasicBoard &       mut_board();
@@ -60,7 +87,12 @@ public:
   bool
        visit_board_if(model::CellVisitor auto &&        visitor,
                       model::CellVisitPredicate auto && should_visit_pred) const;
-  bool visit_adjacent(Coord coord, model::CellVisitor auto && visitor) const;
+  bool visit_adjacent(Coord                            coord,
+                      model::OptDirCellVisitor auto && visitor) const;
+  bool visit_adj_flank(model::Coord                     coord,
+                       model::Direction                 dir,
+                       model::OptDirCellVisitor auto && visitor) const;
+
   bool visit_empty(model::CellVisitor auto && visitor) const;
   bool visit_row_left_of(Coord                            coord,
                          model::OptDirCellVisitor auto && visitor) const;
@@ -75,21 +107,40 @@ public:
                            model::Direction                 dir,
                            model::OptDirCellVisitor auto && visitor) const;
 
+  void visit_rows_cols_outward(
+      model::Coord                     coord,
+      model::OptDirCellVisitor auto && visitor,
+      model::Direction directions = model::directiongroups::all) const;
+
 private:
   friend std::ostream & operator<<(std::ostream &, PositionBoard const &);
 
-  void update_wall(Coord            wall_coord,
-                   model::CellState wall_cell,
-                   model::CellState play_cell,
-                   bool             is_adjacent_to_play);
+  void remove_illum_in_direction_from(model::Coord     start_at,
+                                      model::Direction dir);
 
-  bool              has_error_             = false;
-  int               needs_illum_count_     = 0;
-  int               walls_with_deps_count_ = 0;
+  // returns indication if wall at wall_coord "is satisfied"
+  bool update_wall(Coord     wall_coord,
+                   CellState wall_cell,
+                   CellState play_cell,
+                   bool      is_adjacent_to_play);
+
+  bool              has_error_                      = false;
+  int               num_cells_needing_illumination_ = 0;
+  int               num_walls_with_deps_            = 0;
   DecisionType      decision_type_;
   model::OptCoord   ref_location_;
   model::BasicBoard board_{};
 };
+
+inline void
+PositionBoard::reset(int height, int width) {
+  has_error_                      = false;
+  num_cells_needing_illumination_ = 0;
+  num_walls_with_deps_            = 0;
+  decision_type_                  = DecisionType::NONE;
+  ref_location_                   = std::nullopt;
+  board_.reset(height, width);
+}
 
 inline model::CellState
 PositionBoard::get_cell(model::Coord coord) const {
@@ -109,10 +160,18 @@ PositionBoard::visit_board_if(
       std::forward<decltype(should_visit_pred)>(should_visit_pred));
 }
 inline bool
-PositionBoard::visit_adjacent(Coord                      coord,
-                              model::CellVisitor auto && visitor) const {
+PositionBoard::visit_adjacent(Coord                            coord,
+                              model::OptDirCellVisitor auto && visitor) const {
   return board_.visit_adjacent(coord, std::forward<decltype(visitor)>(visitor));
 }
+inline bool
+PositionBoard::visit_adj_flank(model::Coord                     coord,
+                               model::Direction                 dir,
+                               model::OptDirCellVisitor auto && visitor) const {
+  return board_.visit_adj_flank(
+      coord, dir, std::forward<decltype(visitor)>(visitor));
+}
+
 inline bool
 PositionBoard::visit_empty(model::CellVisitor auto && visitor) const {
   return board_.visit_empty(std::forward<decltype(visitor)>(visitor));
@@ -147,6 +206,13 @@ PositionBoard::visit_perpendicular(
     model::OptDirCellVisitor auto && visitor) const {
   return board_.visit_perpendicular(
       coord, dir, std::forward<decltype(visitor)>(visitor));
+}
+inline void
+PositionBoard::visit_rows_cols_outward(model::Coord                     coord,
+                                       model::OptDirCellVisitor auto && visitor,
+                                       model::Direction directions) const {
+  return board_.visit_rows_cols_outward(
+      coord, std::forward<decltype(visitor)>(visitor), directions);
 }
 
 } // namespace solver
