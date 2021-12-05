@@ -8,7 +8,6 @@
 #include "SingleMove.hpp"
 #include "Solution.hpp"
 #include "SpeculationContext.hpp"
-#include "scope.hpp"
 #include "trivial_moves.hpp"
 #include "utils/DebugLog.hpp"
 #include <algorithm>
@@ -70,7 +69,10 @@ init_speculation_contexts(Solution & solution) {
 // found
 size_t
 speculate(Solution & solution) {
-  assert(solution.is_solved() == false);
+  if (solution.is_solved()) {
+    return 0;
+  }
+
   assert(solution.has_error() == false);
 
   // creates N child boards with a different speculative move applied to
@@ -218,6 +220,14 @@ Solution
 solve(model::BasicBoard const &        board,
       std::optional<model::BasicBoard> known_solution) {
   Solution solution(board, known_solution);
+  if (solution.is_solved()) {
+    solution.set_status(SolutionStatus::Solved);
+    return solution;
+  }
+  if (solution.has_error()) {
+    solution.set_status(SolutionStatus::Impossible);
+    return solution;
+  }
   solution.set_status(SolutionStatus::Progressing);
 
   find_solution(solution);

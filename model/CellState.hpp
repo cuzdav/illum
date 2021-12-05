@@ -38,41 +38,62 @@ operator&(CellState lhs, CellState rhs) {
   return CellState(+lhs & +rhs);
 }
 
+namespace cellgroups {
+
+// a piece the player can add to / remove from the board
+constexpr CellState playable = CellState::Bulb | CellState::Mark;
+
+// a cell that can change during the course of play, either played directly by
+// player, or added/removed as a side effect (i.e. illumination extending from a
+// bulb adds illumination))
+constexpr CellState dynamic_entity =
+    CellState::Bulb | CellState::Empty | CellState::Mark | CellState::Illum;
+
+// a cell that needs illumination, but does not have it
+constexpr CellState illuminable = CellState::Empty | CellState::Mark;
+
+// a cell that a beam of light can pass through
+constexpr CellState translucent =
+    CellState::Empty | CellState::Mark | CellState::Illum;
+
+// any kind of wall
+constexpr CellState any_wall = CellState::Wall0 | CellState::Wall1 |
+                               CellState::Wall2 | CellState::Wall3 |
+                               CellState::Wall4;
+
+// a wall at least one dependency
+constexpr CellState wall_with_deps =
+    CellState::Wall1 | CellState::Wall2 | CellState::Wall3 | CellState::Wall4;
+
+} // namespace cellgroups
+
 // some of these predicates are super simple, but they are readable, and ADL
 // friendly
 
 // a piece the player can add to the board
 constexpr bool
 is_playable(CellState cell) {
-  return cell == (cell & (CellState::Bulb | CellState::Mark));
+  return cell == (cell & cellgroups::playable);
 }
 
 // a cell that can change during the course of play, either played directly by
 // player, or added/removed as a side effect (i.e. illumination extending from a
-// bulb adds illumination))
+// bulb adds illumination)).  Also thought of as, "not a wall"
 constexpr bool
 is_dynamic_entity(CellState cell) {
-  return cell == (cell & (CellState::Bulb | CellState::Empty | CellState::Mark |
-                          CellState::Illum));
+  return cell == (cell & cellgroups::dynamic_entity);
 }
 
 // a cell that needs illumination, but does not have it
 constexpr bool
 is_illuminable(CellState cell) {
-  return cell == (cell & (CellState::Empty | CellState::Mark));
+  return cell == (cell & cellgroups::illuminable);
 }
 
 // a cell that a beam of light can pass through
 constexpr bool
 is_translucent(CellState cell) {
-  return cell ==
-         (cell & (CellState::Empty | CellState::Mark | CellState::Illum));
-}
-
-// any wall
-constexpr bool
-is_wall(CellState cell) {
-  return +cell >= +CellState::Wall0 && +cell <= +CellState::Wall4;
+  return cell == (cell & cellgroups::translucent);
 }
 
 constexpr bool
@@ -90,9 +111,16 @@ is_bulb(CellState cell) {
   return cell == CellState::Bulb;
 }
 
+// any wall
+constexpr bool
+is_wall(CellState cell) {
+  return cell == (cell & cellgroups::any_wall);
+}
+
+// a wall with at least one bulb dependency
 constexpr bool
 is_wall_with_deps(CellState cell) {
-  return +cell >= +CellState::Wall1 && +cell <= +CellState::Wall4;
+  return cell == (cell & cellgroups::wall_with_deps);
 }
 
 // Convert Wall4 to Wall3, or Wall1 to Wall0, etc. Leave non-walls alone.
@@ -126,6 +154,24 @@ num_wall_deps(CellState cell) {
       return 4;
     default:
       return 0;
+  }
+}
+
+constexpr CellState
+wall_with_deps(int num_deps) {
+  switch (num_deps) {
+    case 0:
+      return CellState::Wall0;
+    case 1:
+      return CellState::Wall1;
+    case 2:
+      return CellState::Wall2;
+    case 3:
+      return CellState::Wall3;
+    case 4:
+      return CellState::Wall4;
+    default:
+      throw std::logic_error("invalid dep count for wall");
   }
 }
 
