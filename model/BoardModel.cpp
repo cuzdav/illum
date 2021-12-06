@@ -113,7 +113,8 @@ BoardModel::reset_game(int height, int width) {
 }
 
 void
-BoardModel::reset_game(BasicBoard const & initial_board) {
+BoardModel::reset_game(BasicBoard const & initial_board,
+                       ResetGamePolicy    reset_policy) {
   started_ = false;
   moves_.clear();
   Coord dims = {initial_board.height(), initial_board.width()};
@@ -121,22 +122,25 @@ BoardModel::reset_game(BasicBoard const & initial_board) {
       {Action::ResetGame, CellState::Empty, CellState::Empty, dims});
   on_state_change(Action::ResetGame, CellState::Empty, CellState::Empty, dims);
 
-  board_ = initial_board;
+  board_.reset(initial_board.height(), initial_board.width());
 
   std::vector<SingleMove> deferred;
 
-  board_.visit_board([this, &deferred](Coord coord, CellState cell) {
-    if (cell != CellState::Empty) {
-      if ((cell & (CellState::Illum | CellState::Bulb | CellState::Mark)) ==
-          cell) {
-        deferred.push_back(
-            SingleMove{Action::Add, CellState::Empty, cell, coord});
-      }
-      else {
-        moves_.push_back({Action::Add, CellState::Empty, cell, coord});
-      }
-    }
-  });
+  initial_board.visit_board(
+      [this, &deferred, reset_policy](Coord coord, CellState cell) {
+        if (cell != CellState::Empty) {
+          if (is_dynamic_entity(cell)) {
+            if (reset_policy == ResetGamePolicy::COPY_PLAYER_MOVES) {
+              deferred.push_back(
+                  SingleMove{Action::Add, CellState::Empty, cell, coord});
+            }
+          }
+          else {
+            board_.set_cell(coord, cell);
+            moves_.push_back({Action::Add, CellState::Empty, cell, coord});
+          }
+        }
+      });
   start_game();
   for (auto move : deferred) {
     board_.set_cell(move.coord_, move.to_);

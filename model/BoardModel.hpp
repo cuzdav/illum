@@ -47,8 +47,12 @@ public:
   // These are all appeneded to the vector of moves.  (For purposes of undo,
   // even "remove" is added, so it can be undone to return to previous state.)
 
-  void reset_game(int height, int width);            // empty
-  void reset_game(BasicBoard const & initial_board); // copy of board
+  enum class ResetGamePolicy { COPY_PLAYER_MOVES, ONLY_COPY_WALLS };
+
+  void reset_game(int height, int width); // empty
+  void reset_game(
+      BasicBoard const & initial_board,
+      ResetGamePolicy copy_player_moves = ResetGamePolicy::COPY_PLAYER_MOVES);
   void start_game();
   void add(CellState, Coord coord);
   void apply(SingleMove move);
