@@ -165,9 +165,9 @@ init_col_span_cache(model::BasicBoard const & board,
 // 3) a mark with zero visible empty neighbors -- board is in an invalid
 // state. Returns false if case 3 happened, true otherwise.
 OptCoord
-find_isolated_cells2(model::BasicBoard const & board,
-                     BoardAnalysis *           board_analysis,
-                     AnnotatedMoves &          moves) {
+find_isolated_cells(model::BasicBoard const & board,
+                    BoardAnalysis *           board_analysis,
+                    AnnotatedMoves &          moves) {
 
   auto & row_span_cache = init_row_span_cache(board, board_analysis);
   auto & col_span_cache = init_col_span_cache(board, board_analysis);
@@ -220,54 +220,6 @@ find_isolated_cells2(model::BasicBoard const & board,
          model::BasicBoard::VisitPolicy::SKIP_TERMINATING_WALL));
   }
   return unlightable_mark_coord;
-}
-
-OptCoord
-find_isolated_cells_orig(model::BasicBoard const & board,
-                         AnnotatedMoves &          moves) {
-  OptCoord unlightable_mark_coord;
-  // either a move (where to place a bulb) or an isolated mark, indicating
-  // a mark that cannot be illuminated
-  board.visit_board([&](Coord coord, CellState cell) {
-    if (is_illuminable(cell)) {
-      OptCoord empty_neighbor_location;
-      int      visible_empty_neighbors = 0;
-      board.visit_rows_cols_outward(coord, [&](Coord coord, CellState cell) {
-        if (is_empty(cell)) {
-          visible_empty_neighbors++;
-          empty_neighbor_location = coord;
-        }
-      });
-
-      if (is_empty(cell) && visible_empty_neighbors == 0) {
-        add_bulb(moves,
-                 coord,
-                 DecisionType::ISOLATED_EMPTY_SQUARE,
-                 MoveMotive::FORCED);
-      }
-      else if (is_mark(cell)) {
-        if (visible_empty_neighbors == 1) {
-          add_bulb(moves,
-                   *empty_neighbor_location,
-                   DecisionType::ISOLATED_MARK,
-                   MoveMotive::FORCED,
-                   coord);
-        }
-        else if (visible_empty_neighbors == 0) {
-          // mark has no visible empty neighbors; cannot be illuminated.
-          unlightable_mark_coord = coord;
-        }
-      }
-    }
-  });
-  return unlightable_mark_coord;
-}
-
-OptCoord
-find_isolated_cells(model::BasicBoard const & board,
-                    BoardAnalysis *           board_analysis,
-                    AnnotatedMoves &          moves) {
-  return find_isolated_cells2(board, board_analysis, moves);
 }
 
 void
