@@ -4,6 +4,7 @@
 #include "Direction.hpp"
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
+#include <set>
 
 namespace model::test {
 
@@ -214,6 +215,28 @@ TEST(BasicBoardTest, visit_all) {
   EXPECT_EQ(board, board2);
 }
 
+TEST(BasicBoardTest, visit_empty) {
+  BasicBoard board;
+  {
+    ASCIILevelCreator creator;
+    creator("......0.");
+    creator("00.....0");
+    creator("0....00.");
+    creator("0..00...");
+    creator("......0.");
+    creator("..0...00");
+    creator.finished(&board);
+  }
+
+  std::set<Coord> coords;
+  board.visit_empty([&](Coord coord, CellState cell) {
+    coords.insert(coord);
+    ASSERT_EQ(CellState::Empty, cell);
+    ASSERT_EQ(CellState::Empty, board.get_cell(coord));
+  });
+  ASSERT_EQ(34, coords.size());
+}
+
 TEST(BasicBoardTest, visit_some) {
   BasicBoard board;
   {
@@ -293,7 +316,6 @@ TEST(BasicBoardTest, visit_left_row_some2) {
 TEST(BasicBoardTest, visit_left_row_some3_invalid) {
   Moves moves;
   auto  b = make_board();
-
   b.visit_row_left_of({1, 0}, recorder(moves, CellState::Bulb));
   EXPECT_EQ(Moves{}, moves);
 
