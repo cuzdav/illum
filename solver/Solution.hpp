@@ -65,6 +65,17 @@ public:
     context_cache_.contradicting_context_idxs.reserve(size);
   }
 
+  bool
+  is_ambiguous() const {
+    return board_.decision_type() ==
+           DecisionType::VIOLATES_SINGLE_UNIQUE_SOLUTION;
+  }
+
+  DecisionType
+  decision_type() const {
+    return board_.decision_type();
+  }
+
   void
   enqueue_move(AnnotatedMove next_move) {
     next_moves_.push(next_move);
