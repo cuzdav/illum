@@ -1,9 +1,12 @@
 #pragma once
 
 #include "BasicBoard.hpp"
+#include "CellVisitorConcepts.hpp"
 #include "Coord.hpp"
 #include "DecisionType.hpp"
 #include "PositionBoard.hpp"
+#include "utils/scope.hpp"
+#include <iosfwd>
 #include <vector>
 
 namespace solver {
@@ -14,9 +17,24 @@ class AnalysisBoard {
 public:
   AnalysisBoard(model::BasicBoard const & current);
 
+  AnalysisBoard &
+  operator=(solver::PositionBoard const & pboard) {
+    cur() = pboard;
+    return *this;
+  }
+
   // removes most recently cloned board, stats, to previous position
   void clone_position();
   void pop();
+
+  int
+  width() const {
+    return cur().width();
+  }
+  int
+  height() const {
+    return cur().height();
+  }
 
   // clones board, applies move, returns all affected cells. Returns bool
   // indicating request was successful.
@@ -38,6 +56,21 @@ public:
     return cur().has_error();
   }
 
+  solver::DecisionType
+  decision_type() const {
+    return cur().decision_type();
+  }
+
+  model::OptCoord
+  get_ref_location() const {
+    return cur().get_ref_location();
+  }
+
+  bool
+  is_ambiguous() const {
+    return cur().is_ambiguous();
+  }
+
   int
   num_cells_needing_illumination() const {
     return cur().num_cells_needing_illumination();
@@ -47,10 +80,135 @@ public:
     return cur().num_walls_with_deps();
   }
 
+  model::CellState
+  get_cell(model::Coord coord) const {
+    return cur().get_cell(coord);
+  }
+
+  int
+  get_visit_depth() const {
+    return visit_depth_;
+  }
+
+  bool
+  set_cell(model::Coord                 coord,
+           model::CellState             cell,
+           PositionBoard::SetCellPolicy policy =
+               PositionBoard::SetCellPolicy::REEVALUATE_IF_NECESSARY) {
+    return cur().set_cell(coord, cell, policy);
+  }
+
   model::BasicBoard const &
-  board() const {
+  basic_board() const {
     return cur().board();
   }
+
+  bool
+  visit_board(model::CellVisitor auto && visitor) const {
+    ++visit_depth_;
+    pc::scoped_exit on_return([this]() { this->visit_depth_--; });
+    return basic_board().visit_board(std::forward<decltype(visitor)>(visitor));
+  }
+  bool
+  visit_board_if(model::CellVisitor auto &&        visitor,
+                 model::CellVisitPredicate auto && should_visit_pred) const {
+    ++visit_depth_;
+    pc::scoped_exit on_return([this]() { this->visit_depth_--; });
+    return basic_board().visit_board_if(
+        std::forward<decltype(visitor)>(visitor),
+        std::forward<decltype(should_visit_pred)>(should_visit_pred));
+  }
+
+  bool
+  visit_adjacent(model::Coord                     coord,
+                 model::OptDirCellVisitor auto && visitor) const {
+    ++visit_depth_;
+    pc::scoped_exit on_return([this]() { this->visit_depth_--; });
+    return basic_board().visit_adjacent(
+        coord, std::forward<decltype(visitor)>(visitor));
+  }
+
+  bool
+  visit_adj_flank(model::Coord                     coord,
+                  model::Direction                 dir,
+                  model::OptDirCellVisitor auto && visitor) const {
+    ++visit_depth_;
+    pc::scoped_exit on_return([this]() { this->visit_depth_--; });
+    return basic_board().visit_adj_flank(
+        coord, dir, std::forward<decltype(visitor)>(visitor));
+  }
+
+  bool
+  visit_empty(model::CellVisitor auto && visitor) const {
+    ++visit_depth_;
+    pc::scoped_exit on_return([this]() { this->visit_depth_--; });
+    return basic_board().visit_empty(std::forward<decltype(visitor)>(visitor));
+  }
+
+  bool
+  visit_row_left_of(model::Coord                     coord,
+                    model::OptDirCellVisitor auto && visitor,
+                    model::BasicBoard::VisitPolicy   policy =
+                        model::BasicBoard::VisitPolicy::DEFAULT) const {
+    ++visit_depth_;
+    pc::scoped_exit on_return([this]() { this->visit_depth_--; });
+    return basic_board().visit_row_left_of(
+        coord, std::forward<decltype(visitor)>(visitor), policy);
+  }
+  bool
+  visit_row_right_of(model::Coord                     coord,
+                     model::OptDirCellVisitor auto && visitor,
+                     model::BasicBoard::VisitPolicy   policy =
+                         model::BasicBoard::VisitPolicy::DEFAULT) const {
+    ++visit_depth_;
+    pc::scoped_exit on_return([this]() { this->visit_depth_--; });
+    return basic_board().visit_row_right_of(
+        coord, std::forward<decltype(visitor)>(visitor), policy);
+  }
+  bool
+  visit_col_above(model::Coord                     coord,
+                  model::OptDirCellVisitor auto && visitor,
+                  model::BasicBoard::VisitPolicy   policy =
+                      model::BasicBoard::VisitPolicy::DEFAULT) const {
+    ++visit_depth_;
+    pc::scoped_exit on_return([this]() { this->visit_depth_--; });
+    return basic_board().visit_col_above(
+        coord, std::forward<decltype(visitor)>(visitor), policy);
+  }
+  bool
+  visit_col_below(model::Coord                     coord,
+                  model::OptDirCellVisitor auto && visitor,
+                  model::BasicBoard::VisitPolicy   policy =
+                      model::BasicBoard::VisitPolicy::DEFAULT) const {
+    ++visit_depth_;
+    pc::scoped_exit on_return([this]() { this->visit_depth_--; });
+    return basic_board().visit_col_below(
+        coord, std::forward<decltype(visitor)>(visitor), policy);
+  }
+
+  void
+  visit_perpendicular(model::Coord                     coord,
+                      model::Direction                 dir,
+                      model::OptDirCellVisitor auto && visitor) const {
+    ++visit_depth_;
+    pc::scoped_exit on_return([this]() { this->visit_depth_--; });
+    return basic_board().visit_perpendicular(
+        coord, dir, std::forward<decltype(visitor)>(visitor));
+  }
+
+  void
+  visit_rows_cols_outward(
+      model::Coord                     coord,
+      model::OptDirCellVisitor auto && visitor,
+      model::Direction directions = model::directiongroups::all) const {
+
+    ++visit_depth_;
+    pc::scoped_exit on_return([this]() { this->visit_depth_--; });
+    return basic_board().visit_rows_cols_outward(
+        coord, std::forward<decltype(visitor)>(visitor), directions);
+  }
+
+  friend std::ostream & operator<<(std::ostream &, AnalysisBoard const &);
 
 private:
   PositionBoard &       cur();
@@ -58,6 +216,7 @@ private:
   model::BasicBoard &   mut_board();
 
 private:
+  mutable int                visit_depth_ = 0;
   std::vector<PositionBoard> position_boards_;
 };
 
