@@ -1,4 +1,4 @@
-#include "AnalysisBoard.hpp"
+#include "PositionBoard.hpp"
 #include "BasicBoard.hpp"
 #include "CellState.hpp"
 #include "Coord.hpp"
@@ -107,7 +107,6 @@ PositionBoard::set_cell(model::Coord     coord,
       }
     }
 
-    // TODO:
     // removing something known how to handle
     else if (is_empty(cell)) {
       switch (orig_cell) {
