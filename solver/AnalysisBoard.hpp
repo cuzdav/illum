@@ -27,6 +27,28 @@ public:
   void clone_position();
   void pop();
 
+  void
+  reset(model::BasicBoard const & board) {
+    cur().reset(board);
+  }
+
+  void
+  reevaluate_board_state(
+      PositionBoard::ResetPolicy policy =
+          PositionBoard::ResetPolicy::STOP_PLAYING_MOVES_ON_ERROR) {
+    cur().reevaluate_board_state(policy);
+  }
+
+  auto
+  stack_size() const {
+    return position_boards_.size();
+  }
+
+  void
+  reset(solver::PositionBoard const & board) {
+    cur().reset(board.board());
+  }
+
   int
   width() const {
     return cur().width();
@@ -48,6 +70,11 @@ public:
   }
 
   bool
+  apply_move(model::SingleMove const & move) {
+    return cur().apply_move(move);
+  }
+
+  bool
   is_solved() const {
     return cur().is_solved();
   }
@@ -59,6 +86,13 @@ public:
   solver::DecisionType
   decision_type() const {
     return cur().decision_type();
+  }
+
+  void
+  set_has_error(bool            yn,
+                DecisionType    decision,
+                model::OptCoord coord = std::nullopt) {
+    cur().set_has_error(yn, decision, coord);
   }
 
   model::OptCoord
@@ -201,7 +235,6 @@ public:
       model::Coord                     coord,
       model::OptDirCellVisitor auto && visitor,
       model::Direction directions = model::directiongroups::all) const {
-
     ++visit_depth_;
     pc::scoped_exit on_return([this]() { this->visit_depth_--; });
     return basic_board().visit_rows_cols_outward(
@@ -209,6 +242,11 @@ public:
   }
 
   friend std::ostream & operator<<(std::ostream &, AnalysisBoard const &);
+
+  PositionBoard const &
+  position_board() const {
+    return cur();
+  }
 
 private:
   PositionBoard &       cur();
@@ -221,3 +259,24 @@ private:
 };
 
 } // namespace solver
+
+template <>
+struct fmt::formatter<::solver::AnalysisBoard> {
+  template <typename ParseContext>
+  constexpr auto
+  parse(ParseContext & ctx) {
+    return ctx.begin();
+  }
+
+  template <typename FormatContext>
+  auto
+  format(::solver::AnalysisBoard const & board, FormatContext & ctx) {
+    return fmt::format_to(ctx.out(),
+                          "AnalysisBoard{{\n\t"
+                          "StackDepth={}\n\n\t"
+                          "{}"
+                          "}}",
+                          board.stack_size(),
+                          board.position_board());
+  }
+};

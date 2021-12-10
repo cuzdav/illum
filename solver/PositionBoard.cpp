@@ -17,8 +17,14 @@ PositionBoard::PositionBoard(int height, int width) {
   board_.reset(height, width);
 }
 
-PositionBoard::PositionBoard(model::BasicBoard const & current) : board_{} {
+PositionBoard::PositionBoard(model::BasicBoard const & current,
+                             ResetPolicy               policy) {
+  reset(current, policy);
+}
 
+void
+PositionBoard::reset(model::BasicBoard const &  current,
+                     PositionBoard::ResetPolicy policy) {
   board_.reset(current.height(), current.width());
 
   // first copy the walls and update counts
@@ -29,12 +35,13 @@ PositionBoard::PositionBoard(model::BasicBoard const & current) : board_{} {
     else if (is_wall(cell)) {
       num_walls_with_deps_ += model::is_wall_with_deps(cell);
       board_.set_cell(coord, cell);
+      update_wall(coord, cell, cell, false);
     }
   });
 
   // now just play the moves from their board into ours.
   current.visit_board([&](model::Coord coord, auto cell) {
-    if (has_error()) {
+    if (has_error() && policy == ResetPolicy::STOP_PLAYING_MOVES_ON_ERROR) {
       return model::STOP_VISITING;
     }
     if (model::is_bulb(cell)) {
@@ -51,7 +58,7 @@ PositionBoard::PositionBoard(model::BasicBoard const & current) : board_{} {
 }
 
 void
-PositionBoard::reevaluate_board_state() {
+PositionBoard::reevaluate_board_state(PositionBoard::ResetPolicy policy) {
   // Recompute the state of the board by replaying from start on a separate
   // position board at arm's reach, and take its results.
   //
@@ -61,7 +68,7 @@ PositionBoard::reevaluate_board_state() {
   // our underlying is non-destructive way to evaluate our current board
   // without any changes to our current board or state, and then we can just
   // take the results.
-  PositionBoard paranoid(board_);
+  PositionBoard paranoid(board_, policy);
   has_error_                      = paranoid.has_error_;
   num_cells_needing_illumination_ = paranoid.num_cells_needing_illumination_;
   num_walls_with_deps_            = paranoid.num_walls_with_deps_;
@@ -122,7 +129,7 @@ PositionBoard::set_cell(model::Coord     coord,
 
   // unless explicitly forbidden, we should reevaluate after set_cell
   if (policy != SetCellPolicy::NO_REEVALUATE_BOARD) {
-    reevaluate_board_state();
+    reevaluate_board_state(PositionBoard::ResetPolicy::KEEP_ERRORS);
   }
   return result;
 }
@@ -145,8 +152,7 @@ PositionBoard::is_solved() const {
 
 bool
 PositionBoard::is_ambiguous() const {
-  return has_error_ &&
-         decision_type_ == DecisionType::VIOLATES_SINGLE_UNIQUE_SOLUTION;
+  return decision_type_ == DecisionType::VIOLATES_SINGLE_UNIQUE_SOLUTION;
 }
 
 int
@@ -174,7 +180,9 @@ PositionBoard::has_error() const {
 }
 
 void
-PositionBoard::set_has_error(bool yn, DecisionType decision, Coord location) {
+PositionBoard::set_has_error(bool            yn,
+                             DecisionType    decision,
+                             model::OptCoord location) {
   has_error_     = yn;
   decision_type_ = decision;
   ref_location_  = location;
@@ -414,12 +422,7 @@ PositionBoard::apply_move(const model::SingleMove & move) {
 
 std::ostream &
 operator<<(std::ostream & os, PositionBoard const & pos_board) {
-  os << "PositionBoard{num_cells_needing_illumination="
-     << pos_board.num_cells_needing_illumination()
-     << ", unsatisfied walls: " << pos_board.num_walls_with_deps()
-     << ", Solved=" << pos_board.is_solved()
-     << ", HasError=" << pos_board.has_error() << ", " << pos_board.board()
-     << "}";
-  return os;
+  return os << fmt::format("{}", pos_board);
 }
+
 } // namespace solver

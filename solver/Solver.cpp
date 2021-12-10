@@ -175,9 +175,13 @@ find_moves(Solution & solution) {
     return true;
   }
 
+  if (solution.has_error()) {
+    return false;
+  }
+
   solution.set_status(SolutionStatus::FailedFindingMove);
   solution.board().set_has_error(
-      true, DecisionType::VIOLATES_SINGLE_UNIQUE_SOLUTION, {0, 0});
+      true, DecisionType::VIOLATES_SINGLE_UNIQUE_SOLUTION, Coord{0, 0});
   return false;
 }
 
@@ -191,8 +195,6 @@ play_moves(Solution & solution) {
               to_string(next_move.motive),
               to_string(next_move.reason));
     solution.apply_enqueued_next();
-
-    // std::cout << solution.board() << std::endl;
   }
   return played;
 }

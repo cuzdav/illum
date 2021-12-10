@@ -27,9 +27,12 @@ public:
   using Coord     = model::Coord;
   using CellState = model::CellState;
 
+  enum class ResetPolicy { STOP_PLAYING_MOVES_ON_ERROR, KEEP_ERRORS };
+
   PositionBoard() = default;
   PositionBoard(int height, int width);
-  PositionBoard(model::BasicBoard const & board);
+  PositionBoard(model::BasicBoard const & board,
+                ResetPolicy = ResetPolicy::STOP_PLAYING_MOVES_ON_ERROR);
 
   // Returns bool indicating request was successful.
   bool add_bulb(Coord);
@@ -59,14 +62,17 @@ public:
   // policy, then calling reevaluate_board_state can re-sync the PositionBoard
   // gamestate with the actual underlying board.  Calling this computes the same
   // thing as set_cell with FORCE_REEVALUATE_BOARD policy.
-  void reevaluate_board_state();
+  void reevaluate_board_state(
+      ResetPolicy = ResetPolicy::STOP_PLAYING_MOVES_ON_ERROR);
 
   void reset(int height, int width);
+  void reset(model::BasicBoard const & board,
+             ResetPolicy = ResetPolicy::STOP_PLAYING_MOVES_ON_ERROR);
 
   DecisionType    decision_type() const;
   model::OptCoord get_ref_location() const;
   bool            has_error() const;
-  void            set_has_error(bool, DecisionType, Coord);
+  void set_has_error(bool, DecisionType, model::OptCoord = std::nullopt);
 
   bool is_solved() const;
   bool is_ambiguous() const;
@@ -127,7 +133,7 @@ private:
   bool              has_error_                      = false;
   int               num_cells_needing_illumination_ = 0;
   int               num_walls_with_deps_            = 0;
-  DecisionType      decision_type_;
+  DecisionType      decision_type_                  = DecisionType::NONE;
   model::OptCoord   ref_location_;
   model::BasicBoard board_{};
 };
@@ -216,3 +222,34 @@ PositionBoard::visit_rows_cols_outward(model::Coord                     coord,
 }
 
 } // namespace solver
+
+template <>
+struct fmt::formatter<::solver::PositionBoard> {
+  template <typename ParseContext>
+  constexpr auto
+  parse(ParseContext & ctx) {
+    return ctx.begin();
+  }
+
+  template <typename FormatContext>
+  auto
+  format(::solver::PositionBoard const & board, FormatContext & ctx) {
+    return fmt::format_to(ctx.out(),
+                          "PositionBoard{{\n\t"
+                          "CellS Needing Illuminatation: {}\n\t"
+                          "Unsatisfied Walls: {}\n\t"
+                          "Solved={}\n\t"
+                          "HasError={}\n\t"
+                          "DecisionType={}\n\t"
+                          "RefLocation={}\n\t"
+                          "{}"
+                          "}}",
+                          board.num_cells_needing_illumination(),
+                          board.num_walls_with_deps(),
+                          board.is_solved(),
+                          board.has_error(),
+                          board.decision_type(),
+                          board.get_ref_location(),
+                          board.board());
+  }
+};
