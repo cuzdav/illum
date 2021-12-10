@@ -4,7 +4,6 @@ add_library(levels
 )
 target_include_directories(levels PUBLIC .)
 
-target_link_libraries(levels model)
+target_link_libraries(levels model solver)
 
-
-#add_subdirectory(test)
+add_subdirectory(test)
