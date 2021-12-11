@@ -7,6 +7,6 @@ add_library(solver
     trivial_moves.cpp
 )
 target_include_directories(solver PUBLIC .)
-target_link_libraries(solver model fmt illum)
+target_link_libraries(solver model fmt common)
 
 add_subdirectory(test)

@@ -25,7 +25,7 @@ PositionBoard::PositionBoard(model::BasicBoard const & current,
 void
 PositionBoard::reset(model::BasicBoard const &  current,
                      PositionBoard::ResetPolicy policy) {
-  board_.reset(current.height(), current.width());
+  reset(current.height(), current.width());
 
   // first copy the walls and update counts
   current.visit_board([&](model::Coord coord, auto cell) {
@@ -124,7 +124,6 @@ PositionBoard::set_cell(model::Coord     coord,
       }
     }
   }
-
   bool result = board_.set_cell(coord, cell);
 
   // unless explicitly forbidden, we should reevaluate after set_cell
@@ -337,8 +336,16 @@ PositionBoard::add_wall(model::Coord wall_coord, model::CellState wall_cell) {
 
 bool
 PositionBoard::remove_bulb(model::Coord bulb_coord) {
-  CellState bulb_target = get_cell(bulb_coord);
-  return false;
+  // TODO: this is inefficient logic since it recomputes the board from the
+  // beginning after removing the bulb.  But it works, and is a placeholder
+  // until I feel like dealing with it better.
+  board_.set_cell(bulb_coord, model::CellState::Empty);
+  auto board_copy = board_;
+
+  // an unsolved board is an error, but we don't want that to stop us from
+  // copying the moves back into the new board.
+  reset(board_copy, PositionBoard::ResetPolicy::KEEP_ERRORS);
+  return true;
 }
 
 bool
@@ -405,19 +412,26 @@ PositionBoard::add_mark(model::Coord mark_coord) {
 
 bool
 PositionBoard::apply_move(const model::SingleMove & move) {
-  assert(move.action_ == model::Action::Add);
-
-  if (move.to_ == CellState::Bulb) {
-    add_bulb(move.coord_);
-    return true;
+  if (move.action_ == model::Action::Add) {
+    if (move.to_ == CellState::Bulb) {
+      add_bulb(move.coord_);
+      return true;
+    }
+    if (move.to_ == CellState::Mark) {
+      add_mark(move.coord_);
+      return true;
+    }
+    else {
+      return false;
+    }
   }
-  if (move.to_ == CellState::Mark) {
-    add_mark(move.coord_);
-    return true;
+  else if (move.action_ == model::Action::Remove) {
+    if (move.from_ == CellState::Bulb || move.from_ == CellState::Mark) {
+      set_cell(move.coord_, model::CellState::Empty);
+      return true;
+    }
   }
-  else {
-    return false;
-  }
+  return false;
 }
 
 std::ostream &

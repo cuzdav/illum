@@ -82,7 +82,8 @@ public:
   int width() const;
   int height() const;
 
-  CellState get_cell(Coord coord) const;
+  CellState                get_cell(Coord coord) const;
+  std::optional<CellState> get_opt_cell(Coord coord) const;
 
   model::BasicBoard const & board() const;
   model::BasicBoard &       mut_board();
@@ -151,6 +152,11 @@ PositionBoard::reset(int height, int width) {
 inline model::CellState
 PositionBoard::get_cell(model::Coord coord) const {
   return board_.get_cell(coord);
+}
+
+inline std::optional<model::CellState>
+PositionBoard::get_opt_cell(model::Coord coord) const {
+  return board_.get_opt_cell(coord);
 }
 
 inline bool

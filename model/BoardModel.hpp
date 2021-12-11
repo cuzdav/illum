@@ -67,9 +67,12 @@ public:
   void for_each_move(MoveHandlerT && handler) const;
 
   StateChangeHandler const * get_handler() const;
-  int                        num_total_moves() const;
-  int                        num_played_moves() const;
-  bool                       started() const;
+
+  void set_state_change_handler(std::unique_ptr<StateChangeHandler> handler);
+
+  int  num_total_moves() const;
+  int  num_played_moves() const;
+  bool started() const;
 
   BasicBoard const & get_underlying_board() const;
   CellState          get_cell(Coord coord) const;

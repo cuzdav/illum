@@ -1,4 +1,7 @@
-add_library(olc STATIC olcPixelGameEngine.cpp)
+add_library(olc STATIC
+    olcPixelGameEngine.cpp
+    olcRetroMenu.cpp
+)
 target_include_directories(olc PUBLIC .)
 
 set(THREADS_PREFER_PTHREAD_FLAD ON)

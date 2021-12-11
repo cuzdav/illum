@@ -102,6 +102,12 @@ BoardModel::remove(Coord coord) {
 }
 
 void
+BoardModel::set_state_change_handler(
+    std::unique_ptr<StateChangeHandler> handler) {
+  handler_ = std::move(handler);
+}
+
+void
 BoardModel::reset_game(int height, int width) {
   started_ = false;
   moves_.clear();
