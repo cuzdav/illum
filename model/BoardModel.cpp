@@ -56,9 +56,22 @@ BoardModel::undo() {
   moves_.pop_back();
   Action action = last.action_ == Action::Add ? Action::Remove : Action::Add;
 
+  board_.set_cell(last.coord_, last.from_);
+
   // note: to/from intentionally reversed since this is undo.
   on_state_change(action, last.to_, last.from_, last.coord_);
 
+  return true;
+}
+
+bool
+BoardModel::restart_game() {
+  if (not started_) {
+    return false;
+  }
+  while (undo()) {
+    // nothing
+  }
   return true;
 }
 

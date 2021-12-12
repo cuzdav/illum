@@ -54,6 +54,7 @@ public:
       BasicBoard const & initial_board,
       ResetGamePolicy copy_player_moves = ResetGamePolicy::COPY_PLAYER_MOVES);
   void start_game();
+
   void add(CellState, Coord coord);
   void apply(SingleMove move);
   void remove(Coord coord);
@@ -62,6 +63,7 @@ public:
   // past/before the start-of-game marker.  Returns true if something was
   // undone.  If game not started, or moves not played, it returns false.
   bool undo();
+  bool restart_game(); // clear user-moves
 
   template <typename MoveHandlerT>
   void for_each_move(MoveHandlerT && handler) const;

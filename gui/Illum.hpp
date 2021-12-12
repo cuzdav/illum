@@ -2,6 +2,7 @@
 #include "BasicWallLayout.hpp"
 #include "BoardModel.hpp"
 #include "Solver.hpp"
+#include "olcButton.hpp"
 #include "olcPixelGameEngine.h"
 #include "olcRetroMenu.hpp"
 #include "utils/EnumUtils.hpp"
@@ -39,6 +40,11 @@ private:
   bool render_menu();
   bool render_game();
   void play_tile_at(model::CellState play_tile);
+  void draw_buttons();
+
+  void restart_clicked();
+  void undo_clicked();
+  void hint_clicked();
 
 private:
   class StateChange : public model::StateChangeHandler {
@@ -54,42 +60,18 @@ private:
   };
 
   enum class State { Menu, StartGame, Playing, Exit };
-  enum class MenuId {
-    Play,
-    Tutorial,
-    Settings,
-
-    // Difficulty
-    VeryEasy,
-    Easy,
-    Intermediate,
-    Hard,
-    Expert,
-
-    // Size
-    MinVerySmall,
-    MinSmall,
-    MinMedium,
-    MinLarge,
-    MinHuge,
-    MaxVerySmall,
-    MaxSmall,
-    MaxMedium,
-    MaxLarge,
-    MaxHuge,
-
-    // Meta option
-    Back,
-
-  };
 
   enum class Difficulty { VeryEasy, Easy, Intermediate, Hard, Expert };
   friend char const * to_string(Difficulty);
 
-  std::unique_ptr<olc::Sprite> menu_sprite_;
-  olc::popup::Menu             menu;
-  olc::popup::Manager          menu_manager;
-  State                        state_ = State::Menu;
+  std::unique_ptr<olc::Sprite>      menu_sprite_;
+  olc::popup::Menu                  menu_;
+  olc::popup::Manager               menu_manager_;
+  std::optional<illum::olc::Button> undo_button_;
+  std::optional<illum::olc::Button> hint_button_;
+  std::optional<illum::olc::Button> restart_button_;
+
+  State state_ = State::Menu;
 
   Difficulty difficulty_         = Difficulty::VeryEasy;
   int        min_board_size_idx_ = 0;

@@ -3,7 +3,7 @@
 int
 main() {
   Illum demo;
-  if (demo.Construct(512, 480, 4, 4))
+  if (demo.Construct(512, 480, 2, 2))
     demo.Start();
   return 0;
 }

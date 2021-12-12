@@ -3,16 +3,51 @@
 #include "Coord.hpp"
 #include "SingleMove.hpp"
 #include <chrono>
+#include <filesystem>
 #include <memory>
 #include <random>
 
+namespace {
+
 // Note: characters are fix-width "8 pixels", so "-4" in DrawStrings is to
 // center a char.
-static constexpr int HALF_CHAR_PXLS = 4;
+constexpr int HALF_CHAR_PXLS = 4;
 
-static constexpr int ROW_PADDING_ABOVE = 2;
-static constexpr int ROW_PADDING_BELOW = 1;
-static constexpr int COL_PADDING       = 1;
+constexpr int ROW_PADDING_ABOVE = 2;
+constexpr int ROW_PADDING_BELOW = 2;
+constexpr int COL_PADDING       = 1;
+
+constexpr int BUTTON_SIZE = 32;
+
+enum class MenuId {
+  Play,
+  Tutorial,
+  Settings,
+
+  // Difficulty
+  VeryEasy,
+  Easy,
+  Intermediate,
+  Hard,
+  Expert,
+
+  // Size
+  MinVerySmall,
+  MinSmall,
+  MinMedium,
+  MinLarge,
+  MinHuge,
+  MaxVerySmall,
+  MaxSmall,
+  MaxMedium,
+  MaxLarge,
+  MaxHuge,
+
+  // Meta option
+  Back,
+
+};
+} // namespace
 
 char const *
 to_string(Illum::Difficulty d) {
@@ -49,12 +84,10 @@ Illum::Illum()
 
 bool
 Illum::create_menu() {
-  menu_sprite_ = std::make_unique<olc::Sprite>("./RetroMenu.png");
-
-  menu["main"].SetTable(1, 3);
-  menu["main"]["Play"].SetID(+MenuId::Play);
-  menu["main"]["Tutorial"].SetID(+MenuId::Tutorial).Enable(false);
-  auto & settings = menu["main"]["Settings"].SetTable(1, 4);
+  menu_["main"].SetTable(1, 3);
+  menu_["main"]["Play"].SetID(+MenuId::Play);
+  menu_["main"]["Tutorial"].SetID(+MenuId::Tutorial).Enable(false);
+  auto & settings = menu_["main"]["Settings"].SetTable(1, 4);
 
   auto & difficulty = settings["Difficulty"].SetTable(1, 5);
   difficulty["Very Easy"].SetID(+MenuId::VeryEasy);
@@ -82,8 +115,8 @@ Illum::create_menu() {
 
   settings["(Back)"].SetID(+MenuId::Back);
 
-  menu.Build();
-  menu_manager.Open(&menu["main"]);
+  menu_.Build();
+  menu_manager_.Open(&menu_["main"]);
 
   return true;
 }
@@ -93,60 +126,60 @@ Illum::update_menu() {
   olc::popup::Menu * command = nullptr;
 
   if (GetKey(olc::Key::UP).bPressed) {
-    menu_manager.OnUp();
+    menu_manager_.OnUp();
   }
   if (GetKey(olc::Key::DOWN).bPressed) {
-    menu_manager.OnDown();
+    menu_manager_.OnDown();
   }
   if (GetKey(olc::Key::LEFT).bPressed) {
-    menu_manager.OnLeft();
+    menu_manager_.OnLeft();
   }
   if (GetKey(olc::Key::RIGHT).bPressed) {
-    menu_manager.OnRight();
+    menu_manager_.OnRight();
   }
   if (GetKey(olc::Key::ENTER).bPressed || GetKey(olc::Key::SPACE).bPressed) {
     std::cout << "Enter/space  pressed\n";
-    command = menu_manager.OnConfirm();
+    command = menu_manager_.OnConfirm();
   }
   if (GetKey(olc::Key::ESCAPE).bPressed) {
-    menu_manager.OnBack();
+    menu_manager_.OnBack();
   }
 
   if (command != nullptr) {
     auto menu_id = MenuId(command->GetID());
     switch (menu_id) {
       case MenuId::Back:
-        menu_manager.OnBack();
+        menu_manager_.OnBack();
         break;
 
       case MenuId::Play:
         state_ = State::StartGame;
-        menu_manager.Close();
+        menu_manager_.Close();
         break;
 
       case MenuId::VeryEasy:
         difficulty_ = Difficulty::VeryEasy;
-        menu_manager.OnBack();
+        menu_manager_.OnBack();
         break;
 
       case MenuId::Easy:
         difficulty_ = Difficulty::Easy;
-        menu_manager.OnBack();
+        menu_manager_.OnBack();
         break;
 
       case MenuId::Intermediate:
         difficulty_ = Difficulty::Intermediate;
-        menu_manager.OnBack();
+        menu_manager_.OnBack();
         break;
 
       case MenuId::Hard:
         difficulty_ = Difficulty::Hard;
-        menu_manager.OnBack();
+        menu_manager_.OnBack();
         break;
 
       case MenuId::Expert:
         difficulty_ = Difficulty::Expert;
-        menu_manager.OnBack();
+        menu_manager_.OnBack();
         break;
 
       case MenuId::MinVerySmall:
@@ -157,7 +190,7 @@ Illum::update_menu() {
         min_board_size_idx_ = +menu_id - +MenuId::MinVerySmall;
         max_board_size_idx_ =
             std::max(min_board_size_idx_, max_board_size_idx_);
-        menu_manager.OnBack();
+        menu_manager_.OnBack();
         break;
 
       case MenuId::MaxVerySmall:
@@ -168,7 +201,7 @@ Illum::update_menu() {
         max_board_size_idx_ = +menu_id - +MenuId::MaxVerySmall;
         min_board_size_idx_ =
             std::min(min_board_size_idx_, max_board_size_idx_);
-        menu_manager.OnBack();
+        menu_manager_.OnBack();
         break;
 
       case MenuId::Settings:
@@ -181,9 +214,49 @@ Illum::update_menu() {
 
 bool
 Illum::OnUserCreate() {
-  bool result = create_menu();
 
-  return result;
+  menu_sprite_ = std::make_unique<olc::Sprite>("./resources/RetroMenu.png");
+
+  olc::vf2d size{BUTTON_SIZE, BUTTON_SIZE};
+  int const button_y = 470 - 16 - size.y;
+
+  restart_button_.emplace(
+      this,
+      [this]() { restart_clicked(); },
+      "./resources/restart.png",
+      olc::vf2d(0, 0), // will be positioned in start_game()
+      size);
+
+  undo_button_.emplace(
+      this,
+      [this]() { undo_clicked(); },
+      "./resources/undo.png",
+      olc::vf2d(0, 0),
+      size);
+
+  hint_button_.emplace(
+      this,
+      [this]() { hint_clicked(); },
+      "./resources/hint.png",
+      olc::vf2d(0, 0),
+      size);
+
+  return create_menu();
+}
+
+void
+Illum::restart_clicked() {
+  model_.restart_game();
+}
+
+void
+Illum::undo_clicked() {
+  model_.undo();
+}
+
+void
+Illum::hint_clicked() {
+  std::cout << "HINT !\n ";
 }
 
 bool
@@ -202,7 +275,6 @@ Illum::OnUserUpdate(float elapsed_time) {
       break;
 
     case State::Exit:
-      std::cerr << "Exiting\n";
       return false;
   }
 
@@ -243,7 +315,7 @@ Illum::render() {
                              BOARD_SIZES[min_board_size_idx_],
                              BOARD_SIZES[max_board_size_idx_]));
 
-      menu_manager.Draw(menu_sprite_.get(), {40, 40});
+      menu_manager_.Draw(menu_sprite_.get(), {40, 40});
       return true;
 
     case State::Playing:
@@ -252,8 +324,6 @@ Illum::render() {
     case State::StartGame:
       return true;
   }
-  std::cerr << "returning false " << __LINE__ << std::endl;
-  std::cerr << "State=" << +state_ << "\n";
   return false;
 }
 
@@ -288,6 +358,19 @@ Illum::start_game() {
                  (model_.height() + ROW_PADDING_ABOVE + ROW_PADDING_BELOW);
   state_ = State::Playing;
 
+  int bottom_padding  = tile_height_ * ROW_PADDING_BELOW;
+  int bottom_of_tiles = (model_.height() + ROW_PADDING_ABOVE) * tile_height_;
+  int button_y        = ((ScreenHeight() - 10) - bottom_of_tiles) / 2 +
+                 bottom_of_tiles - BUTTON_SIZE / 2;
+
+  restart_button_->position = {tile_width_, button_y};
+
+  undo_button_->position = {
+      restart_button_->position.x + 2 * restart_button_->size.x, button_y};
+
+  hint_button_->position = {ScreenWidth() - tile_width_ - BUTTON_SIZE,
+                            button_y};
+
   position_.reset(model_.get_underlying_board());
 
   bulbs_in_solution_ = 0;
@@ -316,7 +399,6 @@ void
 Illum::play_tile_at(model::CellState play_tile) {
   model::Coord coord = get_mouse_pos_as_tile_coord();
   if (auto cell = position_.get_opt_cell(coord)) {
-    std::cerr << *cell << std::endl;
     if (is_empty(*cell)) {
       model_.add(play_tile, coord);
     }
@@ -328,6 +410,10 @@ Illum::play_tile_at(model::CellState play_tile) {
 
 bool
 Illum::update_game() {
+  undo_button_->update();
+  hint_button_->update();
+  restart_button_->update();
+
   if (GetMouse(olc::Mouse::LEFT).bPressed) {
     play_tile_at(model::CellState::Bulb);
   }
@@ -347,6 +433,12 @@ Illum::render_game() {
   position_.visit_board([&](model::Coord coord, model::CellState cell) {
     int x_px = (coord.col_ + COL_PADDING) * tile_width_;
     int y_px = (coord.row_ + ROW_PADDING_ABOVE) * tile_height_;
+
+    undo_button_->render();
+    hint_button_->render();
+    restart_button_->render();
+
+    //    DrawRect(restart_button_->position, restart_button_->size);
 
     using enum model::CellState;
     switch (cell) {
