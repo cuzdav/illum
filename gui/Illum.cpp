@@ -6,6 +6,14 @@
 #include <memory>
 #include <random>
 
+// Note: characters are fix-width "8 pixels", so "-4" in DrawStrings is to
+// center a char.
+static constexpr int HALF_CHAR_PXLS = 4;
+
+static constexpr int ROW_PADDING_ABOVE = 2;
+static constexpr int ROW_PADDING_BELOW = 1;
+static constexpr int COL_PADDING       = 1;
+
 char const *
 to_string(Illum::Difficulty d) {
   using enum Illum::Difficulty;
@@ -198,10 +206,7 @@ Illum::OnUserUpdate(float elapsed_time) {
       return false;
   }
 
-  elapsed_since_render_ += elapsed_time;
-  if (elapsed_since_render_ >= RENDER_INTERVAL) {
-    return render();
-  }
+  render();
 
   // keep those fans from spinning needlessly
   std::this_thread::sleep_for(
@@ -211,7 +216,6 @@ Illum::OnUserUpdate(float elapsed_time) {
 
 bool
 Illum::render() {
-  elapsed_since_render_ = 0;
   Clear(olc::DARK_BLUE);
 
   // Draw Boundary
@@ -220,15 +224,24 @@ Illum::render() {
   DrawLine(502, 10, 502, 470, olc::YELLOW);
   DrawLine(10, 470, 502, 470, olc::YELLOW);
 
+  DrawString(
+      30,
+      30,
+      fmt::format("Bulbs Remaining: {}", bulbs_in_solution_ - bulbs_played_),
+      (bulbs_played_ < bulbs_in_solution_) ||
+              ((bulbs_played_ == bulbs_in_solution_) && position_.is_solved())
+          ? olc::WHITE
+          : olc::RED);
+
   switch (state_) {
     case State::Menu:
-      DrawString(200, 100, "Difficulty: ");
-      DrawString(200 + 13 * 8, 100, to_string(difficulty_));
-      DrawString(200, 110, "Board Size: ");
-      DrawString(200 + 13 * 8,
+      DrawString(200, 100, fmt::format("Difficulty: {}", difficulty_));
+      //      DrawString(200 + 13 * 8, 100, to_string(difficulty_));
+      DrawString(200,
                  110,
-                 std::to_string(BOARD_SIZES[min_board_size_idx_]) + "x" +
-                     std::to_string(BOARD_SIZES[max_board_size_idx_]));
+                 fmt::format("Board Size: {}x{}",
+                             BOARD_SIZES[min_board_size_idx_],
+                             BOARD_SIZES[max_board_size_idx_]));
 
       menu_manager.Draw(menu_sprite_.get(), {40, 40});
       return true;
@@ -249,12 +262,15 @@ Illum::on_state_change(model::Action    action,
                        model::CellState prev_state,
                        model::CellState to_state,
                        model::Coord     coord) {
-  std::cerr << "STATE CHANGE: " << action << ", from=" << prev_state
-            << ", to=" << to_state << ", at " << coord << std::endl;
   if (action == model::Action::Remove && prev_state == model::CellState::Bulb) {
-    position_.reset(model_.get_underlying_board());
+    bulbs_played_--;
+    position_.reset(model_.get_underlying_board(),
+                    solver::PositionBoard::ResetPolicy::KEEP_ERRORS);
   }
   else {
+    if (action == model::Action::Add && to_state == model::CellState::Bulb) {
+      ++bulbs_played_;
+    }
     position_.apply_move(
         model::SingleMove{action, prev_state, to_state, coord});
   }
@@ -267,11 +283,19 @@ Illum::start_game() {
   int  height  = BOARD_SIZES[dist(twister_rng_)];
   int  width   = BOARD_SIZES[dist(twister_rng_)];
   model_       = levels::BasicWallLayout{}.create(twister_rng_, height, width);
-  tile_width_  = ScreenWidth() / (model_.width() + 2);
-  tile_height_ = ScreenHeight() / (model_.height() + 2);
-  state_       = State::Playing;
+  tile_width_  = ScreenWidth() / (model_.width() + 2 * COL_PADDING);
+  tile_height_ = ScreenHeight() /
+                 (model_.height() + ROW_PADDING_ABOVE + ROW_PADDING_BELOW);
+  state_ = State::Playing;
 
   position_.reset(model_.get_underlying_board());
+
+  bulbs_in_solution_ = 0;
+  bulbs_played_      = 0;
+
+  auto solution = solver::solve(position_.board());
+  solution.board().visit_board(
+      [&](auto, auto cell) { bulbs_in_solution_ += is_bulb(cell); });
 
   model_.set_state_change_handler(std::make_unique<StateChange>(*this));
 
@@ -282,38 +306,36 @@ Illum::start_game() {
 model::Coord
 Illum::get_mouse_pos_as_tile_coord() const {
   // there is 1 tile of padding as margins on left/right sides.
-  int col_coord = GetMouseX() / tile_width_ - 1;
-  int row_coord = GetMouseY() / tile_height_ - 1;
+  int col_coord = GetMouseX() / tile_width_ - COL_PADDING;
+  int row_coord = GetMouseY() / tile_height_ - ROW_PADDING_ABOVE;
 
   return {row_coord, col_coord};
 }
 
+void
+Illum::play_tile_at(model::CellState play_tile) {
+  model::Coord coord = get_mouse_pos_as_tile_coord();
+  if (auto cell = position_.get_opt_cell(coord)) {
+    std::cerr << *cell << std::endl;
+    if (is_empty(*cell)) {
+      model_.add(play_tile, coord);
+    }
+    else {
+      model_.remove(coord);
+    }
+  }
+}
+
 bool
 Illum::update_game() {
-  auto click_play = [this](model::CellState play_tile) {
-    model::Coord coord = get_mouse_pos_as_tile_coord();
-    std::cerr << "Clicked on tile at: " << coord << std::endl;
-    if (auto cell = position_.get_opt_cell(coord)) {
-      std::cerr << *cell << std::endl;
-      if (is_empty(*cell)) {
-        model_.add(play_tile, coord);
-      }
-      else {
-        model_.remove(coord);
-      }
-    }
-  };
-
   if (GetMouse(olc::Mouse::LEFT).bPressed) {
-    click_play(model::CellState::Bulb);
+    play_tile_at(model::CellState::Bulb);
   }
   else if (GetMouse(olc::Mouse::RIGHT).bPressed) {
-    click_play(model::CellState::Mark);
+    play_tile_at(model::CellState::Mark);
   }
 
-  std::cout << position_ << std::endl;
-
-  if (position_.is_solved()) {
+  if (position_.is_solved() && bulbs_played_ == bulbs_in_solution_) {
     state_ = State::StartGame;
   }
 
@@ -323,8 +345,8 @@ Illum::update_game() {
 bool
 Illum::render_game() {
   position_.visit_board([&](model::Coord coord, model::CellState cell) {
-    int x_px = (coord.col_ + 1) * tile_width_;
-    int y_px = (coord.row_ + 1) * tile_height_;
+    int x_px = (coord.col_ + COL_PADDING) * tile_width_;
+    int y_px = (coord.row_ + ROW_PADDING_ABOVE) * tile_height_;
 
     using enum model::CellState;
     switch (cell) {
@@ -337,26 +359,30 @@ Illum::render_game() {
         break;
       case Wall1:
         FillRect(x_px, y_px, tile_width_, tile_height_, olc::DARK_GREY);
-        DrawString(
-            x_px + tile_width_ / 2 - 4, y_px + tile_height_ / 2 - 4, "1");
+        DrawString(x_px + tile_width_ / 2 - HALF_CHAR_PXLS,
+                   y_px + tile_height_ / 2 - HALF_CHAR_PXLS,
+                   "1");
         DrawRect(x_px, y_px, tile_width_, tile_height_, olc::BLACK);
         break;
       case Wall2:
         FillRect(x_px, y_px, tile_width_, tile_height_, olc::DARK_GREY);
-        DrawString(
-            x_px + tile_width_ / 2 - 4, y_px + tile_height_ / 2 - 4, "2");
+        DrawString(x_px + tile_width_ / 2 - HALF_CHAR_PXLS,
+                   y_px + tile_height_ / 2 - HALF_CHAR_PXLS,
+                   "2");
         DrawRect(x_px, y_px, tile_width_, tile_height_, olc::BLACK);
         break;
       case Wall3:
         FillRect(x_px, y_px, tile_width_, tile_height_, olc::DARK_GREY);
-        DrawString(
-            x_px + tile_width_ / 2 - 4, y_px + tile_height_ / 2 - 4, "3");
+        DrawString(x_px + tile_width_ / 2 - HALF_CHAR_PXLS,
+                   y_px + tile_height_ / 2 - HALF_CHAR_PXLS,
+                   "3");
         DrawRect(x_px, y_px, tile_width_, tile_height_, olc::BLACK);
         break;
       case Wall4:
         FillRect(x_px, y_px, tile_width_, tile_height_, olc::DARK_GREY);
-        DrawString(
-            x_px + tile_width_ / 2 - 4, y_px + tile_height_ / 2 - 4, "4");
+        DrawString(x_px + tile_width_ / 2 - HALF_CHAR_PXLS,
+                   y_px + tile_height_ / 2 - HALF_CHAR_PXLS,
+                   "4");
         DrawRect(x_px, y_px, tile_width_, tile_height_, olc::BLACK);
         break;
       case Bulb:

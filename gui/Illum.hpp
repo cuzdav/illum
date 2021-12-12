@@ -38,6 +38,7 @@ private:
 
   bool render_menu();
   bool render_game();
+  void play_tile_at(model::CellState play_tile);
 
 private:
   class StateChange : public model::StateChangeHandler {
@@ -88,14 +89,15 @@ private:
   std::unique_ptr<olc::Sprite> menu_sprite_;
   olc::popup::Menu             menu;
   olc::popup::Manager          menu_manager;
-  State                        state_                = State::Menu;
-  float                        elapsed_since_render_ = 0;
+  State                        state_ = State::Menu;
 
   Difficulty difficulty_         = Difficulty::VeryEasy;
   int        min_board_size_idx_ = 0;
   int        max_board_size_idx_ = 3;
   int        tile_width_         = 0;
   int        tile_height_        = 0;
+  int        bulbs_in_solution_  = 0;
+  int        bulbs_played_       = 0;
 
   model::BoardModel     model_;
   solver::PositionBoard position_;
