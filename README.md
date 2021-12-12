@@ -55,4 +55,6 @@ Illum makes use of the Pixel game engine, by OneLoneCoder, aka javidx9
 Copyright 2018-2021 OneLoneCoder.com
 https://github.com/OneLoneCoder/olcPixelGameEngine
 
+Illum makes use of some button images under CC 4 license, by 
+https://payhip.com/fakigame from the `free_button_001.zip`.
 
