@@ -183,7 +183,7 @@ BasicBoard::reset(int height, int width) {
   assert(height > 0);
   assert(width > 0);
   for (auto & cell : cells_) {
-    cell = CellState::Empty;
+    cell = CellState::EMPTY;
   }
   height_ = height;
   width_  = width;
@@ -317,7 +317,7 @@ BasicBoard::visit_adjacent(Coord                     coord,
   DEBUGPROFILE_INC_COUNTER(visit_adjacent_counter);
   auto visit = [&](Coord coord) {
     if (int idx = get_flat_idx(coord); idx != -1) {
-      return visit_cell(Direction::None, coord, idx, visitor);
+      return visit_cell(Direction::NONE, coord, idx, visitor);
     }
     return true;
   };
@@ -340,13 +340,13 @@ BasicBoard::visit_adj_flank(Coord                     coord,
   };
 
   auto [row, col] = coord;
-  if (dir == Direction::Up || dir == Direction::Down) {
-    return visit(Direction::Left, {row, col - 1}) &&
-           visit(Direction::Right, {row, col + 1});
+  if (dir == Direction::UP || dir == Direction::DOWN) {
+    return visit(Direction::LEFT, {row, col - 1}) &&
+           visit(Direction::RIGHT, {row, col + 1});
   }
   else {
-    return visit(Direction::Up, {row - 1, col}) &&
-           visit(Direction::Down, {row + 1, col});
+    return visit(Direction::UP, {row - 1, col}) &&
+           visit(Direction::DOWN, {row + 1, col});
   }
 }
 
@@ -364,7 +364,7 @@ BasicBoard::visit_board_if(CellVisitor auto &&        visitor,
   for (int r = 0, c = 0, i = 0; r < height_; ++i) {
     Coord coord{r, c};
     if (visit_cell_pred(coord, cells_[i])) {
-      if (not visit_cell(Direction::None, coord, i, visitor)) {
+      if (not visit_cell(Direction::NONE, coord, i, visitor)) {
         return false;
       }
     }
@@ -428,7 +428,7 @@ BasicBoard::visit_row_left_of(Coord                     coord,
   auto update_coord = [](Coord & coord) { --coord.col_; };
   auto update_idx   = [](int & idx) { --idx; };
   auto test_coord   = [](Coord coord) { return coord.col_ >= 0; };
-  return visit_straight_line(Direction::Left,
+  return visit_straight_line(Direction::LEFT,
                              coord,
                              update_coord,
                              update_idx,
@@ -445,7 +445,7 @@ BasicBoard::visit_row_right_of(Coord                     coord,
   auto update_coord = [](Coord & coord) { ++coord.col_; };
   auto update_idx   = [](int & idx) { ++idx; };
   auto test_coord   = [w = width_](Coord coord) { return coord.col_ < w; };
-  return visit_straight_line(Direction::Right,
+  return visit_straight_line(Direction::RIGHT,
                              coord,
                              update_coord,
                              update_idx,
@@ -462,7 +462,7 @@ BasicBoard::visit_col_above(Coord                     coord,
   auto update_coord = [](Coord & coord) { --coord.row_; };
   auto update_idx   = [w = width_](int & idx) { idx -= w; };
   auto test_coord   = [](Coord coord) { return coord.row_ >= 0; };
-  return visit_straight_line(Direction::Up,
+  return visit_straight_line(Direction::UP,
                              coord,
                              update_coord,
                              update_idx,
@@ -479,7 +479,7 @@ BasicBoard::visit_col_below(Coord                     coord,
   auto update_coord = [](Coord & coord) { ++coord.row_; };
   auto update_idx   = [w = width_](int & idx) { idx += w; };
   auto test_coord   = [h = height_](Coord coord) { return coord.row_ < h; };
-  return visit_straight_line(Direction::Down,
+  return visit_straight_line(Direction::DOWN,
                              coord,
                              update_coord,
                              update_idx,
@@ -493,16 +493,16 @@ BasicBoard::visit_rows_cols_outward(Coord                     coord,
                                     OptDirCellVisitor auto && visitor,
                                     Direction directions) const {
   DEBUGPROFILE_INC_COUNTER(visit_rows_cols_outward_counter);
-  if (contains_all(directions, Direction::Left)) {
+  if (contains_all(directions, Direction::LEFT)) {
     visit_row_left_of(coord, visitor);
   }
-  if (contains_all(directions, Direction::Right)) {
+  if (contains_all(directions, Direction::RIGHT)) {
     visit_row_right_of(coord, visitor);
   }
-  if (contains_all(directions, Direction::Up)) {
+  if (contains_all(directions, Direction::UP)) {
     visit_col_above(coord, visitor);
   }
-  if (contains_all(directions, Direction::Down)) {
+  if (contains_all(directions, Direction::DOWN)) {
     visit_col_below(coord, visitor);
   }
 }
@@ -514,29 +514,29 @@ BasicBoard::visit_rows_cols_outward(Coord                     coord,
 // will NOT visit your starting cell). If you use a Directed visitor, it'll give
 // you the direction the scan is moving on the board in absolute perspective,
 // relative to a fixed camera looking at the board. Your direction is not
-// considered. That is, lower-numbered columns are always "Left" of higher
-// numbered columns, and higher columns are always to the Right of
-// lower-numbered columns. Similarly lower-numbered rows are Up, and higher
-// numbered rows are Down.
+// considered. That is, lower-numbered columns are always "LEFT" of higher
+// numbered columns, and higher columns are always to the RIGHT of
+// lower-numbered columns. Similarly lower-numbered rows are UP, and higher
+// numbered rows are DOWN.
 inline void
 BasicBoard::visit_perpendicular(Coord                     coord,
                                 Direction                 dir,
                                 OptDirCellVisitor auto && visitor) const {
   DEBUGPROFILE_INC_COUNTER(visit_perp_counter);
   switch (dir) {
-    case Direction::Left:
-    case Direction::Right:
+    case Direction::LEFT:
+    case Direction::RIGHT:
       visit_col_above(coord, visitor);
       visit_col_below(coord, visitor);
       break;
 
-    case Direction::Up:
-    case Direction::Down:
+    case Direction::UP:
+    case Direction::DOWN:
       visit_row_left_of(coord, visitor);
       visit_row_right_of(coord, visitor);
       break;
 
-    case Direction::None:
+    case Direction::NONE:
       break;
   }
 }

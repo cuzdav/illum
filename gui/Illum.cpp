@@ -20,31 +20,31 @@ constexpr int COL_PADDING       = 1;
 constexpr int BUTTON_SIZE = 32;
 
 enum class MenuId {
-  Play,
-  Tutorial,
-  Settings,
+  PLAY,
+  TUTORIAL,
+  SETTINGS,
 
   // Difficulty
-  VeryEasy,
-  Easy,
-  Intermediate,
-  Hard,
-  Expert,
+  VERY_EASY,
+  EASY,
+  INTERMEDIATE,
+  HARD,
+  EXPERT,
 
   // Size
-  MinVerySmall,
-  MinSmall,
-  MinMedium,
-  MinLarge,
-  MinHuge,
-  MaxVerySmall,
-  MaxSmall,
-  MaxMedium,
-  MaxLarge,
-  MaxHuge,
+  MIN_VERY_SMALL,
+  MIN_SMALL,
+  MIN_MEDIUM,
+  MIN_LARGE,
+  MIN_HUGE,
+  MAX_VERY_SMALL,
+  MAX_SMALL,
+  MAX_MEDIUM,
+  MAX_LARGE,
+  MAX_HUGE,
 
   // Meta option
-  Back,
+  BACK,
 
 };
 } // namespace
@@ -53,15 +53,15 @@ char const *
 to_string(Illum::Difficulty d) {
   using enum Illum::Difficulty;
   switch (d) {
-    case VeryEasy:
+    case VERY_EASY:
       return "Very Easy";
-    case Easy:
+    case EASY:
       return "Easy";
-    case Intermediate:
+    case INTERMEDIATE:
       return "Intermediate";
-    case Hard:
+    case HARD:
       return "Hard";
-    case Expert:
+    case EXPERT:
       return "Expert";
     default:
       return "( ??? Unhandled Difficulty ??? )";
@@ -79,41 +79,41 @@ Illum::StateChange::on_state_change(model::Action    action,
 Illum::Illum()
     : twister_rng_(
           std::chrono::system_clock::now().time_since_epoch().count()) {
-  sAppName = "Illum";
+  sAppName = "ILLUM";
 }
 
 bool
 Illum::create_menu() {
   menu_["main"].SetTable(1, 3);
-  menu_["main"]["Play"].SetID(+MenuId::Play);
-  menu_["main"]["Tutorial"].SetID(+MenuId::Tutorial).Enable(false);
+  menu_["main"]["Play"].SetID(+MenuId::PLAY);
+  menu_["main"]["Tutorial"].SetID(+MenuId::TUTORIAL).Enable(false);
   auto & settings = menu_["main"]["Settings"].SetTable(1, 4);
 
   auto & difficulty = settings["Difficulty"].SetTable(1, 5);
-  difficulty["Very Easy"].SetID(+MenuId::VeryEasy);
-  difficulty["Easy"].SetID(+MenuId::Easy);
-  difficulty["Intermediate"].SetID(+MenuId::Intermediate);
-  difficulty["Hard"].SetID(+MenuId::Hard);
-  difficulty["Expert"].SetID(+MenuId::Expert);
-  difficulty["(Back)"].SetID(+MenuId::Back);
+  difficulty["Very easy"].SetID(+MenuId::VERY_EASY);
+  difficulty["Easy"].SetID(+MenuId::EASY);
+  difficulty["Intermediate"].SetID(+MenuId::INTERMEDIATE);
+  difficulty["Hard"].SetID(+MenuId::HARD);
+  difficulty["Expert"].SetID(+MenuId::EXPERT);
+  difficulty["(Back)"].SetID(+MenuId::BACK);
 
   auto & min = settings["Min Board Size"].SetTable(1, 6);
-  min["Very Small"].SetID(+MenuId::MinVerySmall);
-  min["Small"].SetID(+MenuId::MinSmall);
-  min["Medium"].SetID(+MenuId::MinMedium);
-  min["Large"].SetID(+MenuId::MinLarge);
-  min["Huge"].SetID(+MenuId::MinHuge);
-  min["(Back)"].SetID(+MenuId::Back);
+  min["Very Small"].SetID(+MenuId::MIN_VERY_SMALL);
+  min["Small"].SetID(+MenuId::MIN_SMALL);
+  min["Medium"].SetID(+MenuId::MIN_MEDIUM);
+  min["Large"].SetID(+MenuId::MIN_LARGE);
+  min["Huge"].SetID(+MenuId::MIN_HUGE);
+  min["(Back)"].SetID(+MenuId::BACK);
 
   auto & max = settings["Max Board Size"].SetTable(1, 6);
-  max["Very Small"].SetID(+MenuId::MaxVerySmall);
-  max["Small"].SetID(+MenuId::MaxSmall);
-  max["Medium"].SetID(+MenuId::MaxMedium);
-  max["Large"].SetID(+MenuId::MaxLarge);
-  max["Huge"].SetID(+MenuId::MaxHuge);
-  max["(Back)"].SetID(+MenuId::Back);
+  max["Very Small"].SetID(+MenuId::MAX_VERY_SMALL);
+  max["Small"].SetID(+MenuId::MAX_SMALL);
+  max["Medium"].SetID(+MenuId::MAX_MEDIUM);
+  max["Large"].SetID(+MenuId::MAX_LARGE);
+  max["Huge"].SetID(+MenuId::MAX_HUGE);
+  max["(Back)"].SetID(+MenuId::BACK);
 
-  settings["(Back)"].SetID(+MenuId::Back);
+  settings["(Back)"].SetID(+MenuId::BACK);
 
   menu_.Build();
   menu_manager_.Open(&menu_["main"]);
@@ -126,16 +126,16 @@ Illum::update_menu() {
   olc::popup::Menu * command = nullptr;
 
   if (GetKey(olc::Key::UP).bPressed) {
-    menu_manager_.OnUp();
+    menu_manager_.OnUP();
   }
   if (GetKey(olc::Key::DOWN).bPressed) {
-    menu_manager_.OnDown();
+    menu_manager_.OnDOWN();
   }
   if (GetKey(olc::Key::LEFT).bPressed) {
-    menu_manager_.OnLeft();
+    menu_manager_.OnLEFT();
   }
   if (GetKey(olc::Key::RIGHT).bPressed) {
-    menu_manager_.OnRight();
+    menu_manager_.OnRIGHT();
   }
   if (GetKey(olc::Key::ENTER).bPressed || GetKey(olc::Key::SPACE).bPressed) {
     std::cout << "Enter/space  pressed\n";
@@ -148,63 +148,63 @@ Illum::update_menu() {
   if (command != nullptr) {
     auto menu_id = MenuId(command->GetID());
     switch (menu_id) {
-      case MenuId::Back:
+      case MenuId::BACK:
         menu_manager_.OnBack();
         break;
 
-      case MenuId::Play:
-        state_ = State::StartGame;
+      case MenuId::PLAY:
+        state_ = State::START_GAME;
         menu_manager_.Close();
         break;
 
-      case MenuId::VeryEasy:
-        difficulty_ = Difficulty::VeryEasy;
+      case MenuId::VERY_EASY:
+        difficulty_ = Difficulty::VERY_EASY;
         menu_manager_.OnBack();
         break;
 
-      case MenuId::Easy:
-        difficulty_ = Difficulty::Easy;
+      case MenuId::EASY:
+        difficulty_ = Difficulty::EASY;
         menu_manager_.OnBack();
         break;
 
-      case MenuId::Intermediate:
-        difficulty_ = Difficulty::Intermediate;
+      case MenuId::INTERMEDIATE:
+        difficulty_ = Difficulty::INTERMEDIATE;
         menu_manager_.OnBack();
         break;
 
-      case MenuId::Hard:
-        difficulty_ = Difficulty::Hard;
+      case MenuId::HARD:
+        difficulty_ = Difficulty::HARD;
         menu_manager_.OnBack();
         break;
 
-      case MenuId::Expert:
-        difficulty_ = Difficulty::Expert;
+      case MenuId::EXPERT:
+        difficulty_ = Difficulty::EXPERT;
         menu_manager_.OnBack();
         break;
 
-      case MenuId::MinVerySmall:
-      case MenuId::MinSmall:
-      case MenuId::MinMedium:
-      case MenuId::MinLarge:
-      case MenuId::MinHuge:
-        min_board_size_idx_ = +menu_id - +MenuId::MinVerySmall;
+      case MenuId::MIN_VERY_SMALL:
+      case MenuId::MIN_SMALL:
+      case MenuId::MIN_MEDIUM:
+      case MenuId::MIN_LARGE:
+      case MenuId::MIN_HUGE:
+        min_board_size_idx_ = +menu_id - +MenuId::MIN_VERY_SMALL;
         max_board_size_idx_ =
             std::max(min_board_size_idx_, max_board_size_idx_);
         menu_manager_.OnBack();
         break;
 
-      case MenuId::MaxVerySmall:
-      case MenuId::MaxSmall:
-      case MenuId::MaxMedium:
-      case MenuId::MaxLarge:
-      case MenuId::MaxHuge:
-        max_board_size_idx_ = +menu_id - +MenuId::MaxVerySmall;
+      case MenuId::MAX_VERY_SMALL:
+      case MenuId::MAX_SMALL:
+      case MenuId::MAX_MEDIUM:
+      case MenuId::MAX_LARGE:
+      case MenuId::MAX_HUGE:
+        max_board_size_idx_ = +menu_id - +MenuId::MAX_VERY_SMALL;
         min_board_size_idx_ =
             std::min(min_board_size_idx_, max_board_size_idx_);
         menu_manager_.OnBack();
         break;
 
-      case MenuId::Settings:
+      case MenuId::SETTINGS:
         throw "Expected Unreachable";
         break;
     }
@@ -260,21 +260,21 @@ Illum::hint_clicked() {
 }
 
 bool
-Illum::OnUserUpdate(float elapsed_time) {
+Illum::OnUserUPdate(float elapsed_time) {
   switch (state_) {
-    case State::Playing:
+    case State::PLAYING:
       update_game();
       break;
 
-    case State::Menu:
+    case State::MENU:
       update_menu();
       break;
 
-    case State::StartGame:
+    case State::START_GAME:
       start_game();
       break;
 
-    case State::Exit:
+    case State::EXIT:
       return false;
   }
 
@@ -306,7 +306,7 @@ Illum::render() {
           : olc::RED);
 
   switch (state_) {
-    case State::Menu:
+    case State::MENU:
       DrawString(200, 100, fmt::format("Difficulty: {}", difficulty_));
       //      DrawString(200 + 13 * 8, 100, to_string(difficulty_));
       DrawString(200,
@@ -318,10 +318,10 @@ Illum::render() {
       menu_manager_.Draw(menu_sprite_.get(), {40, 40});
       return true;
 
-    case State::Playing:
+    case State::PLAYING:
       return render_game();
 
-    case State::StartGame:
+    case State::START_GAME:
       return true;
   }
   return false;
@@ -332,13 +332,13 @@ Illum::on_state_change(model::Action    action,
                        model::CellState prev_state,
                        model::CellState to_state,
                        model::Coord     coord) {
-  if (action == model::Action::Remove && prev_state == model::CellState::Bulb) {
+  if (action == model::Action::REMOVE && prev_state == model::CellState::BULB) {
     bulbs_played_--;
     position_.reset(model_.get_underlying_board(),
-                    solver::PositionBoard::ResetPolicy::KEEP_ERRORS);
+                    solver::PositionBoard::RESETPolicy::KEEP_ERRORS);
   }
   else {
-    if (action == model::Action::Add && to_state == model::CellState::Bulb) {
+    if (action == model::Action::ADD && to_state == model::CellState::BULB) {
       ++bulbs_played_;
     }
     position_.apply_move(
@@ -356,7 +356,7 @@ Illum::start_game() {
   tile_width_  = ScreenWidth() / (model_.width() + 2 * COL_PADDING);
   tile_height_ = ScreenHeight() /
                  (model_.height() + ROW_PADDING_ABOVE + ROW_PADDING_BELOW);
-  state_ = State::Playing;
+  state_ = State::PLAYING;
 
   int bottom_padding  = tile_height_ * ROW_PADDING_BELOW;
   int bottom_of_tiles = (model_.height() + ROW_PADDING_ABOVE) * tile_height_;
@@ -415,14 +415,14 @@ Illum::update_game() {
   restart_button_->update();
 
   if (GetMouse(olc::Mouse::LEFT).bPressed) {
-    play_tile_at(model::CellState::Bulb);
+    play_tile_at(model::CellState::BULB);
   }
   else if (GetMouse(olc::Mouse::RIGHT).bPressed) {
-    play_tile_at(model::CellState::Mark);
+    play_tile_at(model::CellState::MARK);
   }
 
   if (position_.is_solved() && bulbs_played_ == bulbs_in_solution_) {
-    state_ = State::StartGame;
+    state_ = State::START_GAME;
   }
 
   return true;
@@ -442,53 +442,53 @@ Illum::render_game() {
 
     using enum model::CellState;
     switch (cell) {
-      case Empty:
+      case EMPTY:
         FillRect(x_px, y_px, tile_width_, tile_height_, olc::BLACK);
         break;
-      case Wall0:
+      case WALL0:
         FillRect(x_px, y_px, tile_width_, tile_height_, olc::DARK_GREY);
         DrawRect(x_px, y_px, tile_width_, tile_height_, olc::BLACK);
         break;
-      case Wall1:
+      case WALL1:
         FillRect(x_px, y_px, tile_width_, tile_height_, olc::DARK_GREY);
         DrawString(x_px + tile_width_ / 2 - HALF_CHAR_PXLS,
                    y_px + tile_height_ / 2 - HALF_CHAR_PXLS,
                    "1");
         DrawRect(x_px, y_px, tile_width_, tile_height_, olc::BLACK);
         break;
-      case Wall2:
+      case WALL2:
         FillRect(x_px, y_px, tile_width_, tile_height_, olc::DARK_GREY);
         DrawString(x_px + tile_width_ / 2 - HALF_CHAR_PXLS,
                    y_px + tile_height_ / 2 - HALF_CHAR_PXLS,
                    "2");
         DrawRect(x_px, y_px, tile_width_, tile_height_, olc::BLACK);
         break;
-      case Wall3:
+      case WALL3:
         FillRect(x_px, y_px, tile_width_, tile_height_, olc::DARK_GREY);
         DrawString(x_px + tile_width_ / 2 - HALF_CHAR_PXLS,
                    y_px + tile_height_ / 2 - HALF_CHAR_PXLS,
                    "3");
         DrawRect(x_px, y_px, tile_width_, tile_height_, olc::BLACK);
         break;
-      case Wall4:
+      case WALL4:
         FillRect(x_px, y_px, tile_width_, tile_height_, olc::DARK_GREY);
         DrawString(x_px + tile_width_ / 2 - HALF_CHAR_PXLS,
                    y_px + tile_height_ / 2 - HALF_CHAR_PXLS,
                    "4");
         DrawRect(x_px, y_px, tile_width_, tile_height_, olc::BLACK);
         break;
-      case Bulb:
+      case BULB:
         FillRect(x_px, y_px, tile_width_, tile_height_, olc::DARK_YELLOW);
         FillCircle(x_px + tile_width_ / 2,
                    y_px + tile_height_ / 2,
                    std::min(tile_height_, tile_width_) / 3,
                    olc::YELLOW);
         break;
-      case Illum:
+      case ILLUM:
         FillRect(x_px, y_px, tile_width_, tile_height_, olc::DARK_YELLOW);
         break;
 
-      case Mark:
+      case MARK:
         FillRect(x_px + tile_width_ / 4,
                  y_px + tile_height_ / 4,
                  tile_width_ / 2,

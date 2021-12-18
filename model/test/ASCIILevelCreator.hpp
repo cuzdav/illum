@@ -16,7 +16,7 @@ namespace model::test {
 
 class ASCIILevelCreator {
 public:
-  enum class ResetPolicy { RESET, DONT_RESET };
+  enum class RESETPolicy { RESET, DONT_RESET };
   enum class StartPolicy { CALL_START, DONT_CALL_START };
 
   void
@@ -36,7 +36,7 @@ public:
            StartPolicy  start_policy = StartPolicy::CALL_START) {
     model->reset_game(size(unparsed_rows_), width_);
     finished_impl([model](CellState cell, Coord coord) {
-      if (cell != CellState::Empty) {
+      if (cell != CellState::EMPTY) {
         model->add(cell, coord);
       }
     });
@@ -47,14 +47,14 @@ public:
   }
 
   void
-  finished(BasicBoard * board, ResetPolicy policy = ResetPolicy::RESET) {
+  finished(BasicBoard * board, RESETPolicy policy = RESETPolicy::RESET) {
     board->reset(size(unparsed_rows_), width_);
     finished_impl([board](CellState cell, Coord coord) {
-      if (cell != CellState::Empty) {
+      if (cell != CellState::EMPTY) {
         board->set_cell(coord, cell);
       }
     });
-    if (policy == ResetPolicy::RESET) {
+    if (policy == RESETPolicy::RESET) {
       reset();
     }
   }

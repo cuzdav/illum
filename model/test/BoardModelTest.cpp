@@ -35,7 +35,7 @@ TEST(BM, reset_game) {
   auto const & moves = handler.cur().moves_;
   ASSERT_EQ(1, moves.size());
 
-  ASSERT_EQ(ResetGame, moves[0].action_);
+  ASSERT_EQ(RESETGame, moves[0].action_);
   ASSERT_EQ(3, moves[0].coord_.row_); // height
   ASSERT_EQ(5, moves[0].coord_.col_); // width
 }
@@ -44,7 +44,7 @@ TEST(BM, cannot_add_pieces_before_resetting_game) {
   BoardModel model;
 
   // must not add/remove before calling reset()
-  ASSERT_THROW(model.add(Wall0, {0, 0}), std::runtime_error);
+  ASSERT_THROW(model.add(WALL0, {0, 0}), std::runtime_error);
   ASSERT_THROW(model.remove({0, 0}), std::runtime_error);
 }
 
@@ -60,13 +60,13 @@ TEST(BM, reset_game_again) {
   ASSERT_EQ(3, model.height());
   ASSERT_EQ(5, model.width());
 
-  model.add(Wall0, {1, 3});
+  model.add(WALL0, {1, 3});
 
   auto const & moves = handler.cur().moves_;
   ASSERT_EQ(2, moves.size());
 
-  ASSERT_EQ(Add, moves[1].action_);
-  ASSERT_EQ(Wall0, moves[1].to_);
+  ASSERT_EQ(ADD, moves[1].action_);
+  ASSERT_EQ(WALL0, moves[1].to_);
   ASSERT_EQ(1, moves[1].coord_.row_);
   ASSERT_EQ(3, moves[1].coord_.col_);
 
@@ -89,23 +89,23 @@ TEST(BM, start_game) {
   ASSERT_EQ(3, model.height());
   ASSERT_EQ(5, model.width());
 
-  ASSERT_EQ(Wall0, model.get_cell({0, 0}));
-  ASSERT_EQ(Wall0, model.get_cell({0, 1}));
-  ASSERT_EQ(Wall0, model.get_cell({0, 2}));
-  ASSERT_EQ(Wall0, model.get_cell({0, 3}));
-  ASSERT_EQ(Wall0, model.get_cell({0, 4}));
-  ASSERT_EQ(Wall0, model.get_cell({1, 0}));
-  ASSERT_EQ(Wall0, model.get_cell({1, 4}));
-  ASSERT_EQ(Wall0, model.get_cell({2, 0}));
-  ASSERT_EQ(Wall0, model.get_cell({2, 1}));
-  ASSERT_EQ(Wall0, model.get_cell({2, 2}));
-  ASSERT_EQ(Wall0, model.get_cell({2, 3}));
-  ASSERT_EQ(Wall0, model.get_cell({2, 4}));
+  ASSERT_EQ(WALL0, model.get_cell({0, 0}));
+  ASSERT_EQ(WALL0, model.get_cell({0, 1}));
+  ASSERT_EQ(WALL0, model.get_cell({0, 2}));
+  ASSERT_EQ(WALL0, model.get_cell({0, 3}));
+  ASSERT_EQ(WALL0, model.get_cell({0, 4}));
+  ASSERT_EQ(WALL0, model.get_cell({1, 0}));
+  ASSERT_EQ(WALL0, model.get_cell({1, 4}));
+  ASSERT_EQ(WALL0, model.get_cell({2, 0}));
+  ASSERT_EQ(WALL0, model.get_cell({2, 1}));
+  ASSERT_EQ(WALL0, model.get_cell({2, 2}));
+  ASSERT_EQ(WALL0, model.get_cell({2, 3}));
+  ASSERT_EQ(WALL0, model.get_cell({2, 4}));
 
-  ASSERT_EQ(Empty, model.get_cell({1, 1}));
-  ASSERT_EQ(Empty, model.get_cell({1, 2}));
+  ASSERT_EQ(EMPTY, model.get_cell({1, 1}));
+  ASSERT_EQ(EMPTY, model.get_cell({1, 2}));
 
-  ASSERT_EQ(Wall1, model.get_cell({1, 3}));
+  ASSERT_EQ(WALL1, model.get_cell({1, 3}));
 }
 
 TEST(BM, reset_from_board) {
@@ -125,7 +125,7 @@ TEST(BM, reset_from_board) {
   creator2("1...");
   creator2(".2..");
   creator2("..3.");
-  creator2.finished(&board, ASCIILevelCreator::ResetPolicy::DONT_RESET);
+  creator2.finished(&board, ASCIILevelCreator::RESETPolicy::DONT_RESET);
   creator2.finished(&model2);
 
   ASSERT_EQ(3, board.height());
@@ -181,46 +181,46 @@ TEST(BM, undo) {
   ASSERT_EQ(0, model.num_played_moves()); // none yet
 
   // Move 1 (not a good move, maybe a user mistake)
-  model.add(CellState::Bulb, {1, 1});
-  ASSERT_EQ(CellState::Empty, handler.last_move().from_);
-  ASSERT_EQ(CellState::Bulb, handler.last_move().to_);
+  model.add(CellState::BULB, {1, 1});
+  ASSERT_EQ(CellState::EMPTY, handler.last_move().from_);
+  ASSERT_EQ(CellState::BULB, handler.last_move().to_);
   ASSERT_EQ(Coord(1, 1), handler.last_move().coord_);
   ASSERT_EQ(1, model.num_played_moves());
 
   // Move 2 (remove move 1)
   model.remove({1, 1});
-  ASSERT_EQ(CellState::Bulb, handler.last_move().from_);
-  ASSERT_EQ(CellState::Empty, handler.cur().moves_.back().to_);
+  ASSERT_EQ(CellState::BULB, handler.last_move().from_);
+  ASSERT_EQ(CellState::EMPTY, handler.cur().moves_.back().to_);
   ASSERT_EQ(Coord(1, 1), handler.cur().moves_.back().coord_);
   ASSERT_EQ(2, model.num_played_moves());
 
   // Move 3 (a good move, maybe prev mistake was a typo)
-  model.add(CellState::Bulb, {2, 1});
-  ASSERT_EQ(CellState::Empty, handler.last_move().from_);
-  ASSERT_EQ(CellState::Bulb, handler.last_move().to_);
+  model.add(CellState::BULB, {2, 1});
+  ASSERT_EQ(CellState::EMPTY, handler.last_move().from_);
+  ASSERT_EQ(CellState::BULB, handler.last_move().to_);
   ASSERT_EQ(Coord(2, 1), handler.last_move().coord_);
   ASSERT_EQ(3, model.num_played_moves());
 
   ASSERT_TRUE(model.undo()); // undo move 3
   // undoing an add looks like a remove to the callback
-  ASSERT_EQ(Action::Remove, handler.last_move().action_);
-  ASSERT_EQ(CellState::Bulb, handler.last_move().from_);
-  ASSERT_EQ(CellState::Empty, handler.last_move().to_);
+  ASSERT_EQ(Action::REMOVE, handler.last_move().action_);
+  ASSERT_EQ(CellState::BULB, handler.last_move().from_);
+  ASSERT_EQ(CellState::EMPTY, handler.last_move().to_);
   ASSERT_EQ(Coord(2, 1), handler.last_move().coord_);
   ASSERT_EQ(2, model.num_played_moves());
 
   ASSERT_TRUE(model.undo()); // undo move 2
   // undoing a remove looks like an add to the callback
-  ASSERT_EQ(Action::Add, handler.last_move().action_);
-  ASSERT_EQ(CellState::Empty, handler.last_move().from_);
-  ASSERT_EQ(CellState::Bulb, handler.last_move().to_);
+  ASSERT_EQ(Action::ADD, handler.last_move().action_);
+  ASSERT_EQ(CellState::EMPTY, handler.last_move().from_);
+  ASSERT_EQ(CellState::BULB, handler.last_move().to_);
   ASSERT_EQ(Coord(1, 1), handler.last_move().coord_);
   ASSERT_EQ(1, model.num_played_moves());
 
   ASSERT_TRUE(model.undo()); // undo move 1
-  ASSERT_EQ(Action::Remove, handler.last_move().action_);
-  ASSERT_EQ(CellState::Bulb, handler.last_move().from_);
-  ASSERT_EQ(CellState::Empty, handler.last_move().to_);
+  ASSERT_EQ(Action::REMOVE, handler.last_move().action_);
+  ASSERT_EQ(CellState::BULB, handler.last_move().from_);
+  ASSERT_EQ(CellState::EMPTY, handler.last_move().to_);
 
   ASSERT_EQ(Coord(1, 1), handler.last_move().coord_);
 

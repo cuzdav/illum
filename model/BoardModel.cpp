@@ -36,25 +36,25 @@ void
 BoardModel::start_game() {
   if (not started_) {
     started_ = true;
-    // Adds a marker into game histroy separating the level setup from
+    // ADDs a marker into game histroy separating the level setup from
     // the player's moves.
     moves_.push_back(
-        {Action::StartGame, CellState::Empty, CellState::Empty, Coord{-1, -1}});
+        {Action::START_GAME, CellState::EMPTY, CellState::EMPTY, Coord{-1, -1}});
     num_setup_moves_ = moves_.size();
     on_state_change(
-        Action::StartGame, CellState::Empty, CellState::Empty, Coord{-1, -1});
+        Action::START_GAME, CellState::EMPTY, CellState::EMPTY, Coord{-1, -1});
   }
 }
 
 bool
 BoardModel::undo() {
-  if (not started_ or moves_.back().action_ == Action::StartGame) {
+  if (not started_ or moves_.back().action_ == Action::START_GAME) {
     return false;
   }
 
   auto last = moves_.back();
   moves_.pop_back();
-  Action action = last.action_ == Action::Add ? Action::Remove : Action::Add;
+  Action action = last.action_ == Action::ADD ? Action::REMOVE : Action::ADD;
 
   board_.set_cell(last.coord_, last.from_);
 
@@ -95,7 +95,7 @@ BoardModel::apply_move(Action    action,
 void
 BoardModel::add(CellState to_state, Coord coord) {
   CellState orig_cell = board_.get_cell(coord);
-  apply_move(Action::Add, orig_cell, to_state, coord);
+  apply_move(Action::ADD, orig_cell, to_state, coord);
 }
 
 void
@@ -109,8 +109,8 @@ BoardModel::remove(Coord coord) {
     throw std::runtime_error("Cannot remove cells before game has started");
   }
   CellState orig_cell = board_.get_cell(coord);
-  if (orig_cell == CellState::Bulb or orig_cell == CellState::Mark) {
-    apply_move(Action::Remove, orig_cell, CellState::Empty, coord);
+  if (orig_cell == CellState::BULB or orig_cell == CellState::MARK) {
+    apply_move(Action::REMOVE, orig_cell, CellState::EMPTY, coord);
   }
 }
 
@@ -127,19 +127,19 @@ BoardModel::reset_game(int height, int width) {
   board_.reset(height, width);
   Coord coord{height, width};
   moves_.push_back(
-      {Action::ResetGame, CellState::Empty, CellState::Empty, coord});
-  on_state_change(Action::ResetGame, CellState::Empty, CellState::Empty, coord);
+      {Action::RESETGame, CellState::EMPTY, CellState::EMPTY, coord});
+  on_state_change(Action::RESETGame, CellState::EMPTY, CellState::EMPTY, coord);
 }
 
 void
 BoardModel::reset_game(BasicBoard const & initial_board,
-                       ResetGamePolicy    reset_policy) {
+                       RESETGamePolicy    reset_policy) {
   started_ = false;
   moves_.clear();
   Coord dims = {initial_board.height(), initial_board.width()};
   moves_.push_back(
-      {Action::ResetGame, CellState::Empty, CellState::Empty, dims});
-  on_state_change(Action::ResetGame, CellState::Empty, CellState::Empty, dims);
+      {Action::RESETGame, CellState::EMPTY, CellState::EMPTY, dims});
+  on_state_change(Action::RESETGame, CellState::EMPTY, CellState::EMPTY, dims);
 
   board_.reset(initial_board.height(), initial_board.width());
 
@@ -147,16 +147,16 @@ BoardModel::reset_game(BasicBoard const & initial_board,
 
   initial_board.visit_board(
       [this, &deferred, reset_policy](Coord coord, CellState cell) {
-        if (cell != CellState::Empty) {
+        if (cell != CellState::EMPTY) {
           if (is_dynamic_entity(cell)) {
-            if (reset_policy == ResetGamePolicy::COPY_PLAYER_MOVES) {
+            if (reset_policy == RESETGamePolicy::COPY_PLAYER_MOVES) {
               deferred.push_back(
-                  SingleMove{Action::Add, CellState::Empty, cell, coord});
+                  SingleMove{Action::ADD, CellState::EMPTY, cell, coord});
             }
           }
           else {
             board_.set_cell(coord, cell);
-            moves_.push_back({Action::Add, CellState::Empty, cell, coord});
+            moves_.push_back({Action::ADD, CellState::EMPTY, cell, coord});
           }
         }
       });

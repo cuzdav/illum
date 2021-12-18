@@ -130,14 +130,14 @@ Menu::DrawSelf(olc::PixelGameEngine & pge,
   vPatchPos       = {1, 1};
 
   // Work out visible items
-  int32_t nTopLeftItem     = nTopVisibleRow * vCellTable.x;
-  int32_t nBottomRightItem = vCellTable.y * vCellTable.x + nTopLeftItem;
+  int32_t nTopLEFTItem     = nTopVisibleRow * vCellTable.x;
+  int32_t nBottomRIGHTItem = vCellTable.y * vCellTable.x + nTopLEFTItem;
 
   // Clamp to size of child item vector
-  nBottomRightItem      = std::min(int32_t(items.size()), nBottomRightItem);
-  int32_t nVisibleItems = nBottomRightItem - nTopLeftItem;
+  nBottomRIGHTItem      = std::min(int32_t(items.size()), nBottomRIGHTItem);
+  int32_t nVisibleItems = nBottomRIGHTItem - nTopLEFTItem;
 
-  // Draw Scroll Markers (if required)
+  // Draw Scroll MARKers (if required)
   if (nTopVisibleRow > 0) {
     vPatchPos                 = {vSizeInPatches.x - 2, 0};
     olc::vi2d vScreenLocation = vPatchPos * nPatch + vScreenOffset;
@@ -169,11 +169,11 @@ Menu::DrawSelf(olc::PixelGameEngine & pge,
 
     // Display Item Header
     pge.DrawString(vScreenLocation,
-                   items[nTopLeftItem + i].sName,
-                   items[nTopLeftItem + i].bEnabled ? olc::WHITE
+                   items[nTopLEFTItem + i].sName,
+                   items[nTopLEFTItem + i].bEnabled ? olc::WHITE
                                                     : olc::DARK_GREY);
 
-    if (items[nTopLeftItem + i].HasChildren()) {
+    if (items[nTopLEFTItem + i].HasChildren()) {
       // Display Indicator that panel has a sub panel
       vPatchPos.x = vCell.x * (vCellSize.x + vCellPadding.x) + 1 + vCellSize.x;
       vPatchPos.y = vCell.y * (vCellSize.y + vCellPadding.y) + 1;
@@ -207,7 +207,7 @@ Menu::ClampCursor() {
 }
 
 void
-Menu::OnUp() {
+Menu::OnUP() {
   vCellCursor.y--;
   if (vCellCursor.y < 0)
     vCellCursor.y = 0;
@@ -222,7 +222,7 @@ Menu::OnUp() {
 }
 
 void
-Menu::OnDown() {
+Menu::OnDOWN() {
   vCellCursor.y++;
   if (vCellCursor.y == nTotalRows)
     vCellCursor.y = nTotalRows - 1;
@@ -237,7 +237,7 @@ Menu::OnDown() {
 }
 
 void
-Menu::OnLeft() {
+Menu::OnLEFT() {
   vCellCursor.x--;
   if (vCellCursor.x < 0)
     vCellCursor.x = 0;
@@ -245,7 +245,7 @@ Menu::OnLeft() {
 }
 
 void
-Menu::OnRight() {
+Menu::OnRIGHT() {
   vCellCursor.x++;
   if (vCellCursor.x == vCellTable.x)
     vCellCursor.x = vCellTable.x - 1;
@@ -288,27 +288,27 @@ Manager::IsOpen() const {
 }
 
 void
-Manager::OnUp() {
+Manager::OnUP() {
   if (!panels.empty())
-    panels.back()->OnUp();
+    panels.back()->OnUP();
 }
 
 void
-Manager::OnDown() {
+Manager::OnDOWN() {
   if (!panels.empty())
-    panels.back()->OnDown();
+    panels.back()->OnDOWN();
 }
 
 void
-Manager::OnLeft() {
+Manager::OnLEFT() {
   if (!panels.empty())
-    panels.back()->OnLeft();
+    panels.back()->OnLEFT();
 }
 
 void
-Manager::OnRight() {
+Manager::OnRIGHT() {
   if (!panels.empty())
-    panels.back()->OnRight();
+    panels.back()->OnRIGHT();
 }
 
 void

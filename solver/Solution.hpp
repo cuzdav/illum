@@ -19,11 +19,11 @@
 namespace solver {
 
 enum class SolutionStatus {
-  Initial,
-  Progressing,
-  Solved,
-  Impossible,
-  Ambiguous,
+  INITIAL,
+  PROGRESSING,
+  SOLVED,
+  IMPOSSIBLE,
+  AMBIGUOUS,
 
   Terminated,
   FailedFindingMove,
@@ -33,16 +33,16 @@ constexpr char const *
 to_string(SolutionStatus status) {
   using enum SolutionStatus;
   switch (status) {
-    case Initial:
-      return "Initial";
-    case Progressing:
-      return "Progressing";
-    case Solved:
-      return "Solved";
-    case Impossible:
-      return "Impossible";
-    case Ambiguous:
-      return "Ambiguous";
+    case INITIAL:
+      return "INITIAL";
+    case PROGRESSING:
+      return "PROGRESSING";
+    case SOLVED:
+      return "SOLVED";
+    case IMPOSSIBLE:
+      return "IMPOSSIBLE";
+    case AMBIGUOUS:
+      return "AMBIGUOUS";
     case Terminated:
       return "Terminated";
     case FailedFindingMove:
@@ -86,9 +86,9 @@ public:
                DecisionType    reason,
                MoveMotive      motive,
                model::OptCoord ref_coord = std::nullopt) {
-    enqueue_move({model::SingleMove{model::Action::Add,
+    enqueue_move({model::SingleMove{model::Action::ADD,
                                     board_.board().get_cell(coord),
-                                    model::CellState::Bulb,
+                                    model::CellState::BULB,
                                     coord},
                   reason,
                   motive,
@@ -100,9 +100,9 @@ public:
                DecisionType    reason,
                MoveMotive      motive,
                model::OptCoord ref_coord = std::nullopt) {
-    enqueue_move({model::SingleMove{model::Action::Add,
+    enqueue_move({model::SingleMove{model::Action::ADD,
                                     board_.board().get_cell(coord),
-                                    model::CellState::Mark,
+                                    model::CellState::MARK,
                                     coord},
                   reason,
                   motive,
@@ -125,10 +125,10 @@ public:
       if (is_empty(board_.get_cell(next_move.coord_))) {
         board_.apply_move(next_move);
         if (is_solved()) {
-          status_ = SolutionStatus::Solved;
+          status_ = SolutionStatus::SOLVED;
         }
         else if (has_error()) {
-          status_ = SolutionStatus::Impossible;
+          status_ = SolutionStatus::IMPOSSIBLE;
         }
         return true;
       }
@@ -232,7 +232,7 @@ private:
   PositionBoard                  board_;
   OptBoard                       known_solution_;
   std::queue<AnnotatedMove>      next_moves_;
-  SolutionStatus                 status_     = SolutionStatus::Initial;
+  SolutionStatus                 status_     = SolutionStatus::INITIAL;
   int                            step_count_ = 0;
   ContextCache                   context_cache_;
   std::unique_ptr<BoardAnalysis> board_analysis_;

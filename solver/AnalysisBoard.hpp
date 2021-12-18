@@ -34,8 +34,8 @@ public:
 
   void
   reevaluate_board_state(
-      PositionBoard::ResetPolicy policy =
-          PositionBoard::ResetPolicy::STOP_PLAYING_MOVES_ON_ERROR) {
+      PositionBoard::RESETPolicy policy =
+          PositionBoard::RESETPolicy::STOP_PLAYING_MOVES_ON_ERROR) {
     cur().reevaluate_board_state(policy);
   }
 

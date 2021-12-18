@@ -122,8 +122,8 @@ TEST(TrivialMovesTest, ambigus_cells_in_rows) {
                                   DecisionType::VIOLATES_SINGLE_UNIQUE_SOLUTION,
                                   MoveMotive::FOLLOWUP)));
 
-  board.set_cell({0, 5}, CellState::Mark);
-  board.set_cell({0, 6}, CellState::Mark);
+  board.set_cell({0, 5}, CellState::MARK);
+  board.set_cell({0, 6}, CellState::MARK);
 
   moves.clear();
 
@@ -137,8 +137,8 @@ TEST(TrivialMovesTest, ambigus_cells_in_rows) {
                                   DecisionType::VIOLATES_SINGLE_UNIQUE_SOLUTION,
                                   MoveMotive::FOLLOWUP)));
 
-  board.set_cell({2, 5}, CellState::Mark);
-  board.set_cell({5, 6}, CellState::Mark);
+  board.set_cell({2, 5}, CellState::MARK);
+  board.set_cell({5, 6}, CellState::MARK);
   moves.clear();
   find_ambiguous_linear_aligned_row_cells(board, moves);
 
@@ -214,8 +214,8 @@ TEST(TrivialMovesTest, ambigus_cells_in_cols) {
                                   DecisionType::VIOLATES_SINGLE_UNIQUE_SOLUTION,
                                   MoveMotive::FOLLOWUP)));
 
-  board.set_cell({0, 1}, CellState::Mark);
-  board.set_cell({2, 1}, CellState::Mark);
+  board.set_cell({0, 1}, CellState::MARK);
+  board.set_cell({2, 1}, CellState::MARK);
 
   //     ("0X0..0.");
   //     ("....20.");

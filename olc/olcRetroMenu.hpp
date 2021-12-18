@@ -1,9 +1,9 @@
 /*
-        olcPGEX_PopUp.h
+        olcPGEX_PopUP.h
 
         +-------------------------------------------------------------+
         |         OneLoneCoder Pixel Game Engine Extension            |
-        |                Retro PopUp Menu 1.0                         |
+        |                Retro PopUP Menu 1.0                         |
         +-------------------------------------------------------------+
 
         What is this?
@@ -64,7 +64,7 @@
         ~~~~~~~
 
         #define OLC_PGEX_POPUPMENU
-        #include "olcPGEX_PopUpMenu.h"
+        #include "olcPGEX_PopUPMenu.h"
 
         NOTE: Requires a 9-patch sprite, by default each patch is
         8x8 pixels, patches are as follows:
@@ -85,14 +85,14 @@
         // Construction (root menu is a 1x5 table)
         m.SetTable(1, 5);
 
-        // Add first item  to root menu (A 1x5 submenu)
+        // ADD first item  to root menu (A 1x5 submenu)
         m["Menu1"].SetTable(1, 5);
 
-        // Add items to first item
+        // ADD items to first item
         m["Menu1"]["Item1"];
         m["Menu1"]["Item2"];
 
-        // Add a 4x3 submenu
+        // ADD a 4x3 submenu
         m["Menu1"]["Item3"].SetTable(4, 3);
         m["Menu1"]["Item3"]["Option1"];
         m["Menu1"]["Item3"]["Option2"];
@@ -103,7 +103,7 @@
         m["Menu1"]["Item3"]["Option5"];
         m["Menu1"]["Item4"];
 
-        // Add second item to root menu
+        // ADD second item to root menu
         m["Menu2"].SetTable(3, 3);
         m["Menu2"]["Item1"];
         m["Menu2"]["Item2"].SetID(1001).Enable(true);
@@ -130,10 +130,10 @@
         ~~~~~~~~~~~~~~~~~~~~~
 
         // Send key events to menu
-        if (GetKey(olc::Key::UP).bPressed)    man.OnUp();
-        if (GetKey(olc::Key::DOWN).bPressed)  man.OnDown();
-        if (GetKey(olc::Key::LEFT).bPressed)  man.OnLeft();
-        if (GetKey(olc::Key::RIGHT).bPressed) man.OnRight();
+        if (GetKey(olc::Key::UP).bPressed)    man.OnUP();
+        if (GetKey(olc::Key::DOWN).bPressed)  man.OnDOWN();
+        if (GetKey(olc::Key::LEFT).bPressed)  man.OnLEFT();
+        if (GetKey(olc::Key::RIGHT).bPressed) man.OnRIGHT();
         if (GetKey(olc::Key::Z).bPressed)     man.OnBack();
 
         // "Confirm/Action" Key does something, if it returns non-null
@@ -183,10 +183,10 @@ public:
                          olc::Sprite *          sprGFX,
                          olc::vi2d              vScreenOffset);
   void          ClampCursor();
-  void          OnUp();
-  void          OnDown();
-  void          OnLeft();
-  void          OnRight();
+  void          OnUP();
+  void          OnDOWN();
+  void          OnLEFT();
+  void          OnRIGHT();
   Menu *        OnConfirm();
   Menu *        GetSelectedItem();
 
@@ -214,10 +214,10 @@ public:
   bool   IsOpen() const;
   void   Open(Menu * mo);
   void   Close();
-  void   OnUp();
-  void   OnDown();
-  void   OnLeft();
-  void   OnRight();
+  void   OnUP();
+  void   OnDOWN();
+  void   OnLEFT();
+  void   OnRIGHT();
   void   OnBack();
   Menu * OnConfirm();
   void   Draw(olc::Sprite * sprGFX, olc::vi2d vScreenOffset);

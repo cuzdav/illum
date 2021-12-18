@@ -29,12 +29,12 @@ public:
   using Coord     = model::Coord;
   using CellState = model::CellState;
 
-  enum class ResetPolicy { STOP_PLAYING_MOVES_ON_ERROR, KEEP_ERRORS };
+  enum class RESETPolicy { STOP_PLAYING_MOVES_ON_ERROR, KEEP_ERRORS };
 
   PositionBoard() = default;
   PositionBoard(int height, int width);
   PositionBoard(model::BasicBoard const & board,
-                ResetPolicy = ResetPolicy::STOP_PLAYING_MOVES_ON_ERROR);
+                RESETPolicy = RESETPolicy::STOP_PLAYING_MOVES_ON_ERROR);
 
   // Returns bool indicating request was successful.
   bool add_bulb(Coord);
@@ -65,11 +65,11 @@ public:
   // gamestate with the actual underlying board.  Calling this computes the same
   // thing as set_cell with FORCE_REEVALUATE_BOARD policy.
   void reevaluate_board_state(
-      ResetPolicy = ResetPolicy::STOP_PLAYING_MOVES_ON_ERROR);
+      RESETPolicy = RESETPolicy::STOP_PLAYING_MOVES_ON_ERROR);
 
   void reset(int height, int width);
   void reset(model::BasicBoard const & board,
-             ResetPolicy = ResetPolicy::STOP_PLAYING_MOVES_ON_ERROR);
+             RESETPolicy = RESETPolicy::STOP_PLAYING_MOVES_ON_ERROR);
 
   DecisionType    decision_type() const;
   model::OptCoord get_ref_location() const;
@@ -244,9 +244,9 @@ struct fmt::formatter<::solver::PositionBoard> {
   format(::solver::PositionBoard const & board, FormatContext & ctx) {
     return fmt::format_to(ctx.out(),
                           "PositionBoard{{\n\t"
-                          "CellS Needing Illuminatation: {}\n\t"
+                          "CellS Needing ILLUMinatation: {}\n\t"
                           "Unsatisfied Walls: {}\n\t"
-                          "Solved={}\n\t"
+                          "SOLVED={}\n\t"
                           "HasError={}\n\t"
                           "DecisionType={}\n\t"
                           "RefLocation={}\n\t"

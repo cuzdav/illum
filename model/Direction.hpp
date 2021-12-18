@@ -4,29 +4,29 @@
 
 namespace model {
 
-enum class Direction : char { None, Up = 1, Down = 2, Right = 4, Left = 8 };
+enum class Direction : char { NONE, UP = 1, DOWN = 2, RIGHT = 4, LEFT = 8 };
 DEFINE_ENUM_BIT_OPERATIONS(Direction);
 
 namespace directiongroups {
 using enum Direction;
-constexpr Direction all        = Up | Down | Right | Left;
-constexpr Direction horizontal = Left | Right;
-constexpr Direction vertical   = Up | Down;
+constexpr Direction all        = UP | DOWN | RIGHT | LEFT;
+constexpr Direction horizontal = LEFT | RIGHT;
+constexpr Direction vertical   = UP | DOWN;
 } // namespace directiongroups
 
 constexpr char const *
 to_string(Direction d) {
   switch (d) {
-    case Direction::None:
-      return "None";
-    case Direction::Up:
-      return "Up";
-    case Direction::Down:
-      return "Down";
-    case Direction::Left:
-      return "Left";
-    case Direction::Right:
-      return "Right";
+    case Direction::NONE:
+      return "NONE";
+    case Direction::UP:
+      return "UP";
+    case Direction::DOWN:
+      return "DOWN";
+    case Direction::LEFT:
+      return "LEFT";
+    case Direction::RIGHT:
+      return "RIGHT";
   }
   return "<Unhandled direction>";
 }
@@ -37,16 +37,16 @@ constexpr Direction
 rotate90_left(Direction d) {
   using enum Direction;
   switch (d) {
-    case Up:
-      return Left;
-    case Left:
-      return Down;
-    case Down:
-      return Right;
-    case Right:
-      return Up;
+    case UP:
+      return LEFT;
+    case LEFT:
+      return DOWN;
+    case DOWN:
+      return RIGHT;
+    case RIGHT:
+      return UP;
     default:
-      return None;
+      return NONE;
   }
 }
 
@@ -54,16 +54,16 @@ constexpr Direction
 flip(Direction dir) {
   using enum Direction;
   switch (dir) {
-    case Up:
-      return Down;
-    case Left:
-      return Right;
-    case Down:
-      return Up;
-    case Right:
-      return Left;
+    case UP:
+      return DOWN;
+    case LEFT:
+      return RIGHT;
+    case DOWN:
+      return UP;
+    case RIGHT:
+      return LEFT;
     default:
-      return None;
+      return NONE;
   }
 }
 

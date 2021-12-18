@@ -12,9 +12,9 @@
 
 namespace model {
 
-// game is a sequence of state changes. The first is ResetGame to establish
+// game is a sequence of state changes. The first is RESETGame to establish
 // dimensions. Then it's followed by a sequence of add() calls to place walls
-// and such, setting up the level. Then a StartGame marker, to separate the
+// and such, setting up the level. Then a START_GAME marker, to separate the
 // setup from the player moves (and to serve as a sentinel in the moves list
 // to stop UNDO from going before user moves.)
 
@@ -47,12 +47,12 @@ public:
   // These are all appeneded to the vector of moves.  (For purposes of undo,
   // even "remove" is added, so it can be undone to return to previous state.)
 
-  enum class ResetGamePolicy { COPY_PLAYER_MOVES, ONLY_COPY_WALLS };
+  enum class RESETGamePolicy { COPY_PLAYER_MOVES, ONLY_COPY_WALLS };
 
   void reset_game(int height, int width); // empty
   void reset_game(
       BasicBoard const & initial_board,
-      ResetGamePolicy copy_player_moves = ResetGamePolicy::COPY_PLAYER_MOVES);
+      RESETGamePolicy copy_player_moves = RESETGamePolicy::COPY_PLAYER_MOVES);
   void start_game();
 
   void add(CellState, Coord coord);

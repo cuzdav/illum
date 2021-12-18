@@ -53,7 +53,7 @@ TEST(AnalysisBoardTest, no_adjusting_stack_while_visiting) {
 
   // visit_adj_flank
   {
-    aboard.visit_adj_flank({0, 0}, model::Direction::Down, [&](auto, auto) {
+    aboard.visit_adj_flank({0, 0}, model::Direction::DOWN, [&](auto, auto) {
       ASSERT_THROW(aboard.clone_position(), std::runtime_error);
       ASSERT_THROW(aboard.pop(), std::runtime_error);
     });
@@ -113,7 +113,7 @@ TEST(AnalysisBoardTest, no_adjusting_stack_while_visiting) {
 
   // visit_perpendicular
   {
-    aboard.visit_perpendicular({0, 0}, model::Direction::Down, [&](auto, auto) {
+    aboard.visit_perpendicular({0, 0}, model::Direction::DOWN, [&](auto, auto) {
       ASSERT_THROW(aboard.clone_position(), std::runtime_error);
       ASSERT_THROW(aboard.pop(), std::runtime_error);
     });

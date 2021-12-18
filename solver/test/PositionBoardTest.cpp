@@ -476,11 +476,11 @@ TEST(PositionBoardTest, adding_bulbs_cannot_see_each_other_through_walls) {
   position_board.add_bulb({4, 2});
   EXPECT_FALSE(position_board.has_error());
 
-  // From Left
+  // From LEFT
   position_board.add_bulb({0, 2});
   EXPECT_FALSE(position_board.has_error());
 
-  // From Right
+  // From RIGHT
   position_board.add_bulb({2, 4});
   EXPECT_FALSE(position_board.has_error());
 }
@@ -582,11 +582,11 @@ TEST(PositionBoardTest, add_wall1) {
 
   EXPECT_EQ(9, board.num_cells_needing_illumination());
 
-  bool result = board.add_wall({1, 1}, CellState::Wall0);
+  bool result = board.add_wall({1, 1}, CellState::WALL0);
   EXPECT_TRUE(result);
   EXPECT_EQ(0, board.num_walls_with_deps());
   EXPECT_EQ(8, board.num_cells_needing_illumination());
-  EXPECT_EQ(CellState::Wall0, board.get_cell({1, 1}));
+  EXPECT_EQ(CellState::WALL0, board.get_cell({1, 1}));
 }
 
 TEST(PositionBoardTest, add_wall2_blocks_bulb) {
@@ -604,12 +604,12 @@ TEST(PositionBoardTest, add_wall2_blocks_bulb) {
   EXPECT_EQ(0, board.num_walls_with_deps());
   EXPECT_EQ(6, board.num_cells_needing_illumination());
 
-  bool result = board.add_wall({2, 1}, CellState::Wall0);
+  bool result = board.add_wall({2, 1}, CellState::WALL0);
   EXPECT_TRUE(result);
   EXPECT_EQ(0, board.num_walls_with_deps());
   EXPECT_EQ(7, board.num_cells_needing_illumination());
-  EXPECT_EQ(CellState::Wall0, board.get_cell({2, 1}));
-  EXPECT_EQ(CellState::Empty, board.get_cell({3, 1}));
+  EXPECT_EQ(CellState::WALL0, board.get_cell({2, 1}));
+  EXPECT_EQ(CellState::EMPTY, board.get_cell({3, 1}));
 }
 
 TEST(PositionBoardTest, add_wall3_blocks_bulb_with_crossbeams) {
@@ -627,7 +627,7 @@ TEST(PositionBoardTest, add_wall3_blocks_bulb_with_crossbeams) {
 
   PositionBoard board(basic_board);
   EXPECT_EQ(12, board.num_cells_needing_illumination());
-  bool result = board.add_wall({2, 1}, CellState::Wall0);
+  bool result = board.add_wall({2, 1}, CellState::WALL0);
   EXPECT_TRUE(result);
 
   creator("++...+");
@@ -644,12 +644,12 @@ TEST(PositionBoardTest, add_wall3_blocks_bulb_with_crossbeams) {
 
   EXPECT_EQ(0, board.num_walls_with_deps());
   EXPECT_EQ(14, board.num_cells_needing_illumination());
-  EXPECT_EQ(CellState::Wall0, board.get_cell({2, 1}));
-  EXPECT_EQ(CellState::Illum, board.get_cell({3, 1}));
-  EXPECT_EQ(CellState::Illum, board.get_cell({5, 1}));
+  EXPECT_EQ(CellState::WALL0, board.get_cell({2, 1}));
+  EXPECT_EQ(CellState::ILLUM, board.get_cell({3, 1}));
+  EXPECT_EQ(CellState::ILLUM, board.get_cell({5, 1}));
 
-  EXPECT_EQ(CellState::Empty, board.get_cell({4, 1}));
-  EXPECT_EQ(CellState::Empty, board.get_cell({6, 1}));
+  EXPECT_EQ(CellState::EMPTY, board.get_cell({4, 1}));
+  EXPECT_EQ(CellState::EMPTY, board.get_cell({6, 1}));
 }
 
 TEST(PositionBoardTest, add_wall4_has_deps) {
@@ -668,17 +668,17 @@ TEST(PositionBoardTest, add_wall4_has_deps) {
 
   EXPECT_EQ(0, board.num_walls_with_deps());
 
-  bool result = board.add_wall({0, 1}, CellState::Wall3);
+  bool result = board.add_wall({0, 1}, CellState::WALL3);
   EXPECT_TRUE(result);
-  result = board.add_wall({1, 2}, CellState::Wall2);
+  result = board.add_wall({1, 2}, CellState::WALL2);
   EXPECT_TRUE(result);
-  result = board.add_wall({2, 0}, CellState::Wall1);
+  result = board.add_wall({2, 0}, CellState::WALL1);
   EXPECT_TRUE(result);
 
   EXPECT_EQ(9, board.num_cells_needing_illumination());
-  EXPECT_EQ(CellState::Wall3, board.get_cell({0, 1}));
-  EXPECT_EQ(CellState::Wall2, board.get_cell({1, 2}));
-  EXPECT_EQ(CellState::Wall1, board.get_cell({2, 0}));
+  EXPECT_EQ(CellState::WALL3, board.get_cell({0, 1}));
+  EXPECT_EQ(CellState::WALL2, board.get_cell({1, 2}));
+  EXPECT_EQ(CellState::WALL1, board.get_cell({2, 0}));
 
   EXPECT_EQ(3, board.num_walls_with_deps());
 
@@ -697,7 +697,7 @@ TEST(PositionBoardTest, set_cell1_simple) {
   PositionBoard     board(6, 6);
   ASCIILevelCreator creator;
 
-  board.set_cell({0, 0}, CellState::Bulb);
+  board.set_cell({0, 0}, CellState::BULB);
   creator("*+++++");
   creator("+.....");
   creator("+.....");
@@ -709,11 +709,11 @@ TEST(PositionBoardTest, set_cell1_simple) {
   EXPECT_EQ(expected, board.board());
 
   EXPECT_FALSE(board.has_error());
-  board.set_cell({3, 3}, CellState::Wall4);
-  board.set_cell({3, 4}, CellState::Wall0);
+  board.set_cell({3, 3}, CellState::WALL4);
+  board.set_cell({3, 4}, CellState::WALL0);
   EXPECT_TRUE(board.has_error());
 
-  board.set_cell({0, 0}, CellState::Bulb);
+  board.set_cell({0, 0}, CellState::BULB);
   creator("*+++++");
   creator("+.....");
   creator("+.....");
@@ -722,9 +722,9 @@ TEST(PositionBoardTest, set_cell1_simple) {
   creator("+.....");
 
   // "fix" the error
-  board.set_cell({3, 4}, CellState::Bulb);
+  board.set_cell({3, 4}, CellState::BULB);
 
-  board.set_cell({0, 0}, CellState::Bulb);
+  board.set_cell({0, 0}, CellState::BULB);
   creator("*+++++");
   creator("+...+.");
   creator("+...+.");
@@ -738,7 +738,7 @@ TEST(PositionBoardTest, set_cell1_simple) {
 TEST(PositionBoardTest, set_cell2_more_complex) {
   PositionBoard     board(6, 6);
   ASCIILevelCreator creator;
-  board.set_cell({0, 0}, CellState::Bulb);
+  board.set_cell({0, 0}, CellState::BULB);
   creator("*+++++");
   creator("+.....");
   creator("+.....");
@@ -749,8 +749,8 @@ TEST(PositionBoardTest, set_cell2_more_complex) {
   creator.finished(&expected);
   EXPECT_EQ(expected, board.board());
 
-  board.set_cell({0, 1}, CellState::Wall0);
-  board.set_cell({0, 0}, CellState::Bulb);
+  board.set_cell({0, 1}, CellState::WALL0);
+  board.set_cell({0, 0}, CellState::BULB);
   creator("*0....");
   creator("+.....");
   creator("+.....");
@@ -765,8 +765,8 @@ TEST(PositionBoardTest, set_cell3_fix_bulbs_see_eachother) {
   PositionBoard     board(6, 6);
   ASCIILevelCreator creator;
 
-  board.set_cell({0, 0}, CellState::Bulb);
-  board.set_cell({4, 0}, CellState::Bulb);
+  board.set_cell({0, 0}, CellState::BULB);
+  board.set_cell({4, 0}, CellState::BULB);
   creator("*+++++");
   creator("+.....");
   creator("+.....");
@@ -782,7 +782,7 @@ TEST(PositionBoardTest, set_cell3_fix_bulbs_see_eachother) {
 
   EXPECT_EQ(0, board.num_walls_with_deps());
 
-  board.set_cell({3, 0}, CellState::Wall2);
+  board.set_cell({3, 0}, CellState::WALL2);
 
   creator("*+++++");
   creator("+.....");
@@ -802,14 +802,14 @@ TEST(PositionBoardTest, set_cell4_make_batch_changes) {
   ASCIILevelCreator creator;
 
   board.set_cell({0, 0},
-                 CellState::Bulb,
+                 CellState::BULB,
                  PositionBoard::SetCellPolicy::NO_REEVALUATE_BOARD);
 
   // bulbs "see each other" but board evaluation is disabled so it shouldn't
   // notice.
 
   board.set_cell({4, 0},
-                 CellState::Bulb,
+                 CellState::BULB,
                  PositionBoard::SetCellPolicy::NO_REEVALUATE_BOARD);
   creator("*.....");
   creator("......");

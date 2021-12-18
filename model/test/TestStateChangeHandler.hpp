@@ -74,11 +74,11 @@ public:
 
     switch (action) {
 
-      case Add:
-      case Remove:
+      case ADD:
+      case REMOVE:
         {
           if (games_.empty()) {
-            throw std::runtime_error("Add/Remove without reset called first");
+            throw std::runtime_error("ADD/REMOVE without reset called first");
           }
           auto & game = cur();
           if (not coord.in_range(game.height_, game.width_)) {
@@ -93,7 +93,7 @@ public:
           break;
         }
 
-      case ResetGame:
+      case RESETGame:
         {
           Rows rows(coord.row_);
           for (auto & r : rows) {
@@ -110,7 +110,7 @@ public:
           break;
         }
 
-      case StartGame:
+      case START_GAME:
         {
           auto & game = cur();
           game.moves_.push_back({action, from_state, to_state, coord});

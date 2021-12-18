@@ -43,7 +43,7 @@ add_cell(AnnotatedMoves & moves,
   insert_if_unique(
       moves,
       AnnotatedMove{
-          model::SingleMove{model::Action::Add, CellState::Empty, cell, where},
+          model::SingleMove{model::Action::ADD, CellState::EMPTY, cell, where},
           why,
           motive,
           ref_location});
@@ -55,7 +55,7 @@ add_bulb(AnnotatedMoves & moves,
          DecisionType     why,
          MoveMotive       motive,
          OptCoord         ref_location = std::nullopt) {
-  add_cell(moves, CellState::Bulb, where, why, motive, ref_location);
+  add_cell(moves, CellState::BULB, where, why, motive, ref_location);
 }
 
 void
@@ -64,7 +64,7 @@ add_mark(AnnotatedMoves & moves,
          DecisionType     why,
          MoveMotive       motive,
          OptCoord         ref_location = std::nullopt) {
-  add_cell(moves, CellState::Mark, where, why, motive, ref_location);
+  add_cell(moves, CellState::MARK, where, why, motive, ref_location);
 }
 
 int
@@ -259,7 +259,7 @@ find_ambiguous_linear_aligned_row_cells(model::BasicBoard const & board,
           constrained |= model::is_wall_with_deps(cell);
         });
         board.visit_perpendicular(
-            coord, Direction::Right, [&](Coord, CellState cell) {
+            coord, Direction::RIGHT, [&](Coord, CellState cell) {
               constrained |= model::is_illuminable(cell);
               return constrained ? model::STOP_VISITING : model::KEEP_VISITING;
             });
@@ -308,7 +308,7 @@ find_ambiguous_linear_aligned_col_cells(model::BasicBoard const & board,
         });
         if (not constrained) {
           board.visit_perpendicular(
-              coord, Direction::Down, [&](Coord, CellState cell) {
+              coord, Direction::DOWN, [&](Coord, CellState cell) {
                 constrained |= model::is_illuminable(cell);
                 return constrained ? model::STOP_VISITING
                                    : model::KEEP_VISITING;
@@ -367,8 +367,8 @@ find_around_walls_with_deps(model::BasicBoard const & board,
     int       bulb_count  = 0;
     int       deps        = num_wall_deps(cell);
     board.visit_adjacent(wall_coord, [&](Coord coord, auto cell) {
-      empty_count += cell == Empty;
-      bulb_count += cell == Bulb;
+      empty_count += cell == EMPTY;
+      bulb_count += cell == BULB;
     });
 
     // all empty faces around wall must be bulbs

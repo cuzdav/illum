@@ -102,7 +102,7 @@
         https://solarianprogrammer.com/2019/11/05/install-gcc-windows/
         https://solarianprogrammer.com/2019/11/16/install-codeblocks-gcc-windows-build-c-cpp-fortran-programs/
 
-        Add these libraries to "Linker Options":
+        ADD these libraries to "Linker Options":
         user32 gdi32 opengl32 gdiplus Shlwapi dwmapi stdc++fs
 
         Set these compiler options: -std=c++17
@@ -212,8 +212,8 @@
 #pragma region version_history
 /*
         2.01: Made renderer and platform static for multifile projects
-        2.02: Added Decal destructor, optimised Pixel constructor
-        2.03: Added FreeBSD flags, Added DrawStringDecal()
+        2.02: ADDed Decal destructor, optimised Pixel constructor
+        2.03: ADDed FreeBSD flags, ADDed DrawStringDecal()
         2.04: Windows Full-Screen bug fixed
         2.05: +DrawPartialWarpedDecal() - draws a warped decal from a subset
    image +DrawPartialRotatedDecal() - draws a rotated decal from a subset image
@@ -230,9 +230,9 @@
    user specified pixel size +GetScreenPixelSize() - returns actual size in
    monitor pixels +Pixel Cohesion Mode (flag in Construct()) - disallows
    arbitrary window scaling +Working VSYNC in Windows windowed application - now
-   much smoother +Added string conversion for olc::vectors +Added comparator
-   operators for olc::vectors +Added DestroyWindow() on windows platforms for
-   serial PGE launches +Added GetMousePos() to stop TarriestPython whinging
+   much smoother +ADDed string conversion for olc::vectors +ADDed comparator
+   operators for olc::vectors +ADDed DestroyWindow() on windows platforms for
+   serial PGE launches +ADDed GetMousePos() to stop TarriestPython whinging
         2.08: Fix SetScreenSize() aspect ratio pre-calculation
                   Fix DrawExplicitDecal() - stupid oversight with multiple
    decals Disabled olc::Sprite copy constructor +olc::Sprite Duplicate() -
@@ -244,7 +244,7 @@
    olc::Renderable Image load error - Thanks MaGetzUb & Zij-IT for finding and
    moaning about it Fix file rejection in image loaders when using resource
    packs Tidied Compiler defines per platform - Thanks slavka +Pedant fixes,
-   const correctness in parts +DecalModes - Normal, Additive, Multiplicative
+   const correctness in parts +DecalModes - Normal, ADDitive, Multiplicative
    blend modes +Pixel Operators & Lerping +Filtered Decals - If you hate pixels,
    then erase this file +DrawStringProp(), GetTextSizeProp(),
    DrawStringPropDecal() - Draws non-monospaced font 2.10: Fix PixelLerp() -
@@ -266,7 +266,7 @@
                   Fix? Strange error regarding GDI+ Image Loader not knowing
    about COM, SDK change? 2.15: Big Reformat +WASM Platform (via Emscripten) -
    Big Thanks to OLC Community - See Platform for details +Sample Mode for
-   Decals +Made olc_ConfigureSystem() accessible +Added OLC_----_CUSTOM_EX for
+   Decals +Made olc_ConfigureSystem() accessible +ADDed OLC_----_CUSTOM_EX for
    externalised platforms, renderers and image loaders =Refactored olc::Sprite
    pixel data store -Deprecating LoadFromPGESprFile() -Deprecating
    SaveToPGESprFile() Fix Pixel -= operator (thanks Au Lit) 2.16: FIX Emscripten
@@ -909,7 +909,7 @@ class ResourcePack : public std::streambuf {
 public:
   ResourcePack();
   ~ResourcePack();
-  bool           AddFile(const std::string & sFile);
+  bool           ADDFile(const std::string & sFile);
   bool           LoadPack(const std::string & sFile, const std::string & sKey);
   bool           SavePack(const std::string & sFile, const std::string & sKey);
   ResourceBuffer GetFileBuffer(const std::string & sFile);
@@ -1892,7 +1892,7 @@ ResourcePack::ResourcePack() {}
 ResourcePack::~ResourcePack() { baseFile.close(); }
 
 bool
-ResourcePack::AddFile(const std::string & sFile) {
+ResourcePack::ADDFile(const std::string & sFile) {
   const std::string file = makeposix(sFile);
 
   if (_gfs::exists(file)) {
@@ -4147,7 +4147,7 @@ public:
       return olc::FAIL;
     wglMakeCurrent(glDeviceContext, glRenderContext);
 
-    // Remove Frame cap
+    // REMOVE Frame cap
     wglSwapInterval =
         (wglSwapInterval_t *)wglGetProcAddress("wglSwapIntervalEXT");
     if (wglSwapInterval && !bVSYNC)
@@ -6212,9 +6212,9 @@ public:
     Class GLUTViewClass = objc_getClass("GLUTView");
 
     SEL  scrollWheelSel  = sel_registerName("scrollWheel:");
-    bool resultAddMethod = class_addMethod(
+    bool resultADDMethod = class_addMethod(
         GLUTViewClass, scrollWheelSel, (IMP)scrollWheelUpdate, "v@:@");
-    assert(resultAddMethod);
+    assert(resultADDMethod);
 #endif
 
     renderer->PrepareDevice();

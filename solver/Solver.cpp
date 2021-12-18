@@ -43,13 +43,13 @@ init_speculation_contexts(Solution & solution) {
   context_cache.contradicting_context_idxs.clear();
 
   solution.board().visit_empty([&](Coord coord, CellState cell) {
-    for (CellState state : {CellState::Bulb, CellState::Mark}) {
+    for (CellState state : {CellState::BULB, CellState::MARK}) {
 
       size_t idx     = context_cache.contexts.size();
       auto & context = context_cache.contexts.emplace_back(
           0,
           solution.board(),
-          SingleMove{model::Action::Add, CellState::Empty, state, coord});
+          SingleMove{model::Action::ADD, CellState::EMPTY, state, coord});
 
       context.board.apply_move(context.first_move);
 
@@ -164,9 +164,9 @@ speculate(Solution & solution) {
     for (int contradiction_idx : contradictions) {
       auto const &  contradiction = contexts[contradiction_idx];
       AnnotatedMove move{contradiction.first_move};
-      move.next_move.to_      = (move.next_move.to_ == CellState::Bulb)
-                                  ? CellState::Mark
-                                  : CellState::Bulb;
+      move.next_move.to_      = (move.next_move.to_ == CellState::BULB)
+                                  ? CellState::MARK
+                                  : CellState::BULB;
       move.reason             = contradiction.decision_type;
       move.reference_location = contradiction.ref_location;
       solution.enqueue_move(move);
@@ -183,7 +183,7 @@ find_moves(Solution & solution) {
           solution.board().board(), solution.get_board_analysis(), moves)) {
     LOG_DEBUG("Detected a mark that cannot be illuminated at {}\n",
               *invalid_mark_location);
-    solution.set_status(SolutionStatus::Impossible);
+    solution.set_status(SolutionStatus::IMPOSSIBLE);
     solution.set_has_error(
         true, DecisionType::MARK_CANNOT_BE_ILLUMINATED, *invalid_mark_location);
     return false;
@@ -231,7 +231,7 @@ find_solution(Solution & solution) {
     if (not play_moves(solution)) {
       break;
     }
-  } while (solution.get_status() == SolutionStatus::Progressing &&
+  } while (solution.get_status() == SolutionStatus::PROGRESSING &&
            solution.get_step_count() < MAX_SOLVE_STEPS);
 
   if (solution.has_error()) {
@@ -247,18 +247,18 @@ solve(model::BasicBoard const &        board,
       std::optional<model::BasicBoard> known_solution) {
   Solution solution(board, known_solution);
   if (solution.is_solved()) {
-    solution.set_status(SolutionStatus::Solved);
+    solution.set_status(SolutionStatus::SOLVED);
     return solution;
   }
   if (solution.has_error()) {
-    solution.set_status(SolutionStatus::Impossible);
+    solution.set_status(SolutionStatus::IMPOSSIBLE);
     return solution;
   }
-  solution.set_status(SolutionStatus::Progressing);
+  solution.set_status(SolutionStatus::PROGRESSING);
 
   find_solution(solution);
 
-  if (solution.get_status() == SolutionStatus::Progressing) {
+  if (solution.get_status() == SolutionStatus::PROGRESSING) {
     solution.set_status(SolutionStatus::Terminated);
   }
 

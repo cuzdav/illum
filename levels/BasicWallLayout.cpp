@@ -93,7 +93,7 @@ sprinkle_random_walls(GenContext & context) {
     if (auto coord = pick_random_empty_coord(context)) {
       context.board.set_cell(
           *coord,
-          model::CellState::Wall0,
+          model::CellState::WALL0,
           solver::PositionBoard::SetCellPolicy::FORCE_REEVALUATE_BOARD);
     }
   }
@@ -103,7 +103,7 @@ bool
 verify_solvable(GenContext & context) {
   model::BoardModel model;
   model.reset_game(context.board.basic_board(),
-                   model::BoardModel::ResetGamePolicy::ONLY_COPY_WALLS);
+                   model::BoardModel::RESETGamePolicy::ONLY_COPY_WALLS);
   auto solution = solver::solve(model.get_underlying_board());
   if (solution.is_solved()) {
     context.solution = std::move(solution);
@@ -126,33 +126,33 @@ add_more_stuff(GenContext &     context,
   auto empty_adjacents = get_adjacent_empties(context, *coord);
   switch (empty_adjacents.size()) {
     case 0:
-      context.board.set_cell(*coord, model::CellState::Wall0);
+      context.board.set_cell(*coord, model::CellState::WALL0);
       break;
 
     case 1:
-      board.set_cell(*coord, model::CellState::Wall1);
-      board.set_cell(empty_adjacents[0], model::CellState::Bulb);
+      board.set_cell(*coord, model::CellState::WALL1);
+      board.set_cell(empty_adjacents[0], model::CellState::BULB);
       break;
 
     case 2:
-      board.set_cell(*coord, model::CellState::Wall2);
-      board.set_cell(empty_adjacents[0], model::CellState::Bulb);
-      board.set_cell(empty_adjacents[1], model::CellState::Bulb);
+      board.set_cell(*coord, model::CellState::WALL2);
+      board.set_cell(empty_adjacents[0], model::CellState::BULB);
+      board.set_cell(empty_adjacents[1], model::CellState::BULB);
       break;
 
     case 3:
-      board.set_cell(*coord, model::CellState::Wall3);
-      board.set_cell(empty_adjacents[0], model::CellState::Bulb);
-      board.set_cell(empty_adjacents[1], model::CellState::Bulb);
-      board.set_cell(empty_adjacents[2], model::CellState::Bulb);
+      board.set_cell(*coord, model::CellState::WALL3);
+      board.set_cell(empty_adjacents[0], model::CellState::BULB);
+      board.set_cell(empty_adjacents[1], model::CellState::BULB);
+      board.set_cell(empty_adjacents[2], model::CellState::BULB);
       break;
 
     case 4:
-      board.set_cell(*coord, model::CellState::Wall4);
-      board.set_cell(empty_adjacents[0], model::CellState::Bulb);
-      board.set_cell(empty_adjacents[1], model::CellState::Bulb);
-      board.set_cell(empty_adjacents[2], model::CellState::Bulb);
-      board.set_cell(empty_adjacents[3], model::CellState::Bulb);
+      board.set_cell(*coord, model::CellState::WALL4);
+      board.set_cell(empty_adjacents[0], model::CellState::BULB);
+      board.set_cell(empty_adjacents[1], model::CellState::BULB);
+      board.set_cell(empty_adjacents[2], model::CellState::BULB);
+      board.set_cell(empty_adjacents[3], model::CellState::BULB);
       break;
 
     default:
@@ -168,7 +168,7 @@ fix_unilluminable_mark(GenContext & context) {
   // There are a few ways to possibly fix this, because unilluminable marks
   // can happen for different reasons.
 
-  // 1) Add a bulb to shine onto it. Bulb may need extra walls to block
+  // 1) ADD a bulb to shine onto it. BULB may need extra walls to block
   //    other bulbs from seeing it, or new walls to force it.
 
   // 2) change mark to bulb and see if surroundings can be adjusted to "make
@@ -176,7 +176,7 @@ fix_unilluminable_mark(GenContext & context) {
   //    deps to force it to be a bulb.
   // 3) remove walls around it to allow for light to reach it.
 
-  // 4) just fill it in with a Wall0
+  // 4) just fill it in with a WALL0
 
   // Each may or may not work, and could introduce their own problems.
 
@@ -196,9 +196,9 @@ fix_unilluminable_mark(GenContext & context) {
             // we're installing
             context.board.set_cell(adj_coord, add_wall_dep(adj_cell));
           }
-          else if (adj_cell == Wall0) {
-            // Add another bulb dep to this wall, so that it forces the mark to
-            // be illuminated. NOTE: Wall0 may have adjacent bulbs, so count and
+          else if (adj_cell == WALL0) {
+            // ADD another bulb dep to this wall, so that it forces the mark to
+            // be illuminated. NOTE: WALL0 may have adjacent bulbs, so count and
             // include them in the dependency count, plus the bulb we're adding.
             int adj_bulbs = 0;
             context.board.visit_adjacent(
@@ -213,7 +213,7 @@ fix_unilluminable_mark(GenContext & context) {
   }
 
   // for now lets be simple and just put an empty wall here.
-  context.board.set_cell(coord, model::CellState::Wall0);
+  context.board.set_cell(coord, model::CellState::WALL0);
   return true;
 }
 
@@ -309,7 +309,7 @@ fill_board_from_current_position(GenContext & context) {
                solver::find_trivial_moves(board.basic_board(),
                                           context.board_analysis.get(),
                                           context.annotated_moves)) {
-      board.set_cell(*invalid_mark_location, model::CellState::Wall0);
+      board.set_cell(*invalid_mark_location, model::CellState::WALL0);
     }
     for (auto & move : context.annotated_moves) {
       board.apply_move(move.next_move);
@@ -349,7 +349,7 @@ BasicWallLayout::create(RNG & rng, int height, int width) {
     assert(context.solution.has_value() && context.solution->is_solved());
     model::BoardModel model;
     model.reset_game(context.solution->board().board(),
-                     model::BoardModel::ResetGamePolicy::ONLY_COPY_WALLS);
+                     model::BoardModel::RESETGamePolicy::ONLY_COPY_WALLS);
     return model;
   }
 

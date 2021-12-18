@@ -11,15 +11,15 @@
 namespace model {
 
 enum class CellState : std::uint16_t {
-  Wall0 = (1 << 0),
-  Wall1 = (1 << 1),
-  Wall2 = (1 << 2),
-  Wall3 = (1 << 3),
-  Wall4 = (1 << 4),
-  Empty = (1 << 5),
-  Bulb  = (1 << 6),
-  Mark  = (1 << 7),
-  Illum = (1 << 8),
+  WALL0 = (1 << 0),
+  WALL1 = (1 << 1),
+  WALL2 = (1 << 2),
+  WALL3 = (1 << 3),
+  WALL4 = (1 << 4),
+  EMPTY = (1 << 5),
+  BULB  = (1 << 6),
+  MARK  = (1 << 7),
+  ILLUM = (1 << 8),
 };
 
 DEFINE_ENUM_BIT_OPERATIONS(CellState);
@@ -28,24 +28,24 @@ namespace cellstategroups {
 using enum CellState;
 
 // a piece the player can add to / remove from the board
-constexpr CellState playable = Bulb | Mark;
+constexpr CellState playable = BULB | MARK;
 
 // a cell that can change during the course of play, either played directly by
 // player, or added/removed as a side effect (i.e. illumination extending from a
 // bulb adds illumination))
-constexpr CellState dynamic_entity = Bulb | Empty | Mark | Illum;
+constexpr CellState dynamic_entity = BULB | EMPTY | MARK | ILLUM;
 
 // a cell that needs illumination, but does not have it
-constexpr CellState illuminable = Empty | Mark;
+constexpr CellState illuminable = EMPTY | MARK;
 
 // a cell that a beam of light can pass through
-constexpr CellState translucent = Empty | Mark | Illum;
+constexpr CellState translucent = EMPTY | MARK | ILLUM;
 
 // any kind of wall
-constexpr CellState any_wall = Wall0 | Wall1 | Wall2 | Wall3 | Wall4;
+constexpr CellState any_wall = WALL0 | WALL1 | WALL2 | WALL3 | WALL4;
 
 // a wall at least one dependency
-constexpr CellState wall_with_deps = Wall1 | Wall2 | Wall3 | Wall4;
+constexpr CellState wall_with_deps = WALL1 | WALL2 | WALL3 | WALL4;
 
 } // namespace cellstategroups
 
@@ -80,17 +80,17 @@ is_translucent(CellState cell) {
 
 constexpr bool
 is_empty(CellState cell) {
-  return cell == CellState::Empty;
+  return cell == CellState::EMPTY;
 }
 
 constexpr bool
 is_mark(CellState cell) {
-  return cell == CellState::Mark;
+  return cell == CellState::MARK;
 }
 
 constexpr bool
 is_bulb(CellState cell) {
-  return cell == CellState::Bulb;
+  return cell == CellState::BULB;
 }
 
 // any wall
@@ -105,7 +105,7 @@ is_wall_with_deps(CellState cell) {
   return cell == (cell & cellstategroups::wall_with_deps);
 }
 
-// Convert Wall4 to Wall3, or Wall1 to Wall0, etc. Leave non-walls alone.
+// Convert WALL4 to WALL3, or WALL1 to WALL0, etc. Leave non-walls alone.
 constexpr CellState
 remove_wall_dep(CellState cell) {
   if (is_wall_with_deps(cell)) {
@@ -116,8 +116,8 @@ remove_wall_dep(CellState cell) {
 
 constexpr CellState
 add_wall_dep(CellState cell) {
-  // Wall4 is the max
-  if (+cell >= +CellState::Wall0 && +cell < +CellState::Wall4) {
+  // WALL4 is the max
+  if (+cell >= +CellState::WALL0 && +cell < +CellState::WALL4) {
     return CellState(+cell << 1);
   }
   return cell;
@@ -126,13 +126,13 @@ add_wall_dep(CellState cell) {
 constexpr int
 num_wall_deps(CellState cell) {
   switch (cell) {
-    case CellState::Wall1:
+    case CellState::WALL1:
       return 1;
-    case CellState::Wall2:
+    case CellState::WALL2:
       return 2;
-    case CellState::Wall3:
+    case CellState::WALL3:
       return 3;
-    case CellState::Wall4:
+    case CellState::WALL4:
       return 4;
     default:
       return 0;
@@ -143,89 +143,89 @@ constexpr CellState
 wall_with_deps(int num_deps) {
   switch (num_deps) {
     case 0:
-      return CellState::Wall0;
+      return CellState::WALL0;
     case 1:
-      return CellState::Wall1;
+      return CellState::WALL1;
     case 2:
-      return CellState::Wall2;
+      return CellState::WALL2;
     case 3:
-      return CellState::Wall3;
+      return CellState::WALL3;
     case 4:
-      return CellState::Wall4;
+      return CellState::WALL4;
     default:
       throw std::logic_error("invalid dep count for wall");
   }
 }
 
 namespace chr {
-constexpr char Bulb  = '*';
-constexpr char Illum = '+';
-constexpr char Empty = '.';
-constexpr char Wall0 = '0';
-constexpr char Wall1 = '1';
-constexpr char Wall2 = '2';
-constexpr char Wall3 = '3';
-constexpr char Wall4 = '4';
-constexpr char Mark  = 'X';
+constexpr char BULB  = '*';
+constexpr char ILLUM = '+';
+constexpr char EMPTY = '.';
+constexpr char WALL0 = '0';
+constexpr char WALL1 = '1';
+constexpr char WALL2 = '2';
+constexpr char WALL3 = '3';
+constexpr char WALL4 = '4';
+constexpr char MARK  = 'X';
 } // namespace chr
 
 namespace str {
-constexpr char const * Bulb  = "Bulb";
-constexpr char const * Empty = "Empty";
-constexpr char const * Illum = "Illum";
-constexpr char const * Wall0 = "Wall0";
-constexpr char const * Wall1 = "Wall1";
-constexpr char const * Wall2 = "Wall2";
-constexpr char const * Wall3 = "Wall3";
-constexpr char const * Wall4 = "Wall4";
-constexpr char const * Mark  = "Mark";
+constexpr char const * BULB  = "BULB";
+constexpr char const * EMPTY = "EMPTY";
+constexpr char const * ILLUM = "ILLUM";
+constexpr char const * WALL0 = "WALL0";
+constexpr char const * WALL1 = "WALL1";
+constexpr char const * WALL2 = "WALL2";
+constexpr char const * WALL3 = "WALL3";
+constexpr char const * WALL4 = "WALL4";
+constexpr char const * MARK  = "MARK";
 
 } // namespace str
 
 // keep sorted and in "pairwise lockstep" with CellStateValues
-constexpr std::string_view CellStateNames[] = {str::Bulb,
-                                               str::Empty,
-                                               str::Illum,
-                                               str::Mark,
-                                               str::Wall0,
-                                               str::Wall1,
-                                               str::Wall2,
-                                               str::Wall3,
-                                               str::Wall4};
+constexpr std::string_view CellStateNames[] = {str::BULB,
+                                               str::EMPTY,
+                                               str::ILLUM,
+                                               str::MARK,
+                                               str::WALL0,
+                                               str::WALL1,
+                                               str::WALL2,
+                                               str::WALL3,
+                                               str::WALL4};
 
 // keep sorted and in "pairwise lockstep" with CellStateNames
-constexpr CellState CellStateValues[] = {CellState::Bulb,
-                                         CellState::Empty,
-                                         CellState::Illum,
-                                         CellState::Mark,
-                                         CellState::Wall0,
-                                         CellState::Wall1,
-                                         CellState::Wall2,
-                                         CellState::Wall3,
-                                         CellState::Wall4};
+constexpr CellState CellStateValues[] = {CellState::BULB,
+                                         CellState::EMPTY,
+                                         CellState::ILLUM,
+                                         CellState::MARK,
+                                         CellState::WALL0,
+                                         CellState::WALL1,
+                                         CellState::WALL2,
+                                         CellState::WALL3,
+                                         CellState::WALL4};
 
 constexpr char
 to_char(CellState state) {
   using enum CellState;
   switch (state) {
-    case Empty:
-      return chr::Empty;
-    case Illum:
-      return chr::Illum;
-    case Wall0:
-      return chr::Wall0;
-    case Wall1:
-      return chr::Wall1;
-    case Wall2:
-      return chr::Wall2;
-    case Wall3:
-      return chr::Wall3;
-    case Wall4:
-      return chr::Wall4;
-    case Bulb:
-      return chr::Bulb;
-    case Mark:
-      return chr::Mark;
+    case EMPTY:
+      return chr::EMPTY;
+    case ILLUM:
+      return chr::ILLUM;
+    case WALL0:
+      return chr::WALL0;
+    case WALL1:
+      return chr::WALL1;
+    case WALL2:
+      return chr::WALL2;
+    case WALL3:
+      return chr::WALL3;
+    case WALL4:
+      return chr::WALL4;
+    case BULB:
+      return chr::BULB;
+    case MARK:
+      return chr::MARK;
 
     default:
       throw std::runtime_error(
@@ -238,24 +238,24 @@ constexpr CellState
 get_state_from_char(char state) {
   using enum CellState;
   switch (state) {
-    case chr::Empty:
-      return Empty;
-    case chr::Illum:
-      return Illum;
-    case chr::Wall0:
-      return Wall0;
-    case chr::Wall1:
-      return Wall1;
-    case chr::Wall2:
-      return Wall2;
-    case chr::Wall3:
-      return Wall3;
-    case chr::Wall4:
-      return Wall4;
-    case chr::Bulb:
-      return Bulb;
-    case chr::Mark:
-      return Mark;
+    case chr::EMPTY:
+      return EMPTY;
+    case chr::ILLUM:
+      return ILLUM;
+    case chr::WALL0:
+      return WALL0;
+    case chr::WALL1:
+      return WALL1;
+    case chr::WALL2:
+      return WALL2;
+    case chr::WALL3:
+      return WALL3;
+    case chr::WALL4:
+      return WALL4;
+    case chr::BULB:
+      return BULB;
+    case chr::MARK:
+      return MARK;
     default:
       throw std::runtime_error(
           std::string("Invalid State char in Serialize state_from_char(): ") +
@@ -267,24 +267,24 @@ constexpr char const *
 to_string(CellState state) {
   using enum CellState;
   switch (state) {
-    case Empty:
-      return str::Empty;
-    case Illum:
-      return str::Illum;
-    case Wall0:
-      return str::Wall0;
-    case Wall1:
-      return str::Wall1;
-    case Wall2:
-      return str::Wall2;
-    case Wall3:
-      return str::Wall3;
-    case Wall4:
-      return str::Wall4;
-    case Bulb:
-      return str::Bulb;
-    case Mark:
-      return str::Mark;
+    case EMPTY:
+      return str::EMPTY;
+    case ILLUM:
+      return str::ILLUM;
+    case WALL0:
+      return str::WALL0;
+    case WALL1:
+      return str::WALL1;
+    case WALL2:
+      return str::WALL2;
+    case WALL3:
+      return str::WALL3;
+    case WALL4:
+      return str::WALL4;
+    case BULB:
+      return str::BULB;
+    case MARK:
+      return str::MARK;
     default:
       throw std::runtime_error("Invalid CellState in Serialize to_string: " +
                                std::to_string(static_cast<int>(state)));

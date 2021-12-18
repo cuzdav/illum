@@ -18,13 +18,13 @@ PositionBoard::PositionBoard(int height, int width) {
 }
 
 PositionBoard::PositionBoard(model::BasicBoard const & current,
-                             ResetPolicy               policy) {
+                             RESETPolicy               policy) {
   reset(current, policy);
 }
 
 void
 PositionBoard::reset(model::BasicBoard const &  current,
-                     PositionBoard::ResetPolicy policy) {
+                     PositionBoard::RESETPolicy policy) {
   reset(current.height(), current.width());
 
   // first copy the walls and update counts
@@ -41,7 +41,7 @@ PositionBoard::reset(model::BasicBoard const &  current,
 
   // now just play the moves from their board into ours.
   current.visit_board([&](model::Coord coord, auto cell) {
-    if (has_error() && policy == ResetPolicy::STOP_PLAYING_MOVES_ON_ERROR) {
+    if (has_error() && policy == RESETPolicy::STOP_PLAYING_MOVES_ON_ERROR) {
       return model::STOP_VISITING;
     }
     if (model::is_bulb(cell)) {
@@ -58,7 +58,7 @@ PositionBoard::reset(model::BasicBoard const &  current,
 }
 
 void
-PositionBoard::reevaluate_board_state(PositionBoard::ResetPolicy policy) {
+PositionBoard::reevaluate_board_state(PositionBoard::RESETPolicy policy) {
   // Recompute the state of the board by replaying from start on a separate
   // position board at arm's reach, and take its results.
   //
@@ -95,9 +95,9 @@ PositionBoard::set_cell(model::Coord     coord,
     // changing empty to something known how to handle:
     if (is_empty(orig_cell)) {
       switch (cell) {
-        case CellState::Bulb:
+        case CellState::BULB:
           return add_bulb(coord);
-        case CellState::Mark:
+        case CellState::MARK:
           return add_mark(coord);
         default:
           if (is_wall(cell)) {
@@ -108,7 +108,7 @@ PositionBoard::set_cell(model::Coord     coord,
           break;
       }
     }
-    else if (orig_cell == CellState::Illum && not has_error()) {
+    else if (orig_cell == CellState::ILLUM && not has_error()) {
       if (is_wall(cell)) {
         return add_wall(coord, cell);
       }
@@ -117,9 +117,9 @@ PositionBoard::set_cell(model::Coord     coord,
     // removing something known how to handle
     else if (is_empty(cell)) {
       switch (orig_cell) {
-        case CellState::Bulb:
+        case CellState::BULB:
           return remove_bulb(coord);
-          // case CellState::Mark:
+          // case CellState::MARK:
           //   return remove_mark(coord);
       }
     }
@@ -128,7 +128,7 @@ PositionBoard::set_cell(model::Coord     coord,
 
   // unless explicitly forbidden, we should reevaluate after set_cell
   if (policy != SetCellPolicy::NO_REEVALUATE_BOARD) {
-    reevaluate_board_state(PositionBoard::ResetPolicy::KEEP_ERRORS);
+    reevaluate_board_state(PositionBoard::RESETPolicy::KEEP_ERRORS);
   }
   return result;
 }
@@ -202,7 +202,7 @@ PositionBoard::get_ref_location() const {
 // 2) did the bulb over-subscribe the wall?
 // 3) did the bulb just satisfy the wall, and we should reduce our counter?
 
-// NOTE: noops for any non-wall tile, or a Wall0, and considers them satisfied
+// NOTE: noops for any non-wall tile, or a WALL0, and considers them satisfied
 bool
 PositionBoard::update_wall(model::Coord wall_coord,
                            CellState    wall_cell,
@@ -216,8 +216,8 @@ PositionBoard::update_wall(model::Coord wall_coord,
     int bulb_neighbors  = 0;
     board().visit_adjacent(wall_coord,
                            [&](model::Coord coord, CellState neighbor) {
-                             bulb_neighbors += neighbor == CellState::Bulb;
-                             empty_neighbors += neighbor == CellState::Empty;
+                             bulb_neighbors += neighbor == CellState::BULB;
+                             empty_neighbors += neighbor == CellState::EMPTY;
                            });
 
     if (bulb_neighbors > deps) {
@@ -231,7 +231,7 @@ PositionBoard::update_wall(model::Coord wall_coord,
       ref_location_  = wall_coord;
     }
     else if (bulb_neighbors == deps && coord_is_adjacent_to_play &&
-             play_cell == CellState::Bulb) {
+             play_cell == CellState::BULB) {
       // just-played bulb satisfied this wall, so decrement counter
       num_walls_with_deps_--;
     }
@@ -246,14 +246,14 @@ PositionBoard::remove_illum_in_direction_from(model::Coord start_at,
   visit_rows_cols_outward(
       start_at,
       [this, direction](Coord coord, CellState cell) {
-        if (cell == CellState::Illum) {
+        if (cell == CellState::ILLUM) {
           bool has_crossbeam = false;
           visit_perpendicular(
               coord, direction, [&](auto, CellState cross_cell) {
                 has_crossbeam |= is_bulb(cross_cell);
               });
           if (not has_crossbeam) {
-            board_.set_cell(coord, CellState::Empty);
+            board_.set_cell(coord, CellState::EMPTY);
             ++num_cells_needing_illumination_;
           }
         }
@@ -287,8 +287,8 @@ PositionBoard::add_wall(model::Coord wall_coord, model::CellState wall_cell) {
     --num_cells_needing_illumination_;
   }
 
-  // This wall deps counter logic works even with Wall0, which has no
-  // deps, because Wall0 is pathologically satisfied.
+  // This wall deps counter logic works even with WALL0, which has no
+  // deps, because WALL0 is pathologically satisfied.
   num_walls_with_deps_++;
   bool is_satisfied = update_wall(wall_coord, wall_cell, wall_cell, false);
   num_walls_with_deps_ -= is_satisfied;
@@ -306,7 +306,7 @@ PositionBoard::add_wall(model::Coord wall_coord, model::CellState wall_cell) {
   // ...+........+.
   // ...*++++++++++
 
-  // Adding a wall:
+  // ADDing a wall:
   // ...+........+.
   // ++++++++++++*+
   // ...+........+.
@@ -319,7 +319,7 @@ PositionBoard::add_wall(model::Coord wall_coord, model::CellState wall_cell) {
   // ALSO: we are not in an error state, so don't have to check or handle
   // the case where two lights can see each other.
   //
-  if (orig_cell == CellState::Illum) {
+  if (orig_cell == CellState::ILLUM) {
     // find light source(s)
     model::Direction light_sources{};
     visit_rows_cols_outward(
@@ -339,12 +339,12 @@ PositionBoard::remove_bulb(model::Coord bulb_coord) {
   // TODO: this is inefficient logic since it recomputes the board from the
   // beginning after removing the bulb.  But it works, and is a placeholder
   // until I feel like dealing with it better.
-  board_.set_cell(bulb_coord, model::CellState::Empty);
+  board_.set_cell(bulb_coord, model::CellState::EMPTY);
   auto board_copy = board_;
 
   // an unsolved board is an error, but we don't want that to stop us from
   // copying the moves back into the new board.
-  reset(board_copy, PositionBoard::ResetPolicy::KEEP_ERRORS);
+  reset(board_copy, PositionBoard::RESETPolicy::KEEP_ERRORS);
   return true;
 }
 
@@ -353,23 +353,23 @@ PositionBoard::add_bulb(model::Coord bulb_coord) {
   CellState bulb_target = get_cell(bulb_coord);
   // A mark's job is to prevent playing a bulb there, so don't allow it.
   // Otherwise, allow them to play a mistake, but only one.
-  if (bulb_target != (bulb_target & (CellState::Empty | CellState::Illum))) {
+  if (bulb_target != (bulb_target & (CellState::EMPTY | CellState::ILLUM))) {
     return false;
   }
-  mut_board().set_cell(bulb_coord, CellState::Bulb);
-  num_cells_needing_illumination_ -= bulb_target == CellState::Empty;
+  mut_board().set_cell(bulb_coord, CellState::BULB);
+  num_cells_needing_illumination_ -= bulb_target == CellState::EMPTY;
 
   // update walls immediately adjacent to the bulb
   board().visit_adjacent(
       bulb_coord, [&](model::Coord adj_coord, CellState neighbor) {
-        update_wall(adj_coord, neighbor, CellState::Bulb, true);
+        update_wall(adj_coord, neighbor, CellState::BULB, true);
       });
 
   // now emit light outwards, and see if it affects walls nearby
   board().visit_rows_cols_outward(
       bulb_coord, [&](Direction dir, model::Coord coord, CellState cell) {
         if (is_illuminable(cell)) {
-          mut_board().set_cell(coord, model::CellState::Illum);
+          mut_board().set_cell(coord, model::CellState::ILLUM);
           num_cells_needing_illumination_--;
 
           // illuminating a cell adjacent to a wall with deps affects it. Only
@@ -378,7 +378,7 @@ PositionBoard::add_bulb(model::Coord bulb_coord) {
           // get there. Don't look behind because it's already processed.
           board().visit_adj_flank(
               coord, dir, [&](model::Coord adj_coord, CellState neighbor) {
-                update_wall(adj_coord, neighbor, CellState::Illum, false);
+                update_wall(adj_coord, neighbor, CellState::ILLUM, false);
               });
         }
         else if (is_bulb(cell)) {
@@ -387,7 +387,7 @@ PositionBoard::add_bulb(model::Coord bulb_coord) {
           ref_location_  = bulb_coord;
         }
         else if (is_wall_with_deps(cell)) {
-          update_wall(coord, cell, CellState::Illum, false);
+          update_wall(coord, cell, CellState::ILLUM, false);
         }
       });
 
@@ -400,24 +400,24 @@ PositionBoard::add_mark(model::Coord mark_coord) {
   if (not is_empty(mark_target)) {
     return false;
   }
-  mut_board().set_cell(mark_coord, CellState::Mark);
+  mut_board().set_cell(mark_coord, CellState::MARK);
 
   // update walls immediately adjacent to the mark
   board().visit_adjacent(
       mark_coord, [&](model::Coord neighbor_coord, CellState neighbor_cell) {
-        update_wall(neighbor_coord, neighbor_cell, CellState::Mark, true);
+        update_wall(neighbor_coord, neighbor_cell, CellState::MARK, true);
       });
   return true;
 }
 
 bool
 PositionBoard::apply_move(const model::SingleMove & move) {
-  if (move.action_ == model::Action::Add) {
-    if (move.to_ == CellState::Bulb) {
+  if (move.action_ == model::Action::ADD) {
+    if (move.to_ == CellState::BULB) {
       add_bulb(move.coord_);
       return true;
     }
-    if (move.to_ == CellState::Mark) {
+    if (move.to_ == CellState::MARK) {
       add_mark(move.coord_);
       return true;
     }
@@ -425,9 +425,9 @@ PositionBoard::apply_move(const model::SingleMove & move) {
       return false;
     }
   }
-  else if (move.action_ == model::Action::Remove) {
-    if (move.from_ == CellState::Bulb || move.from_ == CellState::Mark) {
-      set_cell(move.coord_, model::CellState::Empty);
+  else if (move.action_ == model::Action::REMOVE) {
+    if (move.from_ == CellState::BULB || move.from_ == CellState::MARK) {
+      set_cell(move.coord_, model::CellState::EMPTY);
       return true;
     }
   }

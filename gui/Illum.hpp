@@ -19,7 +19,7 @@ public:
 
 public:
   bool OnUserCreate() override;
-  bool OnUserUpdate(float fElapsedTime) override;
+  bool OnUserUPdate(float fElapsedTime) override;
 
   bool render();
 
@@ -59,9 +59,9 @@ private:
     Illum & owner_;
   };
 
-  enum class State { Menu, StartGame, Playing, Exit };
+  enum class State { MENU, START_GAME, PLAYING, EXIT };
 
-  enum class Difficulty { VeryEasy, Easy, Intermediate, Hard, Expert };
+  enum class Difficulty { VERY_EASY, EASY, INTERMEDIATE, HARD, EXPERT };
   friend char const * to_string(Difficulty);
 
   std::unique_ptr<olc::Sprite>      menu_sprite_;
@@ -71,9 +71,9 @@ private:
   std::optional<illum::olc::Button> hint_button_;
   std::optional<illum::olc::Button> restart_button_;
 
-  State state_ = State::Menu;
+  State state_ = State::MENU;
 
-  Difficulty difficulty_         = Difficulty::VeryEasy;
+  Difficulty difficulty_         = Difficulty::VERY_EASY;
   int        min_board_size_idx_ = 0;
   int        max_board_size_idx_ = 3;
   int        tile_width_         = 0;

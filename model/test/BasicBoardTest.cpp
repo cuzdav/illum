@@ -31,12 +31,12 @@ using DirectionMoves = std::vector<SingleMoveDirection>;
 
 auto
 mk_move(Coord coord, CellState cell) {
-  return SingleMove{Action::Add, CellState::Empty, cell, coord};
+  return SingleMove{Action::ADD, CellState::EMPTY, cell, coord};
 }
 
 auto
 mk_move(Direction dir, Coord coord, CellState cell) {
-  return SingleMoveDirection(dir, Action::Add, CellState::Empty, cell, coord);
+  return SingleMoveDirection(dir, Action::ADD, CellState::EMPTY, cell, coord);
 }
 
 auto
@@ -101,49 +101,49 @@ TEST(BasicBoardTest, cell_accessors) {
   BasicBoard b;
   b.reset(5, 6);
 
-  EXPECT_EQ(CellState::Empty, b.get_cell({0, 0}));
-  EXPECT_EQ(CellState::Empty, b.get_cell({0, 1}));
-  EXPECT_EQ(CellState::Empty, b.get_cell({1, 2}));
-  EXPECT_EQ(CellState::Empty, b.get_cell({2, 3}));
-  EXPECT_EQ(CellState::Empty, b.get_cell({4, 4}));
+  EXPECT_EQ(CellState::EMPTY, b.get_cell({0, 0}));
+  EXPECT_EQ(CellState::EMPTY, b.get_cell({0, 1}));
+  EXPECT_EQ(CellState::EMPTY, b.get_cell({1, 2}));
+  EXPECT_EQ(CellState::EMPTY, b.get_cell({2, 3}));
+  EXPECT_EQ(CellState::EMPTY, b.get_cell({4, 4}));
 
-  b.set_cell({0, 0}, CellState::Wall0);
-  b.set_cell({0, 1}, CellState::Wall1);
-  b.set_cell({1, 2}, CellState::Wall2);
-  b.set_cell({2, 3}, CellState::Wall3);
-  b.set_cell({4, 4}, CellState::Mark);
+  b.set_cell({0, 0}, CellState::WALL0);
+  b.set_cell({0, 1}, CellState::WALL1);
+  b.set_cell({1, 2}, CellState::WALL2);
+  b.set_cell({2, 3}, CellState::WALL3);
+  b.set_cell({4, 4}, CellState::MARK);
 
-  EXPECT_EQ(CellState::Wall0, b.get_cell({0, 0}));
-  EXPECT_EQ(CellState::Wall1, b.get_cell({0, 1}));
-  EXPECT_EQ(CellState::Wall2, b.get_cell({1, 2}));
-  EXPECT_EQ(CellState::Wall3, b.get_cell({2, 3}));
-  EXPECT_EQ(CellState::Mark, b.get_cell({4, 4}));
+  EXPECT_EQ(CellState::WALL0, b.get_cell({0, 0}));
+  EXPECT_EQ(CellState::WALL1, b.get_cell({0, 1}));
+  EXPECT_EQ(CellState::WALL2, b.get_cell({1, 2}));
+  EXPECT_EQ(CellState::WALL3, b.get_cell({2, 3}));
+  EXPECT_EQ(CellState::MARK, b.get_cell({4, 4}));
 
   EXPECT_TRUE(b.get_opt_cell({0, 0}).has_value());
   EXPECT_TRUE(b.get_opt_cell({0, 1}).has_value());
   EXPECT_TRUE(b.get_opt_cell({1, 2}).has_value());
   EXPECT_TRUE(b.get_opt_cell({2, 3}).has_value());
   EXPECT_TRUE(b.get_opt_cell({4, 4}).has_value());
-  EXPECT_EQ(CellState::Wall0, *b.get_opt_cell({0, 0}));
-  EXPECT_EQ(CellState::Wall1, *b.get_opt_cell({0, 1}));
-  EXPECT_EQ(CellState::Wall2, *b.get_opt_cell({1, 2}));
-  EXPECT_EQ(CellState::Wall3, *b.get_opt_cell({2, 3}));
-  EXPECT_EQ(CellState::Mark, *b.get_opt_cell({4, 4}));
+  EXPECT_EQ(CellState::WALL0, *b.get_opt_cell({0, 0}));
+  EXPECT_EQ(CellState::WALL1, *b.get_opt_cell({0, 1}));
+  EXPECT_EQ(CellState::WALL2, *b.get_opt_cell({1, 2}));
+  EXPECT_EQ(CellState::WALL3, *b.get_opt_cell({2, 3}));
+  EXPECT_EQ(CellState::MARK, *b.get_opt_cell({4, 4}));
 
   auto not_wall1_or_wall2 = [](CellState cell) {
-    return cell != CellState::Wall1 && cell != CellState::Wall2;
+    return cell != CellState::WALL1 && cell != CellState::WALL2;
   };
-  b.set_cell_if({0, 0}, CellState::Empty, not_wall1_or_wall2);
-  b.set_cell_if({0, 1}, CellState::Empty, not_wall1_or_wall2);
-  b.set_cell_if({1, 2}, CellState::Empty, not_wall1_or_wall2);
-  b.set_cell_if({2, 3}, CellState::Empty, not_wall1_or_wall2);
-  b.set_cell_if({4, 4}, CellState::Empty, not_wall1_or_wall2);
+  b.set_cell_if({0, 0}, CellState::EMPTY, not_wall1_or_wall2);
+  b.set_cell_if({0, 1}, CellState::EMPTY, not_wall1_or_wall2);
+  b.set_cell_if({1, 2}, CellState::EMPTY, not_wall1_or_wall2);
+  b.set_cell_if({2, 3}, CellState::EMPTY, not_wall1_or_wall2);
+  b.set_cell_if({4, 4}, CellState::EMPTY, not_wall1_or_wall2);
 
-  EXPECT_EQ(CellState::Empty, b.get_cell({0, 0}));
-  EXPECT_EQ(CellState::Wall1, b.get_cell({0, 1}));
-  EXPECT_EQ(CellState::Wall2, b.get_cell({1, 2}));
-  EXPECT_EQ(CellState::Empty, b.get_cell({2, 3}));
-  EXPECT_EQ(CellState::Empty, b.get_cell({4, 4}));
+  EXPECT_EQ(CellState::EMPTY, b.get_cell({0, 0}));
+  EXPECT_EQ(CellState::WALL1, b.get_cell({0, 1}));
+  EXPECT_EQ(CellState::WALL2, b.get_cell({1, 2}));
+  EXPECT_EQ(CellState::EMPTY, b.get_cell({2, 3}));
+  EXPECT_EQ(CellState::EMPTY, b.get_cell({4, 4}));
 }
 
 TEST(BasicBoardTest, bad_cell_access) {
@@ -173,19 +173,19 @@ TEST(BasicBoardTest, equality) {
 
   auto test = [&](BasicBoard const & board) {
     // Top row
-    EXPECT_EQ(Empty, board.get_cell({0, 0}));
-    EXPECT_EQ(Empty, board.get_cell({0, 1}));
-    EXPECT_EQ(Bulb, board.get_cell({0, 2}));
+    EXPECT_EQ(EMPTY, board.get_cell({0, 0}));
+    EXPECT_EQ(EMPTY, board.get_cell({0, 1}));
+    EXPECT_EQ(BULB, board.get_cell({0, 2}));
 
     // Mid row
-    EXPECT_EQ(Wall1, board.get_cell({1, 0}));
-    EXPECT_EQ(Wall2, board.get_cell({1, 1}));
-    EXPECT_EQ(Wall3, board.get_cell({1, 2}));
+    EXPECT_EQ(WALL1, board.get_cell({1, 0}));
+    EXPECT_EQ(WALL2, board.get_cell({1, 1}));
+    EXPECT_EQ(WALL3, board.get_cell({1, 2}));
 
     // Bot row
-    EXPECT_EQ(Wall0, board.get_cell({2, 0}));
-    EXPECT_EQ(Mark, board.get_cell({2, 1}));
-    EXPECT_EQ(Wall4, board.get_cell({2, 2}));
+    EXPECT_EQ(WALL0, board.get_cell({2, 0}));
+    EXPECT_EQ(MARK, board.get_cell({2, 1}));
+    EXPECT_EQ(WALL4, board.get_cell({2, 2}));
   };
 
   board2 = board1;
@@ -231,8 +231,8 @@ TEST(BasicBoardTest, visit_empty) {
   std::set<Coord> coords;
   board.visit_empty([&](Coord coord, CellState cell) {
     coords.insert(coord);
-    ASSERT_EQ(CellState::Empty, cell);
-    ASSERT_EQ(CellState::Empty, board.get_cell(coord));
+    ASSERT_EQ(CellState::EMPTY, cell);
+    ASSERT_EQ(CellState::EMPTY, board.get_cell(coord));
   });
   ASSERT_EQ(34, coords.size());
 }
@@ -254,7 +254,7 @@ TEST(BasicBoardTest, visit_some) {
   board.visit_board([&](Coord coord, CellState cell) {
     ++count;
     board2.set_cell(coord, cell);
-    return cell != CellState::Wall2 ? KEEP_VISITING : STOP_VISITING;
+    return cell != CellState::WALL2 ? KEEP_VISITING : STOP_VISITING;
   });
   EXPECT_EQ(5, count);
 
@@ -273,42 +273,42 @@ TEST(BasicBoardTest, visit_left_row_some) {
   Moves moves;
   auto  b = make_board(); // r1: "12.00");
 
-  b.visit_row_left_of({1, 4}, recorder(moves, CellState::Empty));
+  b.visit_row_left_of({1, 4}, recorder(moves, CellState::EMPTY));
 
   // stops at wall to left of cooord
-  EXPECT_EQ((std::vector{mk_move({1, 3}, CellState::Wall0)}), moves);
+  EXPECT_EQ((std::vector{mk_move({1, 3}, CellState::WALL0)}), moves);
 
   moves.clear();
-  b.visit_row_left_of({1, 3}, recorder(moves, CellState::Empty));
+  b.visit_row_left_of({1, 3}, recorder(moves, CellState::EMPTY));
 
-  // stops because it sees Empty
-  EXPECT_EQ((std::vector{mk_move({1, 2}, CellState::Empty)}), moves);
+  // stops because it sees EMPTY
+  EXPECT_EQ((std::vector{mk_move({1, 2}, CellState::EMPTY)}), moves);
 }
 
 TEST(BasicBoardTest, visit_directional_left_row_some) {
   DirectionMoves moves;
   auto           b = make_board(); // r1: "12.00");
 
-  b.visit_row_left_of({1, 4}, recorder(moves, CellState::Empty));
+  b.visit_row_left_of({1, 4}, recorder(moves, CellState::EMPTY));
 
   // stops at wall to left of cooord
-  EXPECT_EQ((std::vector{mk_move(Left, {1, 3}, CellState::Wall0)}), moves);
+  EXPECT_EQ((std::vector{mk_move(LEFT, {1, 3}, CellState::WALL0)}), moves);
 
   moves.clear();
-  b.visit_row_left_of({1, 3}, recorder(moves, CellState::Empty));
+  b.visit_row_left_of({1, 3}, recorder(moves, CellState::EMPTY));
 
-  // stops because it sees Empty
-  EXPECT_EQ((std::vector{mk_move(Left, {1, 2}, CellState::Empty)}), moves);
+  // stops because it sees EMPTY
+  EXPECT_EQ((std::vector{mk_move(LEFT, {1, 2}, CellState::EMPTY)}), moves);
 }
 
 TEST(BasicBoardTest, visit_left_row_some2) {
   Moves moves;
   auto  b = make_board(); // row0: "..*.."
 
-  b.visit_row_left_of({0, 4}, recorder(moves, CellState::Bulb));
+  b.visit_row_left_of({0, 4}, recorder(moves, CellState::BULB));
 
-  EXPECT_EQ((std::vector{mk_move({0, 3}, CellState::Empty),
-                         mk_move({0, 2}, CellState::Bulb)}),
+  EXPECT_EQ((std::vector{mk_move({0, 3}, CellState::EMPTY),
+                         mk_move({0, 2}, CellState::BULB)}),
 
             moves);
 }
@@ -316,16 +316,16 @@ TEST(BasicBoardTest, visit_left_row_some2) {
 TEST(BasicBoardTest, visit_left_row_some3_invalid) {
   Moves moves;
   auto  b = make_board();
-  b.visit_row_left_of({1, 0}, recorder(moves, CellState::Bulb));
+  b.visit_row_left_of({1, 0}, recorder(moves, CellState::BULB));
   EXPECT_EQ(Moves{}, moves);
 
-  b.visit_row_left_of({-1, 0}, recorder(moves, CellState::Bulb));
+  b.visit_row_left_of({-1, 0}, recorder(moves, CellState::BULB));
   EXPECT_EQ(Moves{}, moves);
 
-  b.visit_row_left_of({0, -4}, recorder(moves, CellState::Bulb));
+  b.visit_row_left_of({0, -4}, recorder(moves, CellState::BULB));
   EXPECT_EQ(Moves{}, moves);
 
-  b.visit_row_left_of({30, 0}, recorder(moves, CellState::Bulb));
+  b.visit_row_left_of({30, 0}, recorder(moves, CellState::BULB));
   EXPECT_EQ(Moves{}, moves);
 }
 
@@ -333,10 +333,10 @@ TEST(BasicBoardTest, visit_left_row_all) {
   Moves moves;
   // r2: "...X3"
   make_board().visit_row_left_of({2, 4}, recorder(moves));
-  EXPECT_EQ((std::vector{mk_move({2, 3}, CellState::Mark),
-                         mk_move({2, 2}, CellState::Empty),
-                         mk_move({2, 1}, CellState::Empty),
-                         mk_move({2, 0}, CellState::Empty)}),
+  EXPECT_EQ((std::vector{mk_move({2, 3}, CellState::MARK),
+                         mk_move({2, 2}, CellState::EMPTY),
+                         mk_move({2, 1}, CellState::EMPTY),
+                         mk_move({2, 0}, CellState::EMPTY)}),
             moves);
 }
 
@@ -344,30 +344,30 @@ TEST(BasicBoardTest, visit_directional_left_row_all) {
   DirectionMoves moves;
   // r2: "...X3"
   make_board().visit_row_left_of({2, 4}, recorder(moves));
-  EXPECT_EQ((std::vector{mk_move(Left, {2, 3}, CellState::Mark),
-                         mk_move(Left, {2, 2}, CellState::Empty),
-                         mk_move(Left, {2, 1}, CellState::Empty),
-                         mk_move(Left, {2, 0}, CellState::Empty)}),
+  EXPECT_EQ((std::vector{mk_move(LEFT, {2, 3}, CellState::MARK),
+                         mk_move(LEFT, {2, 2}, CellState::EMPTY),
+                         mk_move(LEFT, {2, 1}, CellState::EMPTY),
+                         mk_move(LEFT, {2, 0}, CellState::EMPTY)}),
             moves);
 }
 
 TEST(BasicBoardTest, visit_right_row_some) {
   Moves moves;
-  make_board().visit_row_right_of({2, 0}, recorder(moves, CellState::Mark));
+  make_board().visit_row_right_of({2, 0}, recorder(moves, CellState::MARK));
   // NOTE row 2 looks like: "...X3"
-  EXPECT_EQ((std::vector{mk_move({2, 1}, CellState::Empty),
-                         mk_move({2, 2}, CellState::Empty),
-                         mk_move({2, 3}, CellState::Mark)}),
+  EXPECT_EQ((std::vector{mk_move({2, 1}, CellState::EMPTY),
+                         mk_move({2, 2}, CellState::EMPTY),
+                         mk_move({2, 3}, CellState::MARK)}),
             moves);
 }
 
 TEST(BasicBoardTest, visit_directional_right_row_some) {
   DirectionMoves moves;
-  make_board().visit_row_right_of({2, 0}, recorder(moves, CellState::Mark));
+  make_board().visit_row_right_of({2, 0}, recorder(moves, CellState::MARK));
   // NOTE row 2 looks like: "...X3"
-  EXPECT_EQ((std::vector{mk_move(Right, {2, 1}, CellState::Empty),
-                         mk_move(Right, {2, 2}, CellState::Empty),
-                         mk_move(Right, {2, 3}, CellState::Mark)}),
+  EXPECT_EQ((std::vector{mk_move(RIGHT, {2, 1}, CellState::EMPTY),
+                         mk_move(RIGHT, {2, 2}, CellState::EMPTY),
+                         mk_move(RIGHT, {2, 3}, CellState::MARK)}),
             moves);
 }
 
@@ -375,20 +375,20 @@ TEST(BasicBoardTest, visit_directional_right_row_all) {
   DirectionMoves moves;
   make_board().visit_row_right_of({2, 0}, recorder(moves));
   // NOTE r2 looks like: "...X3"
-  EXPECT_EQ((std::vector{mk_move(Right, {2, 1}, CellState::Empty),
-                         mk_move(Right, {2, 2}, CellState::Empty),
-                         mk_move(Right, {2, 3}, CellState::Mark),
-                         mk_move(Right, {2, 4}, CellState::Wall3)}),
+  EXPECT_EQ((std::vector{mk_move(RIGHT, {2, 1}, CellState::EMPTY),
+                         mk_move(RIGHT, {2, 2}, CellState::EMPTY),
+                         mk_move(RIGHT, {2, 3}, CellState::MARK),
+                         mk_move(RIGHT, {2, 4}, CellState::WALL3)}),
             moves);
 }
 TEST(BasicBoardTest, visit_right_row_all) {
   Moves moves;
   make_board().visit_row_right_of({2, 0}, recorder(moves));
   // NOTE r2 looks like: "...X3"
-  EXPECT_EQ((std::vector{mk_move({2, 1}, CellState::Empty),
-                         mk_move({2, 2}, CellState::Empty),
-                         mk_move({2, 3}, CellState::Mark),
-                         mk_move({2, 4}, CellState::Wall3)}),
+  EXPECT_EQ((std::vector{mk_move({2, 1}, CellState::EMPTY),
+                         mk_move({2, 2}, CellState::EMPTY),
+                         mk_move({2, 3}, CellState::MARK),
+                         mk_move({2, 4}, CellState::WALL3)}),
             moves);
 }
 
@@ -403,12 +403,12 @@ TEST(BasicBoardTest, visit_above_col_some) {
   creator.finished(&board);
 
   Moves moves;
-  board.visit_col_above({4, 4}, recorder(moves, CellState::Wall0));
+  board.visit_col_above({4, 4}, recorder(moves, CellState::WALL0));
 
   EXPECT_EQ((std::vector{
-                mk_move({3, 4}, CellState::Bulb),
-                mk_move({2, 4}, CellState::Illum),
-                mk_move({1, 4}, CellState::Wall0),
+                mk_move({3, 4}, CellState::BULB),
+                mk_move({2, 4}, CellState::ILLUM),
+                mk_move({1, 4}, CellState::WALL0),
             }),
             moves);
 }
@@ -424,12 +424,12 @@ TEST(BasicBoardTest, visit_directional_above_col_some) {
   creator.finished(&board);
 
   DirectionMoves moves;
-  board.visit_col_above({4, 4}, recorder(moves, CellState::Wall0));
+  board.visit_col_above({4, 4}, recorder(moves, CellState::WALL0));
 
   EXPECT_EQ((std::vector{
-                mk_move(Up, {3, 4}, CellState::Bulb),
-                mk_move(Up, {2, 4}, CellState::Illum),
-                mk_move(Up, {1, 4}, CellState::Wall0),
+                mk_move(UP, {3, 4}, CellState::BULB),
+                mk_move(UP, {2, 4}, CellState::ILLUM),
+                mk_move(UP, {1, 4}, CellState::WALL0),
             }),
             moves);
 }
@@ -448,9 +448,9 @@ TEST(BasicBoardTest, visit_above_col_all) {
   board.visit_col_above({4, 4}, recorder(moves));
 
   EXPECT_EQ((std::vector{
-                mk_move({3, 4}, CellState::Bulb),
-                mk_move({2, 4}, CellState::Illum),
-                mk_move({1, 4}, CellState::Wall0),
+                mk_move({3, 4}, CellState::BULB),
+                mk_move({2, 4}, CellState::ILLUM),
+                mk_move({1, 4}, CellState::WALL0),
             }),
             moves);
 }
@@ -469,9 +469,9 @@ TEST(BasicBoardTest, visit_directional_above_col_all) {
   board.visit_col_above({4, 4}, recorder(moves));
 
   EXPECT_EQ((std::vector{
-                mk_move(Up, {3, 4}, CellState::Bulb),
-                mk_move(Up, {2, 4}, CellState::Illum),
-                mk_move(Up, {1, 4}, CellState::Wall0),
+                mk_move(UP, {3, 4}, CellState::BULB),
+                mk_move(UP, {2, 4}, CellState::ILLUM),
+                mk_move(UP, {1, 4}, CellState::WALL0),
             }),
             moves);
 }
@@ -487,12 +487,12 @@ TEST(BasicBoardTest, visit_below_col_some) {
   creator.finished(&board);
 
   Moves moves;
-  board.visit_col_below({0, 3}, recorder(moves, CellState::Wall4));
+  board.visit_col_below({0, 3}, recorder(moves, CellState::WALL4));
 
   EXPECT_EQ((std::vector{
-                mk_move({1, 3}, CellState::Mark),
-                mk_move({2, 3}, CellState::Mark),
-                mk_move({3, 3}, CellState::Wall4),
+                mk_move({1, 3}, CellState::MARK),
+                mk_move({2, 3}, CellState::MARK),
+                mk_move({3, 3}, CellState::WALL4),
             }),
             moves);
 }
@@ -508,12 +508,12 @@ TEST(BasicBoardTest, visit_directional_below_col_some) {
   creator.finished(&board);
 
   DirectionMoves moves;
-  board.visit_col_below({0, 3}, recorder(moves, CellState::Wall4));
+  board.visit_col_below({0, 3}, recorder(moves, CellState::WALL4));
 
   EXPECT_EQ((std::vector{
-                mk_move(Down, {1, 3}, CellState::Mark),
-                mk_move(Down, {2, 3}, CellState::Mark),
-                mk_move(Down, {3, 3}, CellState::Wall4),
+                mk_move(DOWN, {1, 3}, CellState::MARK),
+                mk_move(DOWN, {2, 3}, CellState::MARK),
+                mk_move(DOWN, {3, 3}, CellState::WALL4),
             }),
             moves);
 }
@@ -532,10 +532,10 @@ TEST(BasicBoardTest, visit_below_col_all) {
   board.visit_col_below({0, 2}, recorder(moves));
 
   EXPECT_EQ((std::vector{
-                mk_move({1, 2}, CellState::Illum),
-                mk_move({2, 2}, CellState::Illum),
-                mk_move({3, 2}, CellState::Illum),
-                mk_move({4, 2}, CellState::Illum),
+                mk_move({1, 2}, CellState::ILLUM),
+                mk_move({2, 2}, CellState::ILLUM),
+                mk_move({3, 2}, CellState::ILLUM),
+                mk_move({4, 2}, CellState::ILLUM),
             }),
             moves);
 }
@@ -554,10 +554,10 @@ TEST(BasicBoardTest, visit_directional_below_col_all) {
   board.visit_col_below({0, 2}, recorder(moves));
 
   EXPECT_EQ((std::vector{
-                mk_move(Down, {1, 2}, CellState::Illum),
-                mk_move(Down, {2, 2}, CellState::Illum),
-                mk_move(Down, {3, 2}, CellState::Illum),
-                mk_move(Down, {4, 2}, CellState::Illum),
+                mk_move(DOWN, {1, 2}, CellState::ILLUM),
+                mk_move(DOWN, {2, 2}, CellState::ILLUM),
+                mk_move(DOWN, {3, 2}, CellState::ILLUM),
+                mk_move(DOWN, {4, 2}, CellState::ILLUM),
             }),
             moves);
 }
@@ -570,74 +570,74 @@ TEST(BasicBoardTest, visit_adjacent_all) {
   creator("X+.");
   creator.finished(&board);
 
-  // Top Left corner
+  // Top LEFT corner
   Moves moves;
   board.visit_adjacent({0, 0}, recorder(moves));
   EXPECT_THAT(moves,
-              ElementsAre(Eq(mk_move({1, 0}, CellState::Wall3)),
-                          Eq(mk_move({0, 1}, CellState::Wall1))));
+              ElementsAre(Eq(mk_move({1, 0}, CellState::WALL3)),
+                          Eq(mk_move({0, 1}, CellState::WALL1))));
 
   // Top Mid edge
   moves.clear();
   board.visit_adjacent({0, 1}, recorder(moves));
   EXPECT_THAT(moves,
-              ElementsAre(Eq(mk_move({0, 0}, CellState::Wall0)),
-                          Eq(mk_move({1, 1}, CellState::Wall4)),
-                          Eq(mk_move({0, 2}, CellState::Wall2))));
+              ElementsAre(Eq(mk_move({0, 0}, CellState::WALL0)),
+                          Eq(mk_move({1, 1}, CellState::WALL4)),
+                          Eq(mk_move({0, 2}, CellState::WALL2))));
 
-  // Top Right corner
+  // Top RIGHT corner
   moves.clear();
   board.visit_adjacent({0, 2}, recorder(moves));
   EXPECT_THAT(moves,
-              ElementsAre(Eq(mk_move({0, 1}, CellState::Wall1)),
-                          Eq(mk_move({1, 2}, CellState::Bulb))));
+              ElementsAre(Eq(mk_move({0, 1}, CellState::WALL1)),
+                          Eq(mk_move({1, 2}, CellState::BULB))));
 
-  // Left Mid edge
+  // LEFT Mid edge
   moves.clear();
   board.visit_adjacent({1, 0}, recorder(moves));
   EXPECT_THAT(moves,
-              ElementsAre(Eq(mk_move({0, 0}, CellState::Wall0)),
-                          Eq(mk_move({2, 0}, CellState::Mark)),
-                          Eq(mk_move({1, 1}, CellState::Wall4))));
+              ElementsAre(Eq(mk_move({0, 0}, CellState::WALL0)),
+                          Eq(mk_move({2, 0}, CellState::MARK)),
+                          Eq(mk_move({1, 1}, CellState::WALL4))));
 
   // Center
   moves.clear();
   board.visit_adjacent({1, 1}, recorder(moves));
   EXPECT_THAT(moves,
-              ElementsAre(Eq(mk_move({0, 1}, CellState::Wall1)),
-                          Eq(mk_move({1, 0}, CellState::Wall3)),
-                          Eq(mk_move({2, 1}, CellState::Illum)),
-                          Eq(mk_move({1, 2}, CellState::Bulb))));
+              ElementsAre(Eq(mk_move({0, 1}, CellState::WALL1)),
+                          Eq(mk_move({1, 0}, CellState::WALL3)),
+                          Eq(mk_move({2, 1}, CellState::ILLUM)),
+                          Eq(mk_move({1, 2}, CellState::BULB))));
 
-  // Right Mid edge
+  // RIGHT Mid edge
   moves.clear();
   board.visit_adjacent({1, 2}, recorder(moves));
   EXPECT_THAT(moves,
-              ElementsAre(Eq(mk_move({0, 2}, CellState::Wall2)),
-                          Eq(mk_move({1, 1}, CellState::Wall4)),
-                          Eq(mk_move({2, 2}, CellState::Empty))));
+              ElementsAre(Eq(mk_move({0, 2}, CellState::WALL2)),
+                          Eq(mk_move({1, 1}, CellState::WALL4)),
+                          Eq(mk_move({2, 2}, CellState::EMPTY))));
 
-  // Bottom Left corner
+  // Bottom LEFT corner
   moves.clear();
   board.visit_adjacent({2, 0}, recorder(moves));
   EXPECT_THAT(moves,
-              ElementsAre(Eq(mk_move({1, 0}, CellState::Wall3)),
-                          Eq(mk_move({2, 1}, CellState::Illum))));
+              ElementsAre(Eq(mk_move({1, 0}, CellState::WALL3)),
+                          Eq(mk_move({2, 1}, CellState::ILLUM))));
 
   // Bottom Mid edge
   moves.clear();
   board.visit_adjacent({2, 1}, recorder(moves));
   EXPECT_THAT(moves,
-              ElementsAre(Eq(mk_move({1, 1}, CellState::Wall4)),
-                          Eq(mk_move({2, 0}, CellState::Mark)),
-                          Eq(mk_move({2, 2}, CellState::Empty))));
+              ElementsAre(Eq(mk_move({1, 1}, CellState::WALL4)),
+                          Eq(mk_move({2, 0}, CellState::MARK)),
+                          Eq(mk_move({2, 2}, CellState::EMPTY))));
 
-  // Bottom Right corner
+  // Bottom RIGHT corner
   moves.clear();
   board.visit_adjacent({2, 2}, recorder(moves));
   EXPECT_THAT(moves,
-              ElementsAre(Eq(mk_move({1, 2}, CellState::Bulb)),
-                          Eq(mk_move({2, 1}, CellState::Illum))));
+              ElementsAre(Eq(mk_move({1, 2}, CellState::BULB)),
+                          Eq(mk_move({2, 1}, CellState::ILLUM))));
 }
 
 TEST(BasicBoardTest, visit_perpendiculars) {
@@ -652,67 +652,67 @@ TEST(BasicBoardTest, visit_perpendiculars) {
   // If moving up from 2,0 ...
   {
     DirectionMoves moves;
-    board.visit_perpendicular({2, 0}, Direction::Up, recorder(moves));
+    board.visit_perpendicular({2, 0}, Direction::UP, recorder(moves));
     EXPECT_THAT(moves,
                 UnorderedElementsAre(
-                    Eq(mk_move(Direction::Right, {2, 1}, CellState::Illum)),
-                    Eq(mk_move(Direction::Right, {2, 2}, CellState::Illum)),
-                    Eq(mk_move(Direction::Right, {2, 3}, CellState::Bulb)),
-                    Eq(mk_move(Direction::Right, {2, 4}, CellState::Illum))));
+                    Eq(mk_move(Direction::RIGHT, {2, 1}, CellState::ILLUM)),
+                    Eq(mk_move(Direction::RIGHT, {2, 2}, CellState::ILLUM)),
+                    Eq(mk_move(Direction::RIGHT, {2, 3}, CellState::BULB)),
+                    Eq(mk_move(Direction::RIGHT, {2, 4}, CellState::ILLUM))));
   }
   // If moving up from 1,2 ...
   {
     DirectionMoves moves;
-    board.visit_perpendicular({1, 2}, Direction::Up, recorder(moves));
+    board.visit_perpendicular({1, 2}, Direction::UP, recorder(moves));
     EXPECT_THAT(moves,
                 UnorderedElementsAre(
-                    Eq(mk_move(Direction::Left, {1, 0}, CellState::Mark)),
-                    Eq(mk_move(Direction::Left, {1, 1}, CellState::Empty)),
-                    Eq(mk_move(Direction::Right, {1, 3}, CellState::Illum)),
-                    Eq(mk_move(Direction::Right, {1, 4}, CellState::Wall0))));
+                    Eq(mk_move(Direction::LEFT, {1, 0}, CellState::MARK)),
+                    Eq(mk_move(Direction::LEFT, {1, 1}, CellState::EMPTY)),
+                    Eq(mk_move(Direction::RIGHT, {1, 3}, CellState::ILLUM)),
+                    Eq(mk_move(Direction::RIGHT, {1, 4}, CellState::WALL0))));
   }
 
   // If moving down from 2,0 ...
   {
     DirectionMoves moves;
-    board.visit_perpendicular({2, 0}, Direction::Down, recorder(moves));
+    board.visit_perpendicular({2, 0}, Direction::DOWN, recorder(moves));
     EXPECT_THAT(moves,
                 UnorderedElementsAre(
-                    Eq(mk_move(Direction::Right, {2, 1}, CellState::Illum)),
-                    Eq(mk_move(Direction::Right, {2, 2}, CellState::Illum)),
-                    Eq(mk_move(Direction::Right, {2, 3}, CellState::Bulb)),
-                    Eq(mk_move(Direction::Right, {2, 4}, CellState::Illum))));
+                    Eq(mk_move(Direction::RIGHT, {2, 1}, CellState::ILLUM)),
+                    Eq(mk_move(Direction::RIGHT, {2, 2}, CellState::ILLUM)),
+                    Eq(mk_move(Direction::RIGHT, {2, 3}, CellState::BULB)),
+                    Eq(mk_move(Direction::RIGHT, {2, 4}, CellState::ILLUM))));
   }
   // If moving down from 1,2 ...
   {
     DirectionMoves moves;
-    board.visit_perpendicular({1, 2}, Direction::Down, recorder(moves));
+    board.visit_perpendicular({1, 2}, Direction::DOWN, recorder(moves));
     EXPECT_THAT(moves,
                 UnorderedElementsAre(
-                    Eq(mk_move(Direction::Left, {1, 0}, CellState::Mark)),
-                    Eq(mk_move(Direction::Left, {1, 1}, CellState::Empty)),
-                    Eq(mk_move(Direction::Right, {1, 3}, CellState::Illum)),
-                    Eq(mk_move(Direction::Right, {1, 4}, CellState::Wall0))));
+                    Eq(mk_move(Direction::LEFT, {1, 0}, CellState::MARK)),
+                    Eq(mk_move(Direction::LEFT, {1, 1}, CellState::EMPTY)),
+                    Eq(mk_move(Direction::RIGHT, {1, 3}, CellState::ILLUM)),
+                    Eq(mk_move(Direction::RIGHT, {1, 4}, CellState::WALL0))));
   }
 
   // If moving right at 2,0 ...
   {
     DirectionMoves moves;
-    board.visit_perpendicular({2, 0}, Direction::Right, recorder(moves));
+    board.visit_perpendicular({2, 0}, Direction::RIGHT, recorder(moves));
     EXPECT_THAT(moves,
                 UnorderedElementsAre(
-                    Eq(mk_move(Direction::Up, {0, 0}, CellState::Empty)),
-                    Eq(mk_move(Direction::Up, {1, 0}, CellState::Mark)),
-                    Eq(mk_move(Direction::Down, {3, 0}, CellState::Wall1))));
+                    Eq(mk_move(Direction::UP, {0, 0}, CellState::EMPTY)),
+                    Eq(mk_move(Direction::UP, {1, 0}, CellState::MARK)),
+                    Eq(mk_move(Direction::DOWN, {3, 0}, CellState::WALL1))));
   }
   // If moving right at 3,4 ...
   {
     DirectionMoves moves;
-    board.visit_perpendicular({3, 4}, Direction::Right, recorder(moves));
+    board.visit_perpendicular({3, 4}, Direction::RIGHT, recorder(moves));
     EXPECT_THAT(moves,
                 UnorderedElementsAre(
-                    Eq(mk_move(Direction::Up, {2, 4}, CellState::Illum)),
-                    Eq(mk_move(Direction::Up, {1, 4}, CellState::Wall0))));
+                    Eq(mk_move(Direction::UP, {2, 4}, CellState::ILLUM)),
+                    Eq(mk_move(Direction::UP, {1, 4}, CellState::WALL0))));
   }
 }
 

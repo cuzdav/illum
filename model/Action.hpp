@@ -7,41 +7,41 @@
 
 namespace model {
 
-enum class Action : char { Add, Remove, ResetGame, StartGame };
+enum class Action : char { ADD, REMOVE, RESETGame, START_GAME };
 
 namespace chr {
-constexpr char Add       = '+';
-constexpr char Remove    = '-';
-constexpr char ResetGame = 'R';
-constexpr char StartGame = 'S';
+constexpr char ADD       = '+';
+constexpr char REMOVE    = '-';
+constexpr char RESETGame = 'R';
+constexpr char START_GAME = 'S';
 } // namespace chr
 
 namespace str {
 
-constexpr char const * Add       = "Add";
-constexpr char const * Remove    = "Remove";
-constexpr char const * ResetGame = "ResetGame";
-constexpr char const * StartGame = "StartGame";
+constexpr char const * ADD       = "ADD";
+constexpr char const * REMOVE    = "REMOVE";
+constexpr char const * RESETGame = "RESETGame";
+constexpr char const * START_GAME = "START_GAME";
 } // namespace str
 
 constexpr std::string_view ActionNames[] = {
-    str::Add, str::Remove, str::ResetGame, str::StartGame};
+    str::ADD, str::REMOVE, str::RESETGame, str::START_GAME};
 
 constexpr Action ActionValues[] = {
-    Action::Add, Action::Remove, Action::ResetGame, Action::StartGame};
+    Action::ADD, Action::REMOVE, Action::RESETGame, Action::START_GAME};
 
 constexpr char
 to_char(Action action) {
   using enum Action;
   switch (action) {
-    case Add:
-      return chr::Add;
-    case Remove:
-      return chr::Remove;
-    case ResetGame:
-      return chr::ResetGame;
-    case StartGame:
-      return chr::StartGame;
+    case ADD:
+      return chr::ADD;
+    case REMOVE:
+      return chr::REMOVE;
+    case RESETGame:
+      return chr::RESETGame;
+    case START_GAME:
+      return chr::START_GAME;
     default:
       throw std::runtime_error("Invalid Action in Serialize to_char()" +
                                std::to_string(static_cast<int>(action)));
@@ -52,14 +52,14 @@ constexpr Action
 get_action_from_char(char action) {
   using enum Action;
   switch (action) {
-    case chr::Add:
-      return Add;
-    case chr::Remove:
-      return Remove;
-    case chr::ResetGame:
-      return ResetGame;
-    case chr::StartGame:
-      return StartGame;
+    case chr::ADD:
+      return ADD;
+    case chr::REMOVE:
+      return REMOVE;
+    case chr::RESETGame:
+      return RESETGame;
+    case chr::START_GAME:
+      return START_GAME;
     default:
       throw std::runtime_error(
           std::string("Invalid Action in Serialize action_from_char: ") +
@@ -71,14 +71,14 @@ constexpr char const *
 to_string(Action action) {
   using enum Action;
   switch (action) {
-    case Add:
-      return str::Add;
-    case Remove:
-      return str::Remove;
-    case ResetGame:
-      return str::ResetGame;
-    case StartGame:
-      return str::StartGame;
+    case ADD:
+      return str::ADD;
+    case REMOVE:
+      return str::REMOVE;
+    case RESETGame:
+      return str::RESETGame;
+    case START_GAME:
+      return str::START_GAME;
     default:
       throw std::runtime_error("Unknown Action in Serialize to_string: " +
                                std::to_string(static_cast<int>(action)));
