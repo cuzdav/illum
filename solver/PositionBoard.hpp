@@ -7,6 +7,8 @@
 #include "DecisionType.hpp"
 #include "Direction.hpp"
 #include "SingleMove.hpp"
+#include <fmt/core.h>
+#include <fmt/ostream.h>
 #include <iosfwd>
 #include <vector>
 

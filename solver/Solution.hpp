@@ -201,6 +201,11 @@ public:
     return next_moves_.empty();
   }
 
+  void
+  clear_queue() {
+    next_moves_ = {};
+  }
+
   auto const &
   front() const {
     return next_moves_.front();

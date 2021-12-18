@@ -14,8 +14,10 @@ using SinglePlay = std::function<bool(Solution &)>;
 Solution solve(model::BasicBoard const &        board,
                std::optional<model::BasicBoard> known_solution = std::nullopt);
 
+size_t speculate(Solution & solution);
+
 bool check_solved(model::BasicBoard const & board);
 
-bool play_single_move(Solution & solution);
+bool find_moves(Solution & solution);
 
 } // namespace solver

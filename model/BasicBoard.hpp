@@ -4,8 +4,10 @@
 #include "Coord.hpp"
 #include "utils/EnumUtils.hpp"
 
+
 #include <array>
 #include <fmt/format.h>
+#include <fmt/ostream.h>
 #include <iosfwd>
 #include <optional>
 #include <stdexcept>

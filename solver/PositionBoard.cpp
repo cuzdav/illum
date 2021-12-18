@@ -436,7 +436,8 @@ PositionBoard::apply_move(const model::SingleMove & move) {
 
 std::ostream &
 operator<<(std::ostream & os, PositionBoard const & pos_board) {
-  return os << fmt::format("{}", pos_board);
+  fmt::print(os, "{}", pos_board);
+  return os;
 }
 
 } // namespace solver

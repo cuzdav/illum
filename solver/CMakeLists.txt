@@ -1,6 +1,7 @@
 add_library(solver
     AnalysisBoard.cpp
     AnnotatedMove.cpp
+    Hint.cpp
     PositionBoard.cpp
     Solver.cpp
     SpeculationContext.cpp

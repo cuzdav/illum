@@ -87,6 +87,10 @@ speculate(Solution & solution) {
   auto remove_from_active = [&](auto active_iter) {
     // pop_back invalidates iterators to back, and to end.  So be mindful that
     // active_iter may be already at the back()
+
+    std::cout << "removing from active context: " << contexts[*active_iter]
+              << std::endl;
+
     if (*active_iter != active.back()) {
       *active_iter = active.back();
       active.pop_back();
@@ -105,12 +109,27 @@ speculate(Solution & solution) {
     for (auto iter = active.begin(); iter != active.end();) {
       SpeculationContext & context = contexts[*iter];
       forced.clear();
-      find_trivial_moves(
-          context.board.board(), solution.get_board_analysis(), forced);
+      if (OptCoord unlightable_mark = find_trivial_moves(
+              context.board.board(), solution.get_board_analysis(), forced)) {
+        contradictions.push_back(*iter);
+        SpeculationContext & context = contexts[(*iter)];
+        context.decision_type        = DecisionType::MARK_CANNOT_BE_ILLUMINATED;
+        context.ref_location         = *unlightable_mark;
+        iter                         = remove_from_active(iter);
+        continue;
+      }
+
+      // ////////////////////////////////// REMOVE
+      // std::cout << "Speculating on: " << context.board.board() << "\n";
+      // for (auto & debug_item : forced) {
+      //   std::cout << "\tforced: " << debug_item << std::endl;
+      // }
+      ////////////////////////////////// END REMOVE
 
       // no forced moves is a dead-end
       if (forced.empty()) {
         iter = remove_from_active(iter);
+        std::cout << "(DEAD END)\n";
         continue;
       }
 
@@ -119,6 +138,7 @@ speculate(Solution & solution) {
       for (auto & move : forced) {
         context.board.apply_move(move.next_move);
         if (context.board.has_error()) {
+          std::cout << "(CONTRADICTION!)\n";
           contradictions.push_back(*iter);
           SpeculationContext & context = contexts[(*iter)];
           context.decision_type        = move.reason;
@@ -128,7 +148,8 @@ speculate(Solution & solution) {
           break;
         }
         else if (context.board.is_solved()) {
-          iter     = remove_from_active(iter);
+          iter = remove_from_active(iter);
+          std::cout << "(SOLVED)\n";
           inc_iter = false;
           break;
         }
@@ -141,10 +162,13 @@ speculate(Solution & solution) {
 
   if (not contradictions.empty()) {
     for (int contradiction_idx : contradictions) {
-      AnnotatedMove move{contexts[contradiction_idx].first_move};
-      move.next_move.to_ = (move.next_move.to_ == CellState::Bulb)
-                             ? CellState::Mark
-                             : CellState::Bulb;
+      auto const &  contradiction = contexts[contradiction_idx];
+      AnnotatedMove move{contradiction.first_move};
+      move.next_move.to_      = (move.next_move.to_ == CellState::Bulb)
+                                  ? CellState::Mark
+                                  : CellState::Bulb;
+      move.reason             = contradiction.decision_type;
+      move.reference_location = contradiction.ref_location;
       solution.enqueue_move(move);
     }
     return depth;

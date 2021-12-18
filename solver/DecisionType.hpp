@@ -24,6 +24,37 @@ enum class DecisionType : std::uint8_t {
   VIOLATES_SINGLE_UNIQUE_SOLUTION,
 };
 
+constexpr bool
+is_forced_decision_type(DecisionType dt) {
+  switch (dt) {
+    case DecisionType::WALL_SATISFIED_HAVING_OPEN_FACES:
+    case DecisionType::WALL_DEPS_EQUAL_OPEN_FACES:
+    case DecisionType::ISOLATED_MARK:
+    case DecisionType::ISOLATED_EMPTY_SQUARE:
+      return true;
+
+    default:
+      return false;
+  }
+}
+
+constexpr bool
+is_clustered_decision_type(DecisionType dt) {
+  switch (dt) {
+    case DecisionType::WALL_SATISFIED_HAVING_OPEN_FACES:
+    case DecisionType::WALL_DEPS_EQUAL_OPEN_FACES:
+      return true;
+
+    default:
+      return false;
+  }
+}
+
+constexpr bool
+is_contradiction_decsion_type(DecisionType dt) {
+  return not is_forced_decision_type(dt);
+}
+
 constexpr char const *
 to_string(DecisionType reason) {
   using enum DecisionType;

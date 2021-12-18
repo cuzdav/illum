@@ -5,7 +5,7 @@ namespace model {
 
 std::ostream &
 operator<<(std::ostream & os, BasicBoard const & board) {
-  os << fmt::format("{}", board);
+  fmt::print(os, "{}", board);
   return os;
 }
 
