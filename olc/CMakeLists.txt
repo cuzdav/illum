@@ -9,31 +9,33 @@ find_package(Threads REQUIRED)
 
 find_package(OpenGL REQUIRED)
 
-if (UNIX)
-    find_package(X11 REQUIRED)
-    find_package(PNG REQUIRED)
-    include_directories(${PNG_INCLUDE_DIR})
-endif (UNIX)
+if (NOT EMSCRIPTEN)
+    if (UNIX)
+        find_package(X11 REQUIRED)
+        find_package(PNG REQUIRED)
+        include_directories(${PNG_INCLUDE_DIR})
+    endif (UNIX)
 
-if (WIN32)
-    include_directories(${WinSDK})
-endif (WIN32)
+    if (WIN32)
+        include_directories(${WinSDK})
+    endif (WIN32)
 
-target_link_libraries(olc
-    Threads::Threads
-    OpenGL::OpenGL
-    OpenGL::GL
-    OpenGL::GLX
-)
-
-if (UNIX) 
     target_link_libraries(olc
-        ${X11_LIBRARIES}
-        PNG::PNG
+        Threads::Threads
+        OpenGL::OpenGL
+        OpenGL::GL
+        OpenGL::GLX
     )
-endif (UNIX)
-if (WIN32)
-    target_link_libraries(olc
-        ${WinSDK}
-    )
-endif (WIN32)
+
+    if (UNIX)
+        target_link_libraries(olc
+            ${X11_LIBRARIES}
+            PNG::PNG
+        )
+    endif (UNIX)
+    if (WIN32)
+        target_link_libraries(olc
+            ${WinSDK}
+        )
+    endif (WIN32)
+endif(NOT EMSCRIPTEN)

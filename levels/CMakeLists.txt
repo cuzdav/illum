@@ -6,4 +6,6 @@ target_include_directories(levels PUBLIC .)
 
 target_link_libraries(levels model solver)
 
-add_subdirectory(test)
+if (NOT EMSCRIPTEN)
+    add_subdirectory(test)
+endif()

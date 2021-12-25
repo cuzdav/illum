@@ -10,4 +10,6 @@ add_library(solver
 target_include_directories(solver PUBLIC .)
 target_link_libraries(solver model fmt common)
 
-add_subdirectory(test)
+if (NOT EMSCRIPTEN)
+    add_subdirectory(test)
+endif(NOT EMSCRIPTEN)

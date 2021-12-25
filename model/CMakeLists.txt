@@ -9,5 +9,6 @@ add_library(model
 target_include_directories(model PUBLIC .)
 target_link_libraries(model fmt common)
 
-
-add_subdirectory(test)
+if (NOT EMSCRIPTEN)
+    add_subdirectory(test)
+endif(NOT EMSCRIPTEN)
