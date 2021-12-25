@@ -217,9 +217,12 @@ public:
   }
 
   struct ContextCache {
+    using Indices     = std::vector<int>;
+    using IndicesIter = Indices::iterator;
+
     std::vector<SpeculationContext> contexts;
-    std::vector<int>                active_context_idxs;
-    std::vector<int>                contradicting_context_idxs;
+    Indices                         active_context_idxs;
+    Indices                         contradicting_context_idxs;
     std::vector<AnnotatedMove>      forced_moves;
   };
 

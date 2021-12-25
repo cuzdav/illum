@@ -260,7 +260,7 @@ Illum::hint_clicked() {
 }
 
 bool
-Illum::OnUserUPdate(float elapsed_time) {
+Illum::OnUserUpdate(float elapsed_time) {
   switch (state_) {
     case State::PLAYING:
       update_game();

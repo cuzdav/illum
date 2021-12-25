@@ -65,6 +65,22 @@ init_speculation_contexts(Solution & solution) {
   return context_cache;
 }
 
+Solution::ContextCache::IndicesIter
+remove_from_active(Solution::ContextCache::Indices &   active_context_idxs,
+                   Solution::ContextCache::IndicesIter active_iter) {
+  // pop_back invalidates iterators to back, and to end.  So be mindful that
+  // active_iter may be already at the back()
+  if (*active_iter != active_context_idxs.back()) {
+    *active_iter = active_context_idxs.back();
+    active_context_idxs.pop_back();
+    return active_iter;
+  }
+  else {
+    active_context_idxs.pop_back();
+    return active_context_idxs.end();
+  }
+};
+
 // returns depth of solution (approx some indicator of difficulty) or 0 if not
 // found
 size_t
@@ -84,24 +100,6 @@ speculate(Solution & solution) {
   // cannot be used in lambda capture)
   auto & active = cache.active_context_idxs;
 
-  auto remove_from_active = [&](auto active_iter) {
-    // pop_back invalidates iterators to back, and to end.  So be mindful that
-    // active_iter may be already at the back()
-
-    std::cout << "removing from active context: " << contexts[*active_iter]
-              << std::endl;
-
-    if (*active_iter != active.back()) {
-      *active_iter = active.back();
-      active.pop_back();
-      return active_iter;
-    }
-    else {
-      active.pop_back();
-      return active.end();
-    }
-  };
-
   std::size_t depth = 1;
   //  apply one batch of forced moves to all boards until we learn something.
   while (not active.empty()) {
@@ -115,7 +113,7 @@ speculate(Solution & solution) {
         SpeculationContext & context = contexts[(*iter)];
         context.decision_type        = DecisionType::MARK_CANNOT_BE_ILLUMINATED;
         context.ref_location         = *unlightable_mark;
-        iter                         = remove_from_active(iter);
+        iter                         = remove_from_active(active, iter);
         continue;
       }
 
@@ -128,7 +126,7 @@ speculate(Solution & solution) {
 
       // no forced moves is a dead-end
       if (forced.empty()) {
-        iter = remove_from_active(iter);
+        iter = remove_from_active(active, iter);
         std::cout << "(DEAD END)\n";
         continue;
       }
@@ -143,12 +141,12 @@ speculate(Solution & solution) {
           SpeculationContext & context = contexts[(*iter)];
           context.decision_type        = move.reason;
           context.ref_location         = move.reference_location;
-          iter                         = remove_from_active(iter);
+          iter                         = remove_from_active(active, iter);
           inc_iter                     = false;
           break;
         }
         else if (context.board.is_solved()) {
-          iter = remove_from_active(iter);
+          iter = remove_from_active(active, iter);
           std::cout << "(SOLVED)\n";
           inc_iter = false;
           break;

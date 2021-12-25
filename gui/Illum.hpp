@@ -19,7 +19,7 @@ public:
 
 public:
   bool OnUserCreate() override;
-  bool OnUserUPdate(float fElapsedTime) override;
+  bool OnUserUpdate(float fElapsedTime) override;
 
   bool render();
 
