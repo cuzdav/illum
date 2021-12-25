@@ -34,32 +34,44 @@ speculate_impl(SpeculationContext & context) {
   return 0;
 }
 
-Solution::ContextCache &
-init_speculation_contexts(Solution & solution) {
-
+void
+initialize_speculation_context(Solution & solution) {
   Solution::ContextCache & context_cache = solution.get_context_cache();
   context_cache.contexts.clear();
   context_cache.active_context_idxs.clear();
   context_cache.contradicting_context_idxs.clear();
+}
+
+Solution::ContextCache &
+add_speculation_context_for_move(Solution & solution, SingleMove move) {
+
+  Solution::ContextCache & context_cache = solution.get_context_cache();
+  auto &                   context =
+      context_cache.contexts.emplace_back(0, solution.board(), move);
+
+  context.board.apply_move(context.first_move);
+
+  int const idx = context_cache.contexts.size() - 1;
+  if (context.board.has_error()) {
+    context_cache.contradicting_context_idxs.push_back(idx);
+  }
+  else {
+    context_cache.active_context_idxs.push_back(idx);
+  }
+  return context_cache;
+}
+
+Solution::ContextCache &
+init_speculation_contexts(Solution & solution) {
+
+  Solution::ContextCache & context_cache = solution.get_context_cache();
+  initialize_speculation_context(solution);
 
   solution.board().visit_empty([&](Coord coord, CellState cell) {
     for (CellState state : {CellState::BULB, CellState::MARK}) {
-
-      size_t idx     = context_cache.contexts.size();
-      auto & context = context_cache.contexts.emplace_back(
-          0,
-          solution.board(),
+      add_speculation_context_for_move(
+          solution,
           SingleMove{model::Action::ADD, CellState::EMPTY, state, coord});
-
-      context.board.apply_move(context.first_move);
-
-      if (context.board.has_error()) {
-        assert(&context_cache.contexts[idx] == &context);
-        context_cache.contradicting_context_idxs.push_back(idx);
-      }
-      else {
-        context_cache.active_context_idxs.push_back(idx);
-      }
     }
   });
   return context_cache;
@@ -81,19 +93,12 @@ remove_from_active(Solution::ContextCache::Indices &   active_context_idxs,
   }
 };
 
-// returns depth of solution (approx some indicator of difficulty) or 0 if not
-// found
+// PRE-REQUISITE: the solution cache is already initialized with the contexts
+// to speculate over.
 size_t
-speculate(Solution & solution) {
-  if (solution.is_solved()) {
-    return 0;
-  }
+speculate_over_cache(Solution & solution) {
+  Solution::ContextCache & cache = solution.get_context_cache();
 
-  assert(solution.has_error() == false);
-
-  // creates N child boards with a different speculative move applied to
-  // each.
-  Solution::ContextCache & cache = init_speculation_contexts(solution);
   auto & [contexts, active_, contradictions, forced] = cache;
 
   // clang does not allow references to local bindings yet, (so "active_" above
@@ -172,6 +177,23 @@ speculate(Solution & solution) {
     return depth;
   }
   return 0;
+}
+
+// returns depth of solution (approx some indicator of difficulty) or 0 if not
+// found
+size_t
+speculate(Solution & solution) {
+  if (solution.is_solved()) {
+    return 0;
+  }
+
+  assert(solution.has_error() == false);
+
+  // creates N child boards with a different speculative move applied to
+  // each.
+  Solution::ContextCache & cache = init_speculation_contexts(solution);
+
+  return speculate_over_cache(solution);
 }
 
 bool
