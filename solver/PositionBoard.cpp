@@ -18,14 +18,17 @@ PositionBoard::PositionBoard(int height, int width) {
 }
 
 PositionBoard::PositionBoard(model::BasicBoard const & current,
-                             RESETPolicy               policy) {
+                             ResetPolicy               policy) {
   reset(current, policy);
 }
 
 void
 PositionBoard::reset(model::BasicBoard const &  current,
-                     PositionBoard::RESETPolicy policy) {
+                     PositionBoard::ResetPolicy policy) {
   reset(current.height(), current.width());
+
+  Coord walls_with_deps[model::BasicBoard::MAX_CELLS];
+  int   num_walls_with_deps = 0;
 
   // first copy the walls and update counts
   current.visit_board([&](model::Coord coord, auto cell) {
@@ -33,15 +36,26 @@ PositionBoard::reset(model::BasicBoard const &  current,
       num_cells_needing_illumination_++;
     }
     else if (is_wall(cell)) {
-      num_walls_with_deps_ += model::is_wall_with_deps(cell);
+      walls_with_deps[num_walls_with_deps++] = coord;
       board_.set_cell(coord, cell);
-      update_wall(coord, cell, cell, false);
     }
   });
+  num_walls_with_deps_ = num_walls_with_deps;
 
-  // now just play the moves from their board into ours.
+  // Now update each wall to determine validity
+  for (int i = 0; i < num_walls_with_deps; ++i) {
+    auto coord = walls_with_deps[i];
+    auto cell  = board_.get_cell(coord);
+
+    // ensure each wall with deps is in a valid state
+    update_wall(coord, cell, cell, false);
+    if (has_error() && policy == ResetPolicy::STOP_PLAYING_MOVES_ON_ERROR) {
+      return;
+    }
+  }
+
   current.visit_board([&](model::Coord coord, auto cell) {
-    if (has_error() && policy == RESETPolicy::STOP_PLAYING_MOVES_ON_ERROR) {
+    if (has_error() && policy == ResetPolicy::STOP_PLAYING_MOVES_ON_ERROR) {
       return model::STOP_VISITING;
     }
     if (model::is_bulb(cell)) {
@@ -58,7 +72,7 @@ PositionBoard::reset(model::BasicBoard const &  current,
 }
 
 void
-PositionBoard::reevaluate_board_state(PositionBoard::RESETPolicy policy) {
+PositionBoard::reevaluate_board_state(PositionBoard::ResetPolicy policy) {
   // Recompute the state of the board by replaying from start on a separate
   // position board at arm's reach, and take its results.
   //
@@ -128,7 +142,7 @@ PositionBoard::set_cell(model::Coord     coord,
 
   // unless explicitly forbidden, we should reevaluate after set_cell
   if (policy != SetCellPolicy::NO_REEVALUATE_BOARD) {
-    reevaluate_board_state(PositionBoard::RESETPolicy::KEEP_ERRORS);
+    reevaluate_board_state(PositionBoard::ResetPolicy::KEEP_ERRORS);
   }
   return result;
 }
@@ -344,7 +358,7 @@ PositionBoard::remove_bulb(model::Coord bulb_coord) {
 
   // an unsolved board is an error, but we don't want that to stop us from
   // copying the moves back into the new board.
-  reset(board_copy, PositionBoard::RESETPolicy::KEEP_ERRORS);
+  reset(board_copy, PositionBoard::ResetPolicy::KEEP_ERRORS);
   return true;
 }
 

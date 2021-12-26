@@ -335,7 +335,7 @@ Illum::on_state_change(model::Action    action,
   if (action == model::Action::REMOVE && prev_state == model::CellState::BULB) {
     bulbs_played_--;
     position_.reset(model_.get_underlying_board(),
-                    solver::PositionBoard::RESETPolicy::KEEP_ERRORS);
+                    solver::PositionBoard::ResetPolicy::KEEP_ERRORS);
   }
   else {
     if (action == model::Action::ADD && to_state == model::CellState::BULB) {

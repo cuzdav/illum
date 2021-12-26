@@ -212,7 +212,8 @@ find_isolated_cells(model::BasicBoard const & board,
                   });
             }
             else if (row_col_empty_count == 0) {
-              std::cout << "Unlightable mark at : " << coord << "\n";
+              //              std::cout << "Unlightable mark at : " << coord <<
+              //              "\n";
               unlightable_mark_coord = coord;
             }
           }

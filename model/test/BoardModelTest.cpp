@@ -125,7 +125,7 @@ TEST(BM, reset_from_board) {
   creator2("1...");
   creator2(".2..");
   creator2("..3.");
-  creator2.finished(&board, ASCIILevelCreator::RESETPolicy::DONT_RESET);
+  creator2.finished(&board, ASCIILevelCreator::ResetPolicy::DONT_RESET);
   creator2.finished(&model2);
 
   ASSERT_EQ(3, board.height());

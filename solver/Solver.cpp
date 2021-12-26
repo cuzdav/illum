@@ -132,7 +132,7 @@ speculate_over_cache(Solution & solution) {
       // no forced moves is a dead-end
       if (forced.empty()) {
         iter = remove_from_active(active, iter);
-        std::cout << "(DEAD END)\n";
+        //        std::cout << "(DEAD END)\n";
         continue;
       }
 
@@ -141,7 +141,7 @@ speculate_over_cache(Solution & solution) {
       for (auto & move : forced) {
         context.board.apply_move(move.next_move);
         if (context.board.has_error()) {
-          std::cout << "(CONTRADICTION!)\n";
+          //          std::cout << "(CONTRADICTION!)\n";
           contradictions.push_back(*iter);
           SpeculationContext & context = contexts[(*iter)];
           context.decision_type        = move.reason;
@@ -152,7 +152,7 @@ speculate_over_cache(Solution & solution) {
         }
         else if (context.board.is_solved()) {
           iter = remove_from_active(active, iter);
-          std::cout << "(SOLVED)\n";
+          //          std::cout << "(SOLVED)\n";
           inc_iter = false;
           break;
         }

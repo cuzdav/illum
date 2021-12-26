@@ -292,6 +292,8 @@ fill_board_from_current_position(GenContext & context) {
   while (not board.is_solved() && ++iter_count < 50) {
     board.reevaluate_board_state();
 
+    std::cout << board << std::endl;
+
     if (board.has_error() && not board.is_ambiguous()) {
       try_corrections();
     }
