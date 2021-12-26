@@ -1,6 +1,5 @@
 #pragma once
 
-#include <concepts>
 #include <fmt/format.h>
 #include <stdexcept>
 #include <type_traits>
@@ -11,6 +10,12 @@ auto
 operator+(EnumT e) {
   return static_cast<std::underlying_type_t<EnumT>>(e);
 }
+
+// emscripten currently has weak concepts support
+template <class From, class To>
+concept convertible_to = std::is_convertible_v<From, To> && requires {
+  static_cast<To>(std::declval<From>());
+};
 
 #define DEFINE_ENUM_BIT_OPERATIONS(ENUM_NAME)                                  \
   constexpr auto operator+(ENUM_NAME cell) {                                   \
@@ -33,18 +38,23 @@ operator+(EnumT e) {
   }                                                                            \
   constexpr bool contains_all(ENUM_NAME value, ENUM_NAME bits) {               \
     return (value & bits) == bits;                                             \
+  }                                                                            \
+  constexpr char ordinal(ENUM_NAME value) {                                    \
+    return char(__builtin_clz(static_cast<unsigned int>(+value)));             \
   }
+
+// Note: Emscripten uses older version of clang; does not have std::countr_zero
 
 namespace enumutils {
 
 template <typename T>
 concept Stringable = requires(T obj) {
-  { to_string(obj) } -> std::convertible_to<std::string>;
+  { to_string(obj) } -> convertible_to<std::string>;
 };
 
 template <typename T>
 concept Charable = requires(T obj) {
-  { to_char(obj) } -> std::convertible_to<char>;
+  { to_char(obj) } -> convertible_to<char>;
 };
 
 } // namespace enumutils

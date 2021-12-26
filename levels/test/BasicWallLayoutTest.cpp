@@ -13,7 +13,7 @@ TEST(BasicWallLayoutTest, create10K_8x8) {
   std::mt19937    twister;
   BasicWallLayout layout;
 
-  for (int i = 0; i < 10000; ++i) {
+  for (int i = 0; i < 10'000'000; ++i) {
 
     try {
       twister.seed(i);
@@ -31,7 +31,7 @@ TEST(BasicWallLayoutTest, create10K_8x8) {
   }
 }
 
-TEST(BasicWallLayoutTest, create_single_8x8) {
+TEST(BasicWallLayoutTest, create_single_8x8_regression_5509) {
   std::mt19937    twister;
   BasicWallLayout layout;
 
@@ -41,7 +41,18 @@ TEST(BasicWallLayoutTest, create_single_8x8) {
   auto model    = layout.create(twister, 8, 8);
   auto solution = solver::solve(model.get_underlying_board());
   EXPECT_THAT(solution.is_solved(), Eq(true));
-  //    fmt::print("Unplayed board: {}\n", model.get_underlying_board());
+}
+
+TEST(BasicWallLayoutTest, create_single_8x8_regression_80549) {
+  std::mt19937    twister;
+  BasicWallLayout layout;
+
+  // This seed was found to cause generation to fail. Now it's a regression
+  // test.
+  twister.seed(80549);
+  auto model    = layout.create(twister, 8, 8);
+  auto solution = solver::solve(model.get_underlying_board());
+  EXPECT_THAT(solution.is_solved(), Eq(true));
 }
 
 TEST(BasicWallLayoutTest, create1K_16x16) {

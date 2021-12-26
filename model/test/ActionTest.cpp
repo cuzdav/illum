@@ -9,14 +9,14 @@ using enum Action;
 TEST(ActionTest, action_to_from_string_test) {
   EXPECT_EQ(ADD, get_action_from_string(to_string(ADD)));
   EXPECT_EQ(REMOVE, get_action_from_string(to_string(REMOVE)));
-  EXPECT_EQ(RESETGame, get_action_from_string(to_string(RESETGame)));
+  EXPECT_EQ(RESET_GAME, get_action_from_string(to_string(RESET_GAME)));
   EXPECT_EQ(START_GAME, get_action_from_string(to_string(START_GAME)));
 }
 
 TEST(ActionTest, to_from_char) {
   EXPECT_EQ(ADD, get_action_from_char(to_char(ADD)));
   EXPECT_EQ(REMOVE, get_action_from_char(to_char(REMOVE)));
-  EXPECT_EQ(RESETGame, get_action_from_char(to_char(RESETGame)));
+  EXPECT_EQ(RESET_GAME, get_action_from_char(to_char(RESET_GAME)));
   EXPECT_EQ(START_GAME, get_action_from_char(to_char(START_GAME)));
 }
 

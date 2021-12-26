@@ -4,6 +4,7 @@
 #include "Coord.hpp"
 #include "SingleMove.hpp"
 #include <optional>
+#include <vector>
 
 namespace solver {
 

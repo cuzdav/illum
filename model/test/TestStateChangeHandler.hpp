@@ -93,7 +93,7 @@ public:
           break;
         }
 
-      case RESETGame:
+      case RESET_GAME:
         {
           Rows rows(coord.row_);
           for (auto & r : rows) {

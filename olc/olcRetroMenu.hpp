@@ -157,6 +157,7 @@
 
 #include "olcPixelGameEngine.h"
 #include <cstdint>
+#include <unordered_map>
 
 namespace olc {
 namespace popup {

@@ -32,7 +32,12 @@ get_move_from_string(std::string_view str) {
       if (off == std::string_view::npos) {
         return view;
       }
+
+#if !defined(__EMSCRIPTEN__)
       std::string_view result(view.begin(), view.begin() + off);
+#else
+      std::string_view result(view.begin(), off);
+#endif
       view.remove_prefix(off + 1);
       return result;
     };
@@ -58,18 +63,27 @@ template <>
 struct std::hash<::model::SingleMove> {
   size_t
   operator()(const ::model::SingleMove & m) const {
-    static_assert(sizeof(::model::SingleMove) <= sizeof(size_t));
-    static_assert(sizeof(::model::Coord::row_) == 1);
-    static_assert(sizeof(::model::Coord::col_) == 1);
+    std::size_t result = 0;
 
-    size_t result = 0;
-    char   buf[5]{};
-    buf[0] = to_char(m.action_);
-    buf[1] = to_char(m.from_);
-    buf[2] = to_char(m.to_);
-    buf[3] = m.coord_.row_;
-    buf[4] = m.coord_.col_;
-    memcpy(&result, buf, sizeof(buf));
+    using namespace model;
+    result |= ordinal(m.action_);
+    result <<= Action_ORDINAL_BITS;
+
+    result |= ordinal(m.from_);
+    result <<= CellState_ORDINAL_BITS;
+
+    result |= ordinal(m.to_);
+    result <<= CellState_ORDINAL_BITS;
+
+    result |= m.coord_.row_;
+    result <<= Coord::ROW_COL_BITS;
+
+    result |= m.coord_.col_;
+    result <<= Coord::ROW_COL_BITS;
+
+    static_assert((Action_ORDINAL_BITS + (2 * CellState_ORDINAL_BITS) +
+                   (2 * Coord::ROW_COL_BITS)) <= (sizeof(std::size_t) * 8));
+
     return result;
   }
 };

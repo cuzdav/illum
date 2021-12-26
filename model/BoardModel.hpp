@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Action.hpp"
 #include "BasicBoard.hpp"
 #include "CellState.hpp"
@@ -10,9 +11,10 @@
 #include <string_view>
 #include <vector>
 
+
 namespace model {
 
-// game is a sequence of state changes. The first is RESETGame to establish
+// game is a sequence of state changes. The first is RESET_GAME to establish
 // dimensions. Then it's followed by a sequence of add() calls to place walls
 // and such, setting up the level. Then a START_GAME marker, to separate the
 // setup from the player moves (and to serve as a sentinel in the moves list
@@ -47,12 +49,12 @@ public:
   // These are all appeneded to the vector of moves.  (For purposes of undo,
   // even "remove" is added, so it can be undone to return to previous state.)
 
-  enum class RESETGamePolicy { COPY_PLAYER_MOVES, ONLY_COPY_WALLS };
+  enum class ResetGamePolicy { COPY_PLAYER_MOVES, ONLY_COPY_WALLS };
 
   void reset_game(int height, int width); // empty
   void reset_game(
       BasicBoard const & initial_board,
-      RESETGamePolicy copy_player_moves = RESETGamePolicy::COPY_PLAYER_MOVES);
+      ResetGamePolicy copy_player_moves = ResetGamePolicy::COPY_PLAYER_MOVES);
   void start_game();
 
   void add(CellState, Coord coord);

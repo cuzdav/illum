@@ -137,6 +137,9 @@ PositionBoard::set_cell(model::Coord     coord,
           return remove_bulb(coord);
           // case CellState::MARK:
           //   return remove_mark(coord);
+
+        default:
+          break;
       }
     }
   }

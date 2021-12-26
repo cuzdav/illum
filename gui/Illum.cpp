@@ -207,6 +207,10 @@ Illum::update_menu() {
       case MenuId::SETTINGS:
         throw "Expected Unreachable";
         break;
+
+      case MenuId::TUTORIAL:
+        throw std::runtime_error("Not (yet) implemented");
+        break;
     }
   }
   return true;
@@ -323,6 +327,10 @@ Illum::render() {
 
     case State::START_GAME:
       return true;
+
+    case State::EXIT:
+      // is this even possible?
+      return false;
   }
   return false;
 }

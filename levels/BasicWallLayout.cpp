@@ -103,7 +103,7 @@ bool
 verify_solvable(GenContext & context) {
   model::BoardModel model;
   model.reset_game(context.board.basic_board(),
-                   model::BoardModel::RESETGamePolicy::ONLY_COPY_WALLS);
+                   model::BoardModel::ResetGamePolicy::ONLY_COPY_WALLS);
   auto solution = solver::solve(model.get_underlying_board());
   if (solution.is_solved()) {
     context.solution = std::move(solution);
@@ -246,6 +246,10 @@ try_to_correct(GenContext & context) {
     case WALL_CANNOT_BE_SATISFIED:
       return adjust_wall_to(context, -1);
       break;
+
+    default:
+      // nothing else to do
+      break;
   }
   return false;
 }
@@ -289,10 +293,21 @@ fill_board_from_current_position(GenContext & context) {
     }
   };
 
-  while (not board.is_solved() && ++iter_count < 50) {
-    board.reevaluate_board_state();
+  int illumable       = board.num_cells_needing_illumination();
+  int walls_with_deps = board.num_walls_with_deps();
 
-    std::cout << board << std::endl;
+  while (not board.is_solved() && ++iter_count < 50) {
+
+    if (board.num_cells_needing_illumination() < illumable) {
+      illumable  = board.num_cells_needing_illumination();
+      iter_count = 0;
+    }
+    else if (board.num_walls_with_deps() < walls_with_deps) {
+      walls_with_deps = board.num_walls_with_deps();
+      iter_count      = 0;
+    }
+
+    board.reevaluate_board_state();
 
     if (board.has_error() && not board.is_ambiguous()) {
       try_corrections();
@@ -317,10 +332,12 @@ fill_board_from_current_position(GenContext & context) {
       board.apply_move(move.next_move);
     }
 
-    if (board.has_error() and not board.is_ambiguous()) {
+    if (board.has_error()) {
       try_corrections();
       if (board.has_error() and not board.is_ambiguous()) {
         board.pop();
+        illumable       = board.num_cells_needing_illumination();
+        walls_with_deps = board.num_walls_with_deps();
       }
     }
     if (context.board.is_solved()) {
@@ -331,7 +348,9 @@ fill_board_from_current_position(GenContext & context) {
       if (verify_solvable(context)) {
         return true;
       }
+      std::cout << "Disambiguating...\n" << board << "\n";
       disambiguate(context);
+      std::cout << "AFTER Disambiguating...\n" << board << "\n";
     }
   }
 
@@ -351,7 +370,7 @@ BasicWallLayout::create(RNG & rng, int height, int width) {
     assert(context.solution.has_value() && context.solution->is_solved());
     model::BoardModel model;
     model.reset_game(context.solution->board().board(),
-                     model::BoardModel::RESETGamePolicy::ONLY_COPY_WALLS);
+                     model::BoardModel::ResetGamePolicy::ONLY_COPY_WALLS);
     return model;
   }
 

@@ -38,7 +38,7 @@ setup_model_from_ptree(pt::ptree & moves, BoardModel & model) {
     case ADD: model.add(to_state, coord); break;
     case REMOVE: model.remove(coord); break;
     case START_GAME: model.start_game(); break;
-    case RESETGame: {
+    case RESET_GAME: {
       auto [height, width] = coord;
       model.reset_game(height, width);
       break;

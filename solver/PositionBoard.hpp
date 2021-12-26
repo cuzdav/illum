@@ -244,7 +244,7 @@ struct fmt::formatter<::solver::PositionBoard> {
   format(::solver::PositionBoard const & board, FormatContext & ctx) {
     return fmt::format_to(ctx.out(),
                           "PositionBoard{{\n\t"
-                          "CellS Needing ILLUMinatation: {}\n\t"
+                          "CellS Needing Illuminatation: {}\n\t"
                           "Unsatisfied Walls: {}\n\t"
                           "SOLVED={}\n\t"
                           "HasError={}\n\t"

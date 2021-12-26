@@ -7,28 +7,34 @@
 
 namespace model {
 
-enum class Action : char { ADD, REMOVE, RESETGame, START_GAME };
+enum class Action : char { ADD, REMOVE, RESET_GAME, START_GAME };
+
+constexpr char
+ordinal(Action value) {
+  return static_cast<char>(value);
+}
+constexpr int Action_ORDINAL_BITS = 2;
 
 namespace chr {
-constexpr char ADD       = '+';
-constexpr char REMOVE    = '-';
-constexpr char RESETGame = 'R';
+constexpr char ADD        = '+';
+constexpr char REMOVE     = '-';
+constexpr char RESET_GAME = 'R';
 constexpr char START_GAME = 'S';
 } // namespace chr
 
 namespace str {
 
-constexpr char const * ADD       = "ADD";
-constexpr char const * REMOVE    = "REMOVE";
-constexpr char const * RESETGame = "RESETGame";
+constexpr char const * ADD        = "ADD";
+constexpr char const * REMOVE     = "REMOVE";
+constexpr char const * RESET_GAME = "RESET_GAME";
 constexpr char const * START_GAME = "START_GAME";
 } // namespace str
 
 constexpr std::string_view ActionNames[] = {
-    str::ADD, str::REMOVE, str::RESETGame, str::START_GAME};
+    str::ADD, str::REMOVE, str::RESET_GAME, str::START_GAME};
 
 constexpr Action ActionValues[] = {
-    Action::ADD, Action::REMOVE, Action::RESETGame, Action::START_GAME};
+    Action::ADD, Action::REMOVE, Action::RESET_GAME, Action::START_GAME};
 
 constexpr char
 to_char(Action action) {
@@ -38,8 +44,8 @@ to_char(Action action) {
       return chr::ADD;
     case REMOVE:
       return chr::REMOVE;
-    case RESETGame:
-      return chr::RESETGame;
+    case RESET_GAME:
+      return chr::RESET_GAME;
     case START_GAME:
       return chr::START_GAME;
     default:
@@ -56,8 +62,8 @@ get_action_from_char(char action) {
       return ADD;
     case chr::REMOVE:
       return REMOVE;
-    case chr::RESETGame:
-      return RESETGame;
+    case chr::RESET_GAME:
+      return RESET_GAME;
     case chr::START_GAME:
       return START_GAME;
     default:
@@ -75,8 +81,8 @@ to_string(Action action) {
       return str::ADD;
     case REMOVE:
       return str::REMOVE;
-    case RESETGame:
-      return str::RESETGame;
+    case RESET_GAME:
+      return str::RESET_GAME;
     case START_GAME:
       return str::START_GAME;
     default:
@@ -118,4 +124,3 @@ operator<<(std::ostream & os, Action action) {
 //     return fmt::format_to(ctx.out(), "{}", to_string(action));
 //   }
 // };
-

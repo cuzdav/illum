@@ -4,8 +4,8 @@
 #include "Coord.hpp"
 #include "utils/EnumUtils.hpp"
 
-
 #include <array>
+#include <compare>
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 #include <iosfwd>
@@ -23,7 +23,7 @@ namespace model {
 class BasicBoard {
 
 public:
-  static int constexpr MAX_GRID_EDGE = 21;
+  static int constexpr MAX_GRID_EDGE = Coord::MAX_GRID_EDGE;
   static int constexpr MAX_CELLS     = MAX_GRID_EDGE * MAX_GRID_EDGE;
 
   enum class VisitPolicy {
@@ -114,8 +114,6 @@ public:
   CellState             get_cell_flat_unchecked(int) const;
   OptCoord              get_last_move_coord() const;
 
-  auto operator<=>(BasicBoard const &) const = default;
-
   inline static int visit_cell_counter              = 0;
   inline static int visit_board_counter             = 0;
   inline static int visit_adjacent_counter          = 0;
@@ -127,6 +125,39 @@ public:
   inline static int visit_col_down_counter          = 0;
   inline static int visit_perp_counter              = 0;
   inline static int visit_rows_cols_outward_counter = 0;
+
+  // emscripten does not support <=> on std::array<CellState, N>, so cannot use
+  // default. This also avoids comparing the full array for boards that are
+  // smaller than MAX width and height.
+  auto friend
+  operator<=>(BasicBoard const & lhs, BasicBoard const & rhs) {
+    {
+      auto width_result = lhs.width_ <=> rhs.width_;
+      if (width_result != 0) {
+        return width_result;
+      }
+    }
+    {
+      auto height_result = lhs.height_ <=> rhs.height_;
+      if (height_result != 0) {
+        return height_result;
+      }
+    }
+    {
+      auto last_move_result = lhs.last_move_coord_ <=> rhs.last_move_coord_;
+      if (last_move_result != 0) {
+        return last_move_result;
+      }
+    }
+
+    for (int i = 0, stop = lhs.width_; i < stop;) {
+      auto result = lhs.cells_[i] <=> rhs.cells_[i];
+      if (result != 0) {
+        return result;
+      }
+    }
+    return std::strong_ordering::equal;
+  }
 
 private:
   int get_flat_idx(Coord coord) const;
@@ -511,13 +542,13 @@ BasicBoard::visit_rows_cols_outward(Coord                     coord,
 // will visit the crossing row or column. That is, if you're going left/right,
 // along a row, it'll visit the vertical column that goes above and below you.
 // If you're going up/down along a column, it'll visit the row you're on. (It
-// will NOT visit your starting cell). If you use a Directed visitor, it'll give
-// you the direction the scan is moving on the board in absolute perspective,
-// relative to a fixed camera looking at the board. Your direction is not
-// considered. That is, lower-numbered columns are always "LEFT" of higher
-// numbered columns, and higher columns are always to the RIGHT of
-// lower-numbered columns. Similarly lower-numbered rows are UP, and higher
-// numbered rows are DOWN.
+// will NOT visit your starting cell). If you use a Directed visitor, it'll
+// give you the direction the scan is moving on the board in absolute
+// perspective, relative to a fixed camera looking at the board. Your
+// direction is not considered. That is, lower-numbered columns are always
+// "LEFT" of higher numbered columns, and higher columns are always to the
+// RIGHT of lower-numbered columns. Similarly lower-numbered rows are UP, and
+// higher numbered rows are DOWN.
 inline void
 BasicBoard::visit_perpendicular(Coord                     coord,
                                 Direction                 dir,

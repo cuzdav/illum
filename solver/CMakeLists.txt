@@ -12,4 +12,5 @@ target_link_libraries(solver model fmt common)
 
 if (NOT EMSCRIPTEN)
     add_subdirectory(test)
+else()
 endif(NOT EMSCRIPTEN)

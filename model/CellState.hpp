@@ -22,6 +22,8 @@ enum class CellState : std::uint16_t {
   ILLUM = (1 << 8),
 };
 
+constexpr int CellState_ORDINAL_BITS = 4;
+
 DEFINE_ENUM_BIT_OPERATIONS(CellState);
 
 namespace cellstategroups {

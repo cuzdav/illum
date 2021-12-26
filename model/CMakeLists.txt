@@ -1,14 +1,24 @@
-add_library(model
+SET(MODEL_FILES 
     BasicBoard.cpp
     BoardModel.cpp
     Coord.cpp
     Direction.cpp
-    Serialize.cpp
     SingleMove.cpp
+)
+
+if (EMSCRIPTEN) 
+else ()
+list(APPEND MODEL_FILES Serialize.cpp)
+endif(EMSCRIPTEN)
+
+
+add_library(model
+   ${MODEL_FILES}
 )
 target_include_directories(model PUBLIC .)
 target_link_libraries(model fmt common)
 
-if (NOT EMSCRIPTEN)
+if (EMSCRIPTEN)
+else()
     add_subdirectory(test)
-endif(NOT EMSCRIPTEN)
+endif(EMSCRIPTEN)

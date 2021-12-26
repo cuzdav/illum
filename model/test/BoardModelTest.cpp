@@ -35,7 +35,7 @@ TEST(BM, reset_game) {
   auto const & moves = handler.cur().moves_;
   ASSERT_EQ(1, moves.size());
 
-  ASSERT_EQ(RESETGame, moves[0].action_);
+  ASSERT_EQ(RESET_GAME, moves[0].action_);
   ASSERT_EQ(3, moves[0].coord_.row_); // height
   ASSERT_EQ(5, moves[0].coord_.col_); // width
 }

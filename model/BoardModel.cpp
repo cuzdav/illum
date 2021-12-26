@@ -1,9 +1,12 @@
 #include "BoardModel.hpp"
-#include "Serialize.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <utility>
+
+//#ifndef __EMSCRIPTEN__
+//#include "Serialize.hpp"
+//#endif // __EMSCRIPTEN__
 
 namespace model {
 
@@ -127,19 +130,19 @@ BoardModel::reset_game(int height, int width) {
   board_.reset(height, width);
   Coord coord{height, width};
   moves_.push_back(
-      {Action::RESETGame, CellState::EMPTY, CellState::EMPTY, coord});
-  on_state_change(Action::RESETGame, CellState::EMPTY, CellState::EMPTY, coord);
+      {Action::RESET_GAME, CellState::EMPTY, CellState::EMPTY, coord});
+  on_state_change(Action::RESET_GAME, CellState::EMPTY, CellState::EMPTY, coord);
 }
 
 void
 BoardModel::reset_game(BasicBoard const & initial_board,
-                       RESETGamePolicy    reset_policy) {
+                       ResetGamePolicy    reset_policy) {
   started_ = false;
   moves_.clear();
   Coord dims = {initial_board.height(), initial_board.width()};
   moves_.push_back(
-      {Action::RESETGame, CellState::EMPTY, CellState::EMPTY, dims});
-  on_state_change(Action::RESETGame, CellState::EMPTY, CellState::EMPTY, dims);
+      {Action::RESET_GAME, CellState::EMPTY, CellState::EMPTY, dims});
+  on_state_change(Action::RESET_GAME, CellState::EMPTY, CellState::EMPTY, dims);
 
   board_.reset(initial_board.height(), initial_board.width());
 
@@ -149,7 +152,7 @@ BoardModel::reset_game(BasicBoard const & initial_board,
       [this, &deferred, reset_policy](Coord coord, CellState cell) {
         if (cell != CellState::EMPTY) {
           if (is_dynamic_entity(cell)) {
-            if (reset_policy == RESETGamePolicy::COPY_PLAYER_MOVES) {
+            if (reset_policy == ResetGamePolicy::COPY_PLAYER_MOVES) {
               deferred.push_back(
                   SingleMove{Action::ADD, CellState::EMPTY, cell, coord});
             }
