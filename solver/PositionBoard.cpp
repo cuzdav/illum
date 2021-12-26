@@ -36,7 +36,9 @@ PositionBoard::reset(model::BasicBoard const &  current,
       num_cells_needing_illumination_++;
     }
     else if (is_wall(cell)) {
-      walls_with_deps[num_walls_with_deps++] = coord;
+      if (is_wall_with_deps(cell)) {
+        walls_with_deps[num_walls_with_deps++] = coord;
+      }
       board_.set_cell(coord, cell);
     }
   });
