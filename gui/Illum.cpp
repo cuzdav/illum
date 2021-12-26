@@ -219,7 +219,7 @@ Illum::update_menu() {
 bool
 Illum::OnUserCreate() {
 
-  menu_sprite_ = std::make_unique<olc::Sprite>("./resources/RetroMenu.png");
+  menu_sprite_ = std::make_unique<olc::Sprite>("RetroMenu.png");
 
   olc::vf2d size{BUTTON_SIZE, BUTTON_SIZE};
   int const button_y = 470 - 16 - size.y;
@@ -227,21 +227,21 @@ Illum::OnUserCreate() {
   restart_button_.emplace(
       this,
       [this]() { restart_clicked(); },
-      "./resources/restart.png",
+      "restart.png",
       olc::vf2d(0, 0), // will be positioned in start_game()
       size);
 
   undo_button_.emplace(
       this,
       [this]() { undo_clicked(); },
-      "./resources/undo.png",
+      "undo.png",
       olc::vf2d(0, 0),
       size);
 
   hint_button_.emplace(
       this,
       [this]() { hint_clicked(); },
-      "./resources/hint.png",
+      "hint.png",
       olc::vf2d(0, 0),
       size);
 

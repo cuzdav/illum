@@ -1,20 +1,21 @@
-add_library(illum
+add_executable(illum
     Illum.cpp
+    illum_main.cpp
 )
 target_include_directories(illum PUBLIC .)
 target_link_libraries(illum levels solver model fmt common olc)
 
-add_executable(main
-    illum_main.cpp
-)
-
 if (EMSCRIPTEN)
-    set_target_properties(main PROPERTIES
-       LINK_FLAGS "-s ALLOW_MEMORY_GROWTH=1 -s USE_LIBPNG=1 -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2"
-       SUFFIX ".html"
+    set_target_properties(illum PROPERTIES
+       LINK_FLAGS "-s ALLOW_MEMORY_GROWTH=1 -s USE_LIBPNG=1 \
+                   -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2 \
+                   --embed-file ${CMAKE_CURRENT_SOURCE_DIR}/resources/hint.png@hint.png \
+                   --embed-file ${CMAKE_CURRENT_SOURCE_DIR}/resources/restart.png@restart.png \
+                   --embed-file ${CMAKE_CURRENT_SOURCE_DIR}/resources/RetroMenu.png@RetroMenu.png \
+                   --embed-file ${CMAKE_CURRENT_SOURCE_DIR}/resources/undo.png@undo.png \
+                   "
     )
 endif(EMSCRIPTEN)
 
-target_link_libraries(main illum)
 
 

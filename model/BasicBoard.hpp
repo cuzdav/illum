@@ -131,29 +131,18 @@ public:
   // smaller than MAX width and height.
   auto friend
   operator<=>(BasicBoard const & lhs, BasicBoard const & rhs) {
-    {
-      auto width_result = lhs.width_ <=> rhs.width_;
-      if (width_result != 0) {
-        return width_result;
-      }
+    if (auto cmp = lhs.width_ <=> rhs.width_; cmp != 0) {
+      return cmp;
     }
-    {
-      auto height_result = lhs.height_ <=> rhs.height_;
-      if (height_result != 0) {
-        return height_result;
-      }
+    if (auto cmp = lhs.height_ <=> rhs.height_; cmp != 0) {
+      return cmp;
     }
-    {
-      auto last_move_result = lhs.last_move_coord_ <=> rhs.last_move_coord_;
-      if (last_move_result != 0) {
-        return last_move_result;
-      }
+    if (auto cmp = lhs.last_move_coord_ <=> rhs.last_move_coord_; cmp != 0) {
+      return cmp;
     }
-
     for (int i = 0, stop = lhs.width_; i < stop;) {
-      auto result = lhs.cells_[i] <=> rhs.cells_[i];
-      if (result != 0) {
-        return result;
+      if (auto cmp = lhs.cells_[i] <=> rhs.cells_[i]; cmp != 0) {
+        return cmp;
       }
     }
     return std::strong_ordering::equal;
