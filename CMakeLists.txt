@@ -11,10 +11,6 @@ add_library(common INTERFACE)
 target_include_directories(common INTERFACE .)
 target_link_libraries(common INTERFACE fmt)
 
-if (EMSCRIPTEN)
-set(CMAKE_CXX_FLAGS "-s ALLOW_MEMORY_GROWTH=1 -s USE_LIBPNG=1 -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2")
-endif(EMSCRIPTEN)
-
 add_subdirectory (model)
 add_subdirectory (levels)
 add_subdirectory (solver)
