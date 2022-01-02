@@ -143,6 +143,10 @@ Illum::update_menu() {
   }
   if (GetKey(olc::Key::ESCAPE).bPressed) {
     menu_manager_.OnBack();
+    if (!menu_manager_.IsOpen()) {
+      state_ = State::EXIT;
+      return false;
+    }
   }
 
   if (command != nullptr) {
@@ -232,18 +236,10 @@ Illum::OnUserCreate() {
       size);
 
   undo_button_.emplace(
-      this,
-      [this]() { undo_clicked(); },
-      "undo.png",
-      olc::vf2d(0, 0),
-      size);
+      this, [this]() { undo_clicked(); }, "undo.png", olc::vf2d(0, 0), size);
 
   hint_button_.emplace(
-      this,
-      [this]() { hint_clicked(); },
-      "hint.png",
-      olc::vf2d(0, 0),
-      size);
+      this, [this]() { hint_clicked(); }, "hint.png", olc::vf2d(0, 0), size);
 
   return create_menu();
 }
