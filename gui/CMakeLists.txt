@@ -5,6 +5,10 @@ add_executable(illum
 target_include_directories(illum PUBLIC .)
 target_link_libraries(illum levels solver model fmt common olc)
 
+add_custom_command(TARGET illum PRE_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E
+                   copy ${CMAKE_SOURCE_DIR}/gui/resources/* $<TARGET_FILE_DIR:illum>/..)
+
 if (EMSCRIPTEN)
     set_target_properties(illum PROPERTIES
        LINK_FLAGS "-s ALLOW_MEMORY_GROWTH=1 -s USE_LIBPNG=1 \

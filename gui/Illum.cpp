@@ -432,6 +432,8 @@ Illum::update_game() {
   return true;
 }
 
+const olc::Pixel ORANGE(255, 165, 0);
+
 bool
 Illum::render_game() {
   position_.visit_board([&](model::Coord coord, model::CellState cell) {
@@ -486,7 +488,12 @@ Illum::render_game() {
         FillCircle(x_px + tile_width_ / 2,
                    y_px + tile_height_ / 2,
                    std::min(tile_height_, tile_width_) / 3,
+                   ORANGE);
+        DrawCircle(x_px + tile_width_ / 2,
+                   y_px + tile_height_ / 2,
+                   std::min(tile_height_, tile_width_) / 3,
                    olc::YELLOW);
+
         break;
       case ILLUM:
         FillRect(x_px, y_px, tile_width_, tile_height_, olc::DARK_YELLOW);
