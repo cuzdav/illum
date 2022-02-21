@@ -21,16 +21,18 @@ using enum VisitStatus;
 //
 template <typename T>
 concept CellVisitorAll = requires(T visitor, CellState cell) {
-  { visitor(Coord{0, 0}, cell) } -> std::same_as<void>;
-};
+                           { visitor(Coord{0, 0}, cell) } -> std::same_as<void>;
+                         };
 
 //
 // returning a VisitStatus indicates the visit may be stopped prematurely
 //
 template <typename T>
 concept CellVisitorSome = requires(T visitor, CellState cell) {
-  { visitor(Coord{0, 0}, cell) } -> std::same_as<VisitStatus>;
-};
+                            {
+                              visitor(Coord{0, 0}, cell)
+                              } -> std::same_as<VisitStatus>;
+                          };
 
 //
 // Unify both Some/All cell visitors
@@ -47,13 +49,17 @@ concept CellVisitor = CellVisitorAll<T> || CellVisitorSome<T>;
 
 template <typename T>
 concept DirectedCellVisitorAll = requires(T visitor, CellState cell) {
-  { visitor(Direction{}, Coord{0, 0}, cell) } -> std::same_as<void>;
-};
+                                   {
+                                     visitor(Direction{}, Coord{0, 0}, cell)
+                                     } -> std::same_as<void>;
+                                 };
 
 template <typename T>
 concept DirectedCellVisitorSome = requires(T visitor, CellState cell) {
-  { visitor(Direction{}, Coord{0, 0}, cell) } -> std::same_as<VisitStatus>;
-};
+                                    {
+                                      visitor(Direction{}, Coord{0, 0}, cell)
+                                      } -> std::same_as<VisitStatus>;
+                                  };
 
 //
 // Short circuitable or not, up to the caller
@@ -71,7 +77,9 @@ concept OptDirCellVisitor = DirectedCellVisitor<T> || CellVisitor<T>;
 // queries a predicate before dispatching.
 template <typename T>
 concept CellVisitPredicate = requires(T visitor, CellState cell) {
-  { visitor(Coord{0, 0}, cell) } -> std::same_as<bool>;
-};
+                               {
+                                 visitor(Coord{0, 0}, cell)
+                                 } -> std::same_as<bool>;
+                             };
 
 } // namespace model

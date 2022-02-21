@@ -1,5 +1,6 @@
 add_executable(illum
     Illum.cpp
+    Tutorial.cpp
     illum_main.cpp
 )
 target_include_directories(illum PUBLIC .)
@@ -17,6 +18,7 @@ if (EMSCRIPTEN)
                    --embed-file ${CMAKE_CURRENT_SOURCE_DIR}/resources/restart.png@restart.png \
                    --embed-file ${CMAKE_CURRENT_SOURCE_DIR}/resources/RetroMenu.png@RetroMenu.png \
                    --embed-file ${CMAKE_CURRENT_SOURCE_DIR}/resources/undo.png@undo.png \
+                   --embed-file ${CMAKE_CURRENT_SOURCE_DIR}/resources/tutorial_levels.json@tutorial_levels.json \
                    "
     )
 endif(EMSCRIPTEN)

@@ -48,7 +48,7 @@ class SolverSpeculationTest : public ::testing::Test {
 };
 
 TEST_F(SolverSpeculationTest, detects_board_with_multiple_solutions) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("..");
   creator("..");
   model::BasicBoard board;
@@ -62,7 +62,7 @@ TEST_F(SolverSpeculationTest, detects_board_with_multiple_solutions) {
 }
 
 TEST_F(SolverSpeculationTest, detects_board_with_unilluminable_marks) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("XX");
   creator("XX");
   model::BasicBoard board;
@@ -76,7 +76,7 @@ TEST_F(SolverSpeculationTest, detects_board_with_unilluminable_marks) {
 }
 
 TEST_F(SolverSpeculationTest, simple_deductions1) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("1...");
   creator("..2.");
 
@@ -95,7 +95,7 @@ TEST_F(SolverSpeculationTest, simple_deductions1) {
 }
 
 TEST_F(SolverSpeculationTest, simple_deductions2) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator(".2..");
   creator("....");
   creator("0.2.");
@@ -117,7 +117,7 @@ TEST_F(SolverSpeculationTest, simple_deductions2) {
 }
 
 TEST_F(SolverSpeculationTest, realistic_game1) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("....1...0.");
   creator("..2...0..1");
   creator("..0.......");
@@ -157,7 +157,7 @@ TEST_F(SolverSpeculationTest, realistic_game1) {
 }
 
 TEST_F(SolverSpeculationTest, realistic_game2) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("..0....2...0....");
   creator("....00001....1..");
   creator(".0.10..2..2.0..1");
@@ -185,7 +185,7 @@ TEST_F(SolverSpeculationTest, realistic_game2) {
 }
 
 TEST_F(SolverSpeculationTest, realistic_game3) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator(".......0.......");
   creator(".301.......010.");
   creator("0...0.....3...0");
@@ -212,7 +212,7 @@ TEST_F(SolverSpeculationTest, realistic_game3) {
 }
 
 TEST_F(SolverSpeculationTest, realistic_game4) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("0.....");
   creator("..2.3.");
   creator("...0..");
@@ -230,7 +230,7 @@ TEST_F(SolverSpeculationTest, realistic_game4) {
 }
 
 TEST_F(SolverSpeculationTest, realistic_game5) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator(".........");
   creator(".2.....0.");
   creator("1.3.0.0.0");
@@ -251,7 +251,7 @@ TEST_F(SolverSpeculationTest, realistic_game5) {
 }
 
 TEST_F(SolverSpeculationTest, realistic_game6) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("....10.2....2..0");
   creator("..0.....1....1.0");
   creator("..0......0...0..");
@@ -279,7 +279,7 @@ TEST_F(SolverSpeculationTest, realistic_game6) {
 }
 
 TEST_F(SolverSpeculationTest, realistic_game7) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator(".2.2.0......2...");
   creator("........0....0.0");
   creator(".00.....12..02..");
@@ -307,7 +307,7 @@ TEST_F(SolverSpeculationTest, realistic_game7) {
 }
 
 TEST_F(SolverSpeculationTest, realistic_game8) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("01.1...........0.00");
   creator("....2...1.1...1....");
   creator("0.................1");
@@ -338,7 +338,7 @@ TEST_F(SolverSpeculationTest, realistic_game8) {
 }
 
 TEST_F(SolverSpeculationTest, realistic_game9) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("0......00.2.");
   creator("0..001.....0");
   creator(".4...0.0..1.");
@@ -362,7 +362,7 @@ TEST_F(SolverSpeculationTest, realistic_game9) {
 }
 
 TEST_F(SolverSpeculationTest, realistic_game10) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("...1.0.0..");
   creator("..........");
   creator("1..10.....");
@@ -383,7 +383,7 @@ TEST_F(SolverSpeculationTest, realistic_game10) {
 }
 
 TEST_F(SolverSpeculationTest, realistic_game11) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("0...1.00..20");
   creator("0...........");
   creator("..2....0.1..");

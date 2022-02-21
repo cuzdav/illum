@@ -20,7 +20,7 @@ using model::Coord;
 using model::SingleMove;
 
 TEST(TrivialMovesTest, find_isolated_cell_detects_invalid_mark) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("0.0");
   creator("X4.");
   creator("0.0");
@@ -36,7 +36,7 @@ TEST(TrivialMovesTest, find_isolated_cell_detects_invalid_mark) {
 }
 
 TEST(TrivialMovesTest, find_isolated_cell) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("0.0");
   creator(".4.");
   creator("0.0");
@@ -65,7 +65,7 @@ TEST(TrivialMovesTest, find_isolated_cell) {
 }
 
 TEST(TrivialMovesTest, find_around_walls_with_deps1) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator(".00");
   creator(".10");
   creator("000");
@@ -84,7 +84,7 @@ TEST(TrivialMovesTest, find_around_walls_with_deps1) {
 }
 
 TEST(TrivialMovesTest, find_around_walls_with_deps2) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("01*");
   creator("..0");
 
@@ -103,7 +103,7 @@ TEST(TrivialMovesTest, find_around_walls_with_deps2) {
 }
 
 TEST(TrivialMovesTest, ambigus_cells_in_rows) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("..0....");
   creator(".1..200");
   creator("0000+..");
@@ -155,7 +155,7 @@ TEST(TrivialMovesTest, ambigus_cells_in_rows) {
 }
 
 TEST(TrivialMovesTest, ambigus_cells_in_cols_far_away_wall_with_deps) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("0.0*0*0");
   creator("0.++++1");
   creator("0.++++.");
@@ -177,7 +177,7 @@ TEST(TrivialMovesTest, ambigus_cells_in_cols_far_away_wall_with_deps) {
 
 TEST(TrivialMovesTest,
      ambigus_cells_in_cols_far_endpoints_are_walls_with_deps) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("0100");
   creator("0.0.");
   creator("0.0.");
@@ -195,7 +195,7 @@ TEST(TrivialMovesTest,
 }
 
 TEST(TrivialMovesTest, ambigus_cells_in_cols) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("0.0..0.");
   creator("....20.");
   creator("0.0.+..");

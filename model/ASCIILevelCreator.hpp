@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-namespace model::test {
+namespace model {
 
 // I'd like to just chain calls together to create the level row-wise, but it
 // does not look good in clang-format and I don't want to have to disable
@@ -84,4 +84,4 @@ private:
   std::vector<std::string> unparsed_rows_;
 };
 
-} // namespace model::test
+} // namespace model

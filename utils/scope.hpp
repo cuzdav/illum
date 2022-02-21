@@ -19,7 +19,8 @@ auto inline constexpr dont_check_for_uncaught_exceptions = std::false_type{};
 
 template <typename F, bool checkForUncaughtExceptions = true>
 // Change Requires to an ugly enable_if_t or a static_assert for C++17 support
-requires(std::is_invocable_v<F>) struct scoped_exit {
+requires(std::is_invocable_v<F>)
+struct scoped_exit {
   // Store the function only
   // No need to store a 2nd variable
   F const f;
@@ -37,8 +38,8 @@ requires(std::is_invocable_v<F>) struct scoped_exit {
       // If the function is nothrow invocable
       // Then modifying the checkForUncaughtExceptions is useless
       // So don't let user modify the param
-      requires(!(!checkForUncaughtExceptions && std::is_nothrow_invocable_v<F>))
-      : f(std::forward<F>(f)) {}
+  requires(!(!checkForUncaughtExceptions && std::is_nothrow_invocable_v<F>))
+  : f(std::forward<F>(f)) {}
 
   ~scoped_exit() noexcept(
       // GSL Destructors are always noexcept
@@ -57,9 +58,9 @@ requires(std::is_invocable_v<F>) struct scoped_exit {
   }
 
   // Disable move & copy
-  scoped_exit(const scoped_exit &) = delete;
-  scoped_exit(scoped_exit &&)      = delete;
-  scoped_exit & operator=(scoped_exit &&) = delete;
+  scoped_exit(const scoped_exit &)             = delete;
+  scoped_exit(scoped_exit &&)                  = delete;
+  scoped_exit & operator=(scoped_exit &&)      = delete;
   scoped_exit & operator=(const scoped_exit &) = delete;
 };
 

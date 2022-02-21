@@ -9,7 +9,6 @@ namespace solver::test {
 
 using namespace ::testing;
 using namespace model;
-using namespace model::test;
 
 TEST(HintTest, simple_forced_isolated_cell) {
   ASCIILevelCreator creator;

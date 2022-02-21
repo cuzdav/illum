@@ -1,7 +1,9 @@
 #include "AnalysisBoard.hpp"
 #include "BasicWallLayout.hpp"
 #include "BoardModel.hpp"
+#include "GuiTypes.hpp"
 #include "Solver.hpp"
+#include "Tutorial.hpp"
 #include "olcButton.hpp"
 #include "olcPixelGameEngine.h"
 #include "olcRetroMenu.hpp"
@@ -67,6 +69,7 @@ private:
   std::unique_ptr<olc::Sprite>      menu_sprite_;
   olc::popup::Menu                  menu_;
   olc::popup::Manager               menu_manager_;
+  Tutorial                          tutorial_;
   std::optional<illum::olc::Button> undo_button_;
   std::optional<illum::olc::Button> hint_button_;
   std::optional<illum::olc::Button> restart_button_;
@@ -81,6 +84,7 @@ private:
   int        bulbs_in_solution_  = 0;
   int        bulbs_played_       = 0;
 
+  BoardGenerator        board_generator_;
   model::BoardModel     model_;
   solver::PositionBoard position_;
   std::mt19937          twister_rng_;

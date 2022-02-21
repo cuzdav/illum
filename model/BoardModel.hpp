@@ -11,7 +11,6 @@
 #include <string_view>
 #include <vector>
 
-
 namespace model {
 
 // game is a sequence of state changes. The first is RESET_GAME to establish
@@ -31,10 +30,10 @@ public:
   BoardModel();
   BoardModel(std::unique_ptr<StateChangeHandler> handler);
 
-  BoardModel(BoardModel const &) = delete;
+  BoardModel(BoardModel const &)             = delete;
   BoardModel & operator=(BoardModel const &) = delete;
 
-  BoardModel(BoardModel &&) = default;
+  BoardModel(BoardModel &&)             = default;
   BoardModel & operator=(BoardModel &&) = default;
 
   bool                  operator==(BoardModel const &) const;

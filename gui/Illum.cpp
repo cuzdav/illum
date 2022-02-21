@@ -1,4 +1,5 @@
 #include "Illum.hpp"
+#include "BasicWallLayout.hpp"
 #include "CellState.hpp"
 #include "Coord.hpp"
 #include "SingleMove.hpp"
@@ -19,10 +20,12 @@ constexpr int COL_PADDING       = 1;
 
 constexpr int BUTTON_SIZE = 32;
 
+constexpr int TUTORIAL_RESERVED_IDS = 100;
+
 enum class MenuId {
   PLAY,
   TUTORIAL,
-  SETTINGS,
+  SETTINGS = TUTORIAL + TUTORIAL_RESERVED_IDS,
 
   // Difficulty
   VERY_EASY,
@@ -86,7 +89,10 @@ bool
 Illum::create_menu() {
   menu_["main"].SetTable(1, 3);
   menu_["main"]["Play"].SetID(+MenuId::PLAY);
-  menu_["main"]["Tutorial"].SetID(+MenuId::TUTORIAL).Enable(false);
+
+  auto & tutorial = menu_["main"]["Tutorial"];
+  tutorial_.initialize(+MenuId::TUTORIAL, tutorial);
+
   auto & settings = menu_["main"]["Settings"].SetTable(1, 4);
 
   auto & difficulty = settings["Difficulty"].SetTable(1, 5);
@@ -151,12 +157,31 @@ Illum::update_menu() {
 
   if (command != nullptr) {
     auto menu_id = MenuId(command->GetID());
+
+    // Tutorial has a range of reserved identifiers, but we don't need to know
+    // what they are in this file, defer it to a tutorial class.
+    if (+menu_id >= +MenuId::TUTORIAL &&
+        +menu_id < +MenuId::TUTORIAL + TUTORIAL_RESERVED_IDS) {
+      tutorial_.update_menu(command->GetID(), board_generator_);
+      state_ = State::START_GAME;
+      menu_manager_.OnBack();
+      menu_manager_.OnBack();
+      return true;
+    }
+
     switch (menu_id) {
       case MenuId::BACK:
         menu_manager_.OnBack();
         break;
 
       case MenuId::PLAY:
+        board_generator_ = [this] {
+          auto dist   = std::uniform_int_distribution<int>(min_board_size_idx_,
+                                                         max_board_size_idx_);
+          int  height = BOARD_SIZES[dist(twister_rng_)];
+          int  width  = BOARD_SIZES[dist(twister_rng_)];
+          return levels::BasicWallLayout{}.create(twister_rng_, height, width);
+        };
         state_ = State::START_GAME;
         menu_manager_.Close();
         break;
@@ -352,11 +377,6 @@ Illum::on_state_change(model::Action    action,
 
 bool
 Illum::start_game() {
-  auto dist    = std::uniform_int_distribution<int>(min_board_size_idx_,
-                                                 max_board_size_idx_);
-  int  height  = BOARD_SIZES[dist(twister_rng_)];
-  int  width   = BOARD_SIZES[dist(twister_rng_)];
-  model_       = levels::BasicWallLayout{}.create(twister_rng_, height, width);
   tile_width_  = ScreenWidth() / (model_.width() + 2 * COL_PADDING);
   tile_height_ = ScreenHeight() /
                  (model_.height() + ROW_PADDING_ABOVE + ROW_PADDING_BELOW);

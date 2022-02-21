@@ -35,15 +35,23 @@ setup_model_from_ptree(pt::ptree & moves, BoardModel & model) {
     auto [action, from_state, to_state, coord] = get_move_from_string(move_str);
 
     switch (action) {
-    case ADD: model.add(to_state, coord); break;
-    case REMOVE: model.remove(coord); break;
-    case START_GAME: model.start_game(); break;
-    case RESET_GAME: {
-      auto [height, width] = coord;
-      model.reset_game(height, width);
-      break;
-    }
-    default: throw "Invalid action in from_json";
+      case ADD:
+        model.add(to_state, coord);
+        break;
+      case REMOVE:
+        model.remove(coord);
+        break;
+      case START_GAME:
+        model.start_game();
+        break;
+      case RESET_GAME:
+        {
+          auto [height, width] = coord;
+          model.reset_game(height, width);
+          break;
+        }
+      default:
+        throw "Invalid action in from_json";
     }
   }
 }

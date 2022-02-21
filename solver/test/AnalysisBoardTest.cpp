@@ -7,7 +7,7 @@
 namespace solver::test {
 
 TEST(AnalysisBoardTest, no_adjusting_stack_while_visiting) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("...");
   creator(".3.");
   creator("...");
@@ -133,7 +133,7 @@ TEST(AnalysisBoardTest, no_adjusting_stack_while_visiting) {
 }
 
 TEST(AnalysisBoardTest, no_adjusting_stack_while_nested_visiting) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("...");
   creator(".3.");
   creator("...");
@@ -161,7 +161,7 @@ TEST(AnalysisBoardTest, no_adjusting_stack_while_nested_visiting) {
 }
 
 TEST(AnalysisBoardTest, pop1) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("...");
   creator(".3.");
   creator("...");

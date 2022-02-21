@@ -1,0 +1,57 @@
+{
+    "name": "tutorial levels",
+    "levels": [
+        {
+            "levelname": "Use Lights",
+            "board": [
+                ".XX",
+                "X.X",
+                "XX."
+            ],
+            "actions": [
+                ["display", "Win by lighting every empty cell"],
+                [
+                    "display",
+                    "Fully enclosed single cells always have bulbs"
+                ],
+                ["play",
+                 ["bulb", 0, 0],
+                 ["bulb", 1, 1],
+                 ["bulb", 2, 2]]
+            ]
+        },
+        {
+            "levelname": "Bulbs shine outwards",
+            "board": [
+                "X.X",
+                "...",
+                "X.X"
+            ],
+            "actions": [
+                [
+                    "display",
+                    "Bulbs illuminate the row and column in which they are placed, until the light hits a wall"
+                ],
+                [
+                    "play", ["bulb", 1, 1 ]
+                ]
+            ]
+        },
+        {
+            "levelname": "Bulbs are not allowed to \"see\" each other",
+            "board": [
+                "XXXXXX.",
+                "...0...",
+                "XXXXXXX",
+                ".......",
+                "XXXXXXX"
+            ],
+            "actions": [
+                ["display", "It is ok if two bulbs are in the same row or column if a wall separates them"],
+                ["play", ["bulb", 1, 0], ["bulb", 1, 6]],
+                ["display", "However, the next moves are invalid"],
+                ["play", ["bulb", 3, 0], ["bulb", 3, 6]]
+            ]
+        }
+    ]
+}

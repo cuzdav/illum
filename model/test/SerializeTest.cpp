@@ -21,7 +21,7 @@ TEST(SerializeTest, to_ptree) {
   BoardModel   model(std::make_unique<TestStateChangeHandler>());
   auto const & handler = *model.get_handler();
 
-  ::model::test::ASCIILevelCreator creator;
+  ::model::ASCIILevelCreator creator;
   creator("00010");
   creator("0...1");
   creator("00010");
@@ -59,7 +59,7 @@ TEST(SerializeTest, to_from_json) {
   BoardModel   model(std::make_unique<TestStateChangeHandler>());
   auto const & handler = *model.get_handler();
 
-  ::model::test::ASCIILevelCreator creator;
+  ::model::ASCIILevelCreator creator;
   creator("0100010");
   creator("1..0..1");
   creator("010.010");

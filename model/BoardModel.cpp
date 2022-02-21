@@ -41,8 +41,10 @@ BoardModel::start_game() {
     started_ = true;
     // ADDs a marker into game histroy separating the level setup from
     // the player's moves.
-    moves_.push_back(
-        {Action::START_GAME, CellState::EMPTY, CellState::EMPTY, Coord{-1, -1}});
+    moves_.push_back({Action::START_GAME,
+                      CellState::EMPTY,
+                      CellState::EMPTY,
+                      Coord{-1, -1}});
     num_setup_moves_ = moves_.size();
     on_state_change(
         Action::START_GAME, CellState::EMPTY, CellState::EMPTY, Coord{-1, -1});
@@ -131,7 +133,8 @@ BoardModel::reset_game(int height, int width) {
   Coord coord{height, width};
   moves_.push_back(
       {Action::RESET_GAME, CellState::EMPTY, CellState::EMPTY, coord});
-  on_state_change(Action::RESET_GAME, CellState::EMPTY, CellState::EMPTY, coord);
+  on_state_change(
+      Action::RESET_GAME, CellState::EMPTY, CellState::EMPTY, coord);
 }
 
 void

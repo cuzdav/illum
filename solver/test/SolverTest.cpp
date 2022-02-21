@@ -9,7 +9,7 @@ namespace solver::test {
 using namespace ::testing;
 
 TEST(SolverTest, isolated_empty) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("0.0");
   creator(".0.");
   creator("0.0");
@@ -20,7 +20,7 @@ TEST(SolverTest, isolated_empty) {
 }
 
 TEST(SolverTest, isolated_empty2) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("*++");
   creator("+.0");
   creator("+00");
@@ -31,7 +31,7 @@ TEST(SolverTest, isolated_empty2) {
 }
 
 TEST(SolverTest, isolated_empty3_no_solution) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("*++");
   creator("+..");
   creator("+00");
@@ -42,7 +42,7 @@ TEST(SolverTest, isolated_empty3_no_solution) {
 }
 
 TEST(SolverTest, wall_with_deps_equal_to_open_faces1) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("0.0");
   creator(".4.");
   creator("0.0");
@@ -53,7 +53,7 @@ TEST(SolverTest, wall_with_deps_equal_to_open_faces1) {
 }
 
 TEST(SolverTest, wall_with_deps_equal_to_open_faces2) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("2.0");
   creator(".0.");
   creator("0.2");
@@ -64,7 +64,7 @@ TEST(SolverTest, wall_with_deps_equal_to_open_faces2) {
 }
 
 TEST(SolverTest, wall_with_deps_equal_to_open_faces3) {
-  model::test::ASCIILevelCreator creator;
+  model::ASCIILevelCreator creator;
   creator("2.");
   creator(".3");
   creator("2.");
