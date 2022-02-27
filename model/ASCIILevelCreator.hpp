@@ -1,5 +1,6 @@
 #include "BoardModel.hpp"
 #include "CellState.hpp"
+#include "utils/picojson.hpp"
 #include <array>
 #include <stdexcept>
 #include <string>
@@ -57,6 +58,25 @@ public:
     if (policy == ResetPolicy::RESET) {
       reset();
     }
+  }
+
+  BoardModel
+  create_from_json(picojson::value::array const & rows) {
+    reset();
+    BoardModel retval;
+    for (auto const & elt : rows) {
+      (*this)(elt.to_str());
+    }
+    finished(&retval);
+    return retval;
+  }
+
+  BoardModel
+  create_from_json(picojson::value const & rows) {
+    if (rows.is<picojson::value::array>()) {
+      return create_from_json(rows.get<picojson::value::array>());
+    }
+    throw std::runtime_error("rows must be an array of strings");
   }
 
 private:

@@ -122,7 +122,14 @@ Illum::create_menu() {
   settings["(Back)"].SetID(+MenuId::BACK);
 
   menu_.Build();
+
   menu_manager_.Open(&menu_["main"]);
+
+  // REMOVE::::::
+  // Selects tutorial|rules to make testing easier
+  menu_manager_.OnDOWN();
+  menu_manager_.OnConfirm();
+  // ::::::::::::%%% END
 
   return true;
 }
@@ -159,13 +166,11 @@ Illum::update_menu() {
     auto menu_id = MenuId(command->GetID());
 
     // Tutorial has a range of reserved identifiers, but we don't need to know
-    // what they are in this file, defer it to a tutorial class.
+    // what they are in this file, defer it to a tutorial class. So give
+    // tutorial a block of ids and let it sort out which one it is.
     if (+menu_id >= +MenuId::TUTORIAL &&
         +menu_id < +MenuId::TUTORIAL + TUTORIAL_RESERVED_IDS) {
-      tutorial_.update_menu(command->GetID(), board_generator_);
-      state_ = State::START_GAME;
-      menu_manager_.OnBack();
-      menu_manager_.OnBack();
+      setup_tutorial_game(+menu_id - +MenuId::TUTORIAL);
       return true;
     }
 
@@ -175,15 +180,7 @@ Illum::update_menu() {
         break;
 
       case MenuId::PLAY:
-        board_generator_ = [this] {
-          auto dist   = std::uniform_int_distribution<int>(min_board_size_idx_,
-                                                         max_board_size_idx_);
-          int  height = BOARD_SIZES[dist(twister_rng_)];
-          int  width  = BOARD_SIZES[dist(twister_rng_)];
-          return levels::BasicWallLayout{}.create(twister_rng_, height, width);
-        };
-        state_ = State::START_GAME;
-        menu_manager_.Close();
+        setup_regular_game();
         break;
 
       case MenuId::VERY_EASY:
@@ -245,6 +242,32 @@ Illum::update_menu() {
   return true;
 }
 
+// takes a zero-based tutorial selection id, which comes from the reserved range
+// in the total MenuId selection, adjusted.
+void
+Illum::setup_tutorial_game(int selection_id) {
+  tutorial_.update_menu(selection_id, board_generator_);
+  state_          = State::START_GAME;
+  update_handler_ = [tutorial = &tutorial_](float fElapsedTime) {
+    return tutorial->update_game(fElapsedTime);
+  };
+}
+
+void
+Illum::setup_regular_game() {
+  board_generator_ = [this] {
+    auto dist   = std::uniform_int_distribution<int>(min_board_size_idx_,
+                                                   max_board_size_idx_);
+    int  height = BOARD_SIZES[dist(twister_rng_)];
+    int  width  = BOARD_SIZES[dist(twister_rng_)];
+    return levels::BasicWallLayout{}.create(twister_rng_, height, width);
+  };
+  update_handler_ = [this](float) { return this->update_game(); };
+
+  state_ = State::START_GAME;
+  menu_manager_.Close();
+}
+
 bool
 Illum::OnUserCreate() {
 
@@ -288,7 +311,12 @@ bool
 Illum::OnUserUpdate(float elapsed_time) {
   switch (state_) {
     case State::PLAYING:
-      update_game();
+      undo_button_->update();
+      hint_button_->update();
+      restart_button_->update();
+      if (not update_handler_(elapsed_time)) {
+        return false;
+      }
       break;
 
     case State::MENU:
@@ -377,6 +405,7 @@ Illum::on_state_change(model::Action    action,
 
 bool
 Illum::start_game() {
+  model_       = board_generator_();
   tile_width_  = ScreenWidth() / (model_.width() + 2 * COL_PADDING);
   tile_height_ = ScreenHeight() /
                  (model_.height() + ROW_PADDING_ABOVE + ROW_PADDING_BELOW);
@@ -434,9 +463,6 @@ Illum::play_tile_at(model::CellState play_tile) {
 
 bool
 Illum::update_game() {
-  undo_button_->update();
-  hint_button_->update();
-  restart_button_->update();
 
   if (GetMouse(olc::Mouse::LEFT).bPressed) {
     play_tile_at(model::CellState::BULB);

@@ -34,6 +34,9 @@ public:
 private:
   model::Coord get_mouse_pos_as_tile_coord() const;
 
+  void setup_tutorial_game(int selection_id);
+  void setup_regular_game();
+
   bool create_menu();
   bool update_menu();
   bool start_game();
@@ -84,7 +87,9 @@ private:
   int        bulbs_in_solution_  = 0;
   int        bulbs_played_       = 0;
 
-  BoardGenerator        board_generator_;
+  BoardGenerator board_generator_;
+  UpdateHandler  update_handler_;
+
   model::BoardModel     model_;
   solver::PositionBoard position_;
   std::mt19937          twister_rng_;

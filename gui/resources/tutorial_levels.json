@@ -2,11 +2,12 @@
     "name": "tutorial levels",
     "levels": [
         {
-            "levelname": "Use Lights",
+            "level_name": "Use Lights",
+            "section_name": "RULES",
             "board": [
-                ".XX",
-                "X.X",
-                "XX."
+                ".00",
+                "0.0",
+                "00."
             ],
             "actions": [
                 ["display", "Win by lighting every empty cell"],
@@ -21,11 +22,11 @@
             ]
         },
         {
-            "levelname": "Bulbs shine outwards",
+            "level_name": "Bulbs shine outwards",
             "board": [
-                "X.X",
+                "0.0",
                 "...",
-                "X.X"
+                "0.0"
             ],
             "actions": [
                 [
@@ -38,13 +39,13 @@
             ]
         },
         {
-            "levelname": "Bulbs are not allowed to \"see\" each other",
+            "level_name": "Bulbs are not allowed to \"see\" each other",
             "board": [
-                "XXXXXX.",
+                "000000.",
                 "...0...",
-                "XXXXXXX",
+                "0000000",
                 ".......",
-                "XXXXXXX"
+                "0000000"
             ],
             "actions": [
                 ["display", "It is ok if two bulbs are in the same row or column if a wall separates them"],
