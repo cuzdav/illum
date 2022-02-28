@@ -80,7 +80,8 @@ Illum::StateChange::on_state_change(model::Action    action,
 }
 
 Illum::Illum()
-    : twister_rng_(
+    : tutorial_(this)
+    , twister_rng_(
           std::chrono::system_clock::now().time_since_epoch().count()) {
   sAppName = "ILLUM";
 }
@@ -95,12 +96,12 @@ Illum::create_menu() {
 
   auto & settings = menu_["main"]["Settings"].SetTable(1, 4);
 
-  auto & difficulty = settings["Difficulty"].SetTable(1, 5);
+  auto & difficulty = settings["Difficulty"].SetTable(1, 6);
   difficulty["Very easy"].SetID(+MenuId::VERY_EASY);
-  difficulty["Easy"].SetID(+MenuId::EASY);
-  difficulty["Intermediate"].SetID(+MenuId::INTERMEDIATE);
-  difficulty["Hard"].SetID(+MenuId::HARD);
-  difficulty["Expert"].SetID(+MenuId::EXPERT);
+  difficulty["Easy"].SetID(+MenuId::EASY).Enable(false);
+  difficulty["Intermediate"].SetID(+MenuId::INTERMEDIATE).Enable(false);
+  difficulty["Hard"].SetID(+MenuId::HARD).Enable(false);
+  difficulty["Expert"].SetID(+MenuId::EXPERT).Enable(false);
   difficulty["(Back)"].SetID(+MenuId::BACK);
 
   auto & min = settings["Min Board Size"].SetTable(1, 6);
@@ -121,14 +122,14 @@ Illum::create_menu() {
 
   settings["(Back)"].SetID(+MenuId::BACK);
 
-  menu_.Build();
+  menu_.Build(2);
 
   menu_manager_.Open(&menu_["main"]);
 
-  // REMOVE::::::
+  // TODO: REMOVE::::::
   // Selects tutorial|rules to make testing easier
-  menu_manager_.OnDOWN();
-  menu_manager_.OnConfirm();
+  //  menu_manager_.OnDOWN();
+  // menu_manager_.OnConfirm();
   // ::::::::::::%%% END
 
   return true;
@@ -246,10 +247,10 @@ Illum::update_menu() {
 // in the total MenuId selection, adjusted.
 void
 Illum::setup_tutorial_game(int selection_id) {
-  tutorial_.update_menu(selection_id, board_generator_);
-  state_          = State::START_GAME;
-  update_handler_ = [tutorial = &tutorial_](float fElapsedTime) {
-    return tutorial->update_game(fElapsedTime);
+  board_generator_ = tutorial_.handle_menu_selection(selection_id);
+  state_           = State::START_GAME;
+  update_handler_  = [tutorial = &tutorial_](float fElapsedTime) {
+    return tutorial->update_gamestate(fElapsedTime);
   };
 }
 
@@ -262,7 +263,7 @@ Illum::setup_regular_game() {
     int  width  = BOARD_SIZES[dist(twister_rng_)];
     return levels::BasicWallLayout{}.create(twister_rng_, height, width);
   };
-  update_handler_ = [this](float) { return this->update_game(); };
+  update_handler_ = [this](float) { return this->update_gamestate(); };
 
   state_ = State::START_GAME;
   menu_manager_.Close();
@@ -349,29 +350,36 @@ Illum::render() {
   DrawLine(502, 10, 502, 470, olc::YELLOW);
   DrawLine(10, 470, 502, 470, olc::YELLOW);
 
-  DrawString(
-      30,
-      30,
-      fmt::format("Bulbs Remaining: {}", bulbs_in_solution_ - bulbs_played_),
-      (bulbs_played_ < bulbs_in_solution_) ||
-              ((bulbs_played_ == bulbs_in_solution_) && position_.is_solved())
-          ? olc::WHITE
-          : olc::RED);
+  int scale = 2;
 
   switch (state_) {
     case State::MENU:
-      DrawString(200, 100, fmt::format("Difficulty: {}", difficulty_));
-      //      DrawString(200 + 13 * 8, 100, to_string(difficulty_));
-      DrawString(200,
-                 110,
+      DrawString(100,
+                 200,
+                 fmt::format("Difficulty: {}", difficulty_),
+                 olc::WHITE,
+                 scale);
+      DrawString(100,
+                 220,
                  fmt::format("Board Size: {}x{}",
                              BOARD_SIZES[min_board_size_idx_],
-                             BOARD_SIZES[max_board_size_idx_]));
+                             BOARD_SIZES[max_board_size_idx_]),
+                 olc::WHITE,
+                 scale);
 
       menu_manager_.Draw(menu_sprite_.get(), {40, 40});
       return true;
 
     case State::PLAYING:
+      DrawString(30,
+                 30,
+                 fmt::format("Bulbs Remaining: {}",
+                             bulbs_in_solution_ - bulbs_played_),
+                 (bulbs_played_ < bulbs_in_solution_) ||
+                         ((bulbs_played_ == bulbs_in_solution_) &&
+                          position_.is_solved())
+                     ? olc::WHITE
+                     : olc::RED);
       return render_game();
 
     case State::START_GAME:
@@ -462,7 +470,7 @@ Illum::play_tile_at(model::CellState play_tile) {
 }
 
 bool
-Illum::update_game() {
+Illum::update_gamestate() {
 
   if (GetMouse(olc::Mouse::LEFT).bPressed) {
     play_tile_at(model::CellState::BULB);

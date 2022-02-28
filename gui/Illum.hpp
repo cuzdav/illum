@@ -40,7 +40,7 @@ private:
   bool create_menu();
   bool update_menu();
   bool start_game();
-  bool update_game();
+  bool update_gamestate();
 
   bool render_menu();
   bool render_game();
@@ -55,6 +55,10 @@ private:
   class StateChange : public model::StateChangeHandler {
   public:
     StateChange(Illum & owner) : owner_(owner) {}
+
+    // callback from BoardModel after a move has been applied. (Invalid moves
+    // don't get a response, so this is a confirmation, and when updates are
+    // applied to the gui.)
     void on_state_change(model::Action    action,
                          model::CellState prev_state,
                          model::CellState to_state,

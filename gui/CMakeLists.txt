@@ -1,6 +1,7 @@
 add_executable(illum
     Illum.cpp
     Tutorial.cpp
+    TutorialLevels.cpp
     illum_main.cpp
 )
 target_include_directories(illum PUBLIC .)
