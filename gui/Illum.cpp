@@ -360,12 +360,14 @@ Illum::render() {
                  olc::WHITE,
                  scale);
       DrawString(100,
-                 220,
+                 200 + 10 * scale,
                  fmt::format("Board Size: {}x{}",
                              BOARD_SIZES[min_board_size_idx_],
                              BOARD_SIZES[max_board_size_idx_]),
                  olc::WHITE,
                  scale);
+
+      DrawString(100, 400, "Arrow keys to move, Space/Enter to select");
 
       menu_manager_.Draw(menu_sprite_.get(), {40, 40});
       return true;
