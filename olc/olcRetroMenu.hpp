@@ -1,3 +1,16 @@
+
+// NOTE: this is modified in a couple of ways from the original
+
+// 1) split into header and cpp file
+
+// 2) changed naming of classes and namespaces.
+
+// 3) added a "scale" argument to Build function, for doubling (or tripling?) scale
+//    of menu and text.
+
+// Original
+// https://github.com/OneLoneCoder/olcPixelGameEngine/blob/master/Videos/OneLoneCoder_PGE_RetroMenu.cpp
+
 /*
         olcPGEX_PopUP.h
 
@@ -171,6 +184,7 @@ public:
   Menu & SetTable(int32_t nColumns, int32_t nRows);
   Menu & SetID(int32_t id);
   Menu & Enable(bool b);
+  Menu & SetScale(int32_t scale);
 
   int32_t       GetID();
   std::string & GetName();
@@ -179,7 +193,7 @@ public:
   olc::vi2d     GetSize();
   olc::vi2d &   GetCursorPosition();
   Menu &        operator[](const std::string & name);
-  void          Build();
+  void          Build(int32_t scale = 1);
   void          DrawSelf(olc::PixelGameEngine & pge,
                          olc::Sprite *          sprGFX,
                          olc::vi2d              vScreenOffset);
@@ -203,6 +217,7 @@ protected:
   int32_t                                 nCursorItem    = 0;
   int32_t                                 nTopVisibleRow = 0;
   int32_t                                 nTotalRows     = 0;
+  int32_t                                 nScale         = 1;
   const olc::vi2d                         vPatchSize     = {nPatch, nPatch};
   std::string                             sName;
   olc::vi2d                               vCursorPos = {0, 0};
@@ -224,6 +239,7 @@ public:
   void   Draw(olc::Sprite * sprGFX, olc::vi2d vScreenOffset);
 
 private:
+  int32_t scale;
   std::list<Menu *> panels;
 };
 

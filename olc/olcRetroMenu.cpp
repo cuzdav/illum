@@ -66,25 +66,28 @@ Menu::operator[](const std::string & name) {
 }
 
 void
-Menu::Build() {
+Menu::Build(int32_t scale) {
   // Recursively build all children, so they can determine their size, use
   // that size to indicate cell sizes if this object contains more than
   // one item
+  nScale = scale;
   for (auto & m : items) {
     if (m.HasChildren()) {
-      m.Build();
+      m.Build(scale);
     }
 
     // Longest child name determines cell width
     vCellSize.x = std::max(m.GetSize().x, vCellSize.x);
     vCellSize.y = std::max(m.GetSize().y, vCellSize.y);
   }
+  vCellSize.x *= nScale;
+  vCellSize.y *= nScale;
 
   // Adjust size of this object (in patches) if it were rendered as a panel
   vSizeInPatches.x =
-      vCellTable.x * vCellSize.x + (vCellTable.x - 1) * vCellPadding.x + 2;
+    (vCellTable.x * vCellSize.x + (vCellTable.x - 1) * vCellPadding.x + 2);
   vSizeInPatches.y =
-      vCellTable.y * vCellSize.y + (vCellTable.y - 1) * vCellPadding.y + 2;
+    (vCellTable.y * vCellSize.y + (vCellTable.y - 1) * vCellPadding.y + 2);
 
   // Calculate how many rows this item has to hold
   nTotalRows = (items.size() / vCellTable.x) +
@@ -143,7 +146,7 @@ Menu::DrawSelf(olc::PixelGameEngine & pge,
     olc::vi2d vScreenLocation = vPatchPos * nPatch + vScreenOffset;
     olc::vi2d vSourcePatch    = {3, 0};
     pge.DrawPartialSprite(
-        vScreenLocation, sprGFX, vSourcePatch * nPatch, vPatchSize);
+        vScreenLocation, sprGFX, vSourcePatch * nPatch, vPatchSize, nScale);
   }
 
   if ((nTotalRows - nTopVisibleRow) > vCellTable.y) {
@@ -151,7 +154,7 @@ Menu::DrawSelf(olc::PixelGameEngine & pge,
     olc::vi2d vScreenLocation = vPatchPos * nPatch + vScreenOffset;
     olc::vi2d vSourcePatch    = {3, 2};
     pge.DrawPartialSprite(
-        vScreenLocation, sprGFX, vSourcePatch * nPatch, vPatchSize);
+        vScreenLocation, sprGFX, vSourcePatch * nPatch, vPatchSize, nScale);
   }
 
   // Draw Visible Items
@@ -171,7 +174,8 @@ Menu::DrawSelf(olc::PixelGameEngine & pge,
     pge.DrawString(vScreenLocation,
                    items[nTopLEFTItem + i].sName,
                    items[nTopLEFTItem + i].bEnabled ? olc::WHITE
-                                                    : olc::DARK_GREY);
+                                                    : olc::DARK_GREY,
+                   nScale);
 
     if (items[nTopLEFTItem + i].HasChildren()) {
       // Display Indicator that panel has a sub panel
@@ -180,7 +184,7 @@ Menu::DrawSelf(olc::PixelGameEngine & pge,
       olc::vi2d vSourcePatch = {3, 1};
       vScreenLocation        = vPatchPos * nPatch + vScreenOffset;
       pge.DrawPartialSprite(
-          vScreenLocation, sprGFX, vSourcePatch * nPatch, vPatchSize);
+         vScreenLocation, sprGFX, vSourcePatch * nPatch, vPatchSize, nScale);
     }
   }
 
