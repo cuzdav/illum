@@ -3,6 +3,7 @@
 #include "olcPixelGameEngine.h"
 #include "olcRetroMenu.hpp"
 #include "utils/EnumUtils.hpp"
+#include "utils/jsonschema.hpp"
 #include "utils/picojson.hpp"
 #include <fstream>
 #include <stdexcept>
@@ -20,13 +21,14 @@ load_file(std::string const & filename) {
 
 Tutorial::Tutorial(olc::PixelGameEngine * engine)
     : levels_data_{std::make_unique<picojson::value>()}, game_engine_{engine} {
-
-  auto tutorial_levels_jsonstr = load_file("tutorial_levels.json");
-  if (std::string errmsg =
-          picojson::parse(*levels_data_, tutorial_levels_jsonstr);
-      not errmsg.empty()) {
-    throw std::runtime_error("Invalid json in tutorial data:" + errmsg);
-  }
+  *levels_data_ = load_and_validate_json("tutorial_levels.json",
+                                         "tutorial_levels_schema.json");
+  // auto tutorial_levels_jsonstr = load_file("tutorial_levels.json");
+  // if (std::string errmsg =
+  //         picojson::parse(*levels_data_, tutorial_levels_jsonstr);
+  //     not errmsg.empty()) {
+  //   throw std::runtime_error("Invalid json in tutorial data:" + errmsg);
+  // }
 }
 
 // unique_ptr member declared with an incomplete type in header,

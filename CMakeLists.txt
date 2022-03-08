@@ -11,6 +11,7 @@ add_library(common INTERFACE)
 target_include_directories(common INTERFACE .)
 target_link_libraries(common INTERFACE fmt)
 
+add_subdirectory (utils)
 add_subdirectory (model)
 add_subdirectory (levels)
 add_subdirectory (solver)

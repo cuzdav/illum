@@ -1,0 +1,39 @@
+
+{
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string"
+        },
+        "levels": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "level_name": {
+                        "type": "string"
+                    },
+                    "section_name": {
+                        "type": "string"
+                    },
+                    "board": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "actions": {
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "required": [
+                    "level_name",
+                    "board"
+                ]
+            }
+        }
+    }
+}

@@ -31,7 +31,7 @@ to_string(TutorialId id) {
 static void
 ensure_key_exists(char const * key, picojson::value const & val) {
   if (not val.contains(key)) {
-    throw std::runtime_error("Jason expected to have key of: "s + key);
+    throw std::runtime_error("JSON expected to have key of: "s + key);
   }
 }
 

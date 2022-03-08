@@ -30,6 +30,11 @@ Menu::GetID() {
   return nID;
 }
 
+int32_t
+Menu::GetScale() {
+  return nScale;
+}
+
 std::string &
 Menu::GetName() {
   return sName;
@@ -124,7 +129,7 @@ Menu::DrawSelf(olc::PixelGameEngine & pge,
 
       // Draw Actual Patch
       pge.DrawPartialSprite(
-          vScreenLocation, sprGFX, vSourcePatch * nPatch, vPatchSize);
+                            vScreenLocation, sprGFX, vSourcePatch * nPatch, vPatchSize, nScale);
     }
   }
 
@@ -353,11 +358,16 @@ Manager::Draw(olc::Sprite * sprGFX, olc::vi2d vScreenOffset) {
   // Draw Cursor
   olc::Pixel::Mode currentPixelMode = pge->GetPixelMode();
   pge->SetPixelMode(olc::Pixel::ALPHA);
-  pge->DrawPartialSprite(panels.back()->GetCursorPosition(),
+  auto scale = panels.front()->GetScale();
+  auto pos = panels.back()->GetCursorPosition();
+  pos.x -= (scale-1) * 15;
+  pge->DrawPartialSprite(pos,
                          sprGFX,
                          olc::vi2d(4, 0) * nPatch,
-                         {nPatch * 2, nPatch * 2});
+                         {nPatch * 2, nPatch * 2},
+                         scale);
   pge->SetPixelMode(currentPixelMode);
 }
 } // namespace popup
 } // namespace olc
+ 

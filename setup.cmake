@@ -47,6 +47,16 @@ FetchContent_Declare(
   GIT_TAG        release-1.11.0
 )
 
+FetchContent_Declare(
+  valijson
+  UPDATE_DISCONNECTED 0,
+  GIT_REPOSITORY https://github.com/tristanpenman/valijson.git
+  GIT_TAG 4d603df4333b17e5309c368c5b614bb881a16b35
+)
+
+FetchContent_MakeAvailable(valijson)
+
+
 # google tests do not build cleanly.  Disable some warnings.
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set (GTEST_COMPILE_OPTS -Wno-undef)

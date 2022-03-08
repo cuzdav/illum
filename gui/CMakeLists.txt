@@ -5,11 +5,15 @@ add_executable(illum
     illum_main.cpp
 )
 target_include_directories(illum PUBLIC .)
-target_link_libraries(illum levels solver model fmt common olc)
+target_link_libraries(illum levels solver model fmt common olc valijson utils)
 
 add_custom_command(TARGET illum PRE_BUILD
                    COMMAND ${CMAKE_COMMAND} -E
                    copy ${CMAKE_SOURCE_DIR}/gui/resources/* $<TARGET_FILE_DIR:illum>/..)
+
+
+
+
 
 if (EMSCRIPTEN)
     set_target_properties(illum PROPERTIES
@@ -20,6 +24,7 @@ if (EMSCRIPTEN)
                    --embed-file ${CMAKE_CURRENT_SOURCE_DIR}/resources/RetroMenu.png@RetroMenu.png \
                    --embed-file ${CMAKE_CURRENT_SOURCE_DIR}/resources/undo.png@undo.png \
                    --embed-file ${CMAKE_CURRENT_SOURCE_DIR}/resources/tutorial_levels.json@tutorial_levels.json \
+                   --embed-file ${CMAKE_CURRENT_SOURCE_DIR}/resources/tutorial_levels.json@tutorial_levels_schema.json \
                    "
     )
 endif(EMSCRIPTEN)

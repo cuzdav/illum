@@ -184,9 +184,9 @@ public:
   Menu & SetTable(int32_t nColumns, int32_t nRows);
   Menu & SetID(int32_t id);
   Menu & Enable(bool b);
-  Menu & SetScale(int32_t scale);
 
   int32_t       GetID();
+  int32_t       GetScale();
   std::string & GetName();
   bool          Enabled();
   bool          HasChildren();
