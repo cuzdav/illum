@@ -16,7 +16,7 @@ add_library(model
    ${MODEL_FILES}
 )
 target_include_directories(model PUBLIC .)
-target_link_libraries(model fmt common)
+target_link_libraries(model fmt common picojson)
 
 if (EMSCRIPTEN)
 else()

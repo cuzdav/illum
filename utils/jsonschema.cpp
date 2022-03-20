@@ -1,5 +1,7 @@
 #include "jsonschema.hpp"
 
+// For future use if valijson is updated
+
 #include <valijson/adapters/picojson_adapter.hpp>
 #include <valijson/schema.hpp>
 #include <valijson/schema_parser.hpp>

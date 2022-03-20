@@ -1,6 +1,6 @@
 #include "BoardModel.hpp"
 #include "GuiTypes.hpp"
-#include "utils/picojson.hpp"
+#include "picojson.h"
 
 /*
  * This class applies a sequence of "levels" as described in json, with

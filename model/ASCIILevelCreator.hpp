@@ -1,6 +1,6 @@
 #include "BoardModel.hpp"
 #include "CellState.hpp"
-#include "utils/picojson.hpp"
+#include "picojson.h"
 #include <array>
 #include <stdexcept>
 #include <string>

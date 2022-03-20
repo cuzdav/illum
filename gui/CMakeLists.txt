@@ -5,7 +5,7 @@ add_executable(illum
     illum_main.cpp
 )
 target_include_directories(illum PUBLIC .)
-target_link_libraries(illum levels solver model fmt common olc valijson utils)
+target_link_libraries(illum levels solver model fmt common olc utils picojson)
 
 add_custom_command(TARGET illum PRE_BUILD
                    COMMAND ${CMAKE_COMMAND} -E

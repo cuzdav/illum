@@ -24,6 +24,7 @@ if (DEBUGLOG)
     ADD_DEFINITIONS(-DDEBUG)
 endif(DEBUGLOG)
 
+
 # for clangd and other clang tools
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -31,12 +32,25 @@ include(CTest)
 include(FetchContent)
 
 FetchContent_Declare(
+  picojson
+  UPDATE_DISCONNECTED 0,
+  GIT_REPOSITORY https://github.com/cuzdav/picojson.git
+  GIT_TAG
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND ""
+)
+FetchContent_MakeAvailable(picojson)
+
+add_library(picojson INTERFACE)
+target_include_directories(picojson INTERFACE ${picojson_SOURCE_DIR})
+
+
+FetchContent_Declare(
   fmt
   UPDATE_DISCONNECTED 0,
   GIT_REPOSITORY https://github.com/fmtlib/fmt.git
   GIT_TAG
 )
-
 FetchContent_MakeAvailable(fmt)
 
 
@@ -47,14 +61,16 @@ FetchContent_Declare(
   GIT_TAG        release-1.11.0
 )
 
-FetchContent_Declare(
-  valijson
-  UPDATE_DISCONNECTED 0,
-  GIT_REPOSITORY https://github.com/tristanpenman/valijson.git
-  GIT_TAG 4d603df4333b17e5309c368c5b614bb881a16b35
-)
 
-FetchContent_MakeAvailable(valijson)
+# Only supports json schama up to revision 7, but I'd like the 2020 or
+# later, so for now will write a hand-made schema validator
+#FetchContent_Declare(
+#  valijson
+#  UPDATE_DISCONNECTED 0,
+#  GIT_REPOSITORY https://github.com/tristanpenman/valijson.git
+#  GIT_TAG 4d603df4333b17e5309c368c5b614bb881a16b35
+#)
+#FetchContent_MakeAvailable(valijson)
 
 
 # google tests do not build cleanly.  Disable some warnings.
