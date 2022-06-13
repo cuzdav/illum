@@ -21,18 +21,16 @@ using enum VisitStatus;
 //
 template <typename T>
 concept CellVisitorAll = requires(T visitor, CellState cell) {
-                           { visitor(Coord{0, 0}, cell) } -> std::same_as<void>;
-                         };
+  { visitor(Coord{0, 0}, cell) } -> std::same_as<void>;
+};
 
 //
 // returning a VisitStatus indicates the visit may be stopped prematurely
 //
 template <typename T>
 concept CellVisitorSome = requires(T visitor, CellState cell) {
-                            {
-                              visitor(Coord{0, 0}, cell)
-                              } -> std::same_as<VisitStatus>;
-                          };
+  { visitor(Coord{0, 0}, cell) } -> std::same_as<VisitStatus>;
+};
 
 //
 // Unify both Some/All cell visitors

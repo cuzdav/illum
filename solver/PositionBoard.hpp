@@ -144,7 +144,7 @@ private:
 inline void
 PositionBoard::reset(int height, int width) {
   has_error_                      = false;
-  num_cells_needing_illumination_ = 0;
+  num_cells_needing_illumination_ = height * width;
   num_walls_with_deps_            = 0;
   decision_type_                  = DecisionType::NONE;
   ref_location_                   = std::nullopt;
@@ -244,7 +244,7 @@ struct fmt::formatter<::solver::PositionBoard> {
   format(::solver::PositionBoard const & board, FormatContext & ctx) {
     return fmt::format_to(ctx.out(),
                           "PositionBoard{{\n\t"
-                          "CellS Needing Illuminatation: {}\n\t"
+                          "Cells Needing Illuminatation: {}\n\t"
                           "Unsatisfied Walls: {}\n\t"
                           "SOLVED={}\n\t"
                           "HasError={}\n\t"

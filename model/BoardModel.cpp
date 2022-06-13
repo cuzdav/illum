@@ -15,6 +15,12 @@ using namespace std::literals;
 BoardModel::BoardModel(std::unique_ptr<StateChangeHandler> handler)
     : handler_(std::move(handler)) {}
 
+BoardModel::BoardModel(BasicBoard const &                  board,
+                       std::unique_ptr<StateChangeHandler> handler)
+    : handler_(std::move(handler)), board_(board) {
+  std::cout << "Constructor body (BoardModel)" << std::endl;
+}
+
 BoardModel::BoardModel() : BoardModel(nullptr) {}
 
 bool

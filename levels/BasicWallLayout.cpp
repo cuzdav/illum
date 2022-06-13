@@ -11,6 +11,7 @@
 #include <iostream>
 
 namespace levels {
+inline namespace v1 {
 
 using RNG          = std::mt19937;
 using Distribution = std::uniform_int_distribution<RNG::result_type>;
@@ -356,6 +357,8 @@ fill_board_from_current_position(GenContext & context) {
 
   return verify_solvable(context);
 }
+
+} // v1
 
 model::BoardModel
 BasicWallLayout::create(RNG & rng, int height, int width) {

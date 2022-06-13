@@ -14,7 +14,7 @@ using model::Coord;
 using model::Direction;
 
 PositionBoard::PositionBoard(int height, int width) {
-  board_.reset(height, width);
+  reset(height, width);
 }
 
 PositionBoard::PositionBoard(model::BasicBoard const & current,
@@ -26,6 +26,7 @@ void
 PositionBoard::reset(model::BasicBoard const &  current,
                      PositionBoard::ResetPolicy policy) {
   reset(current.height(), current.width());
+  num_cells_needing_illumination_ = 0;
 
   Coord walls_with_deps[model::BasicBoard::MAX_CELLS];
   int   num_walls_with_deps = 0;

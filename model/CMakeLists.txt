@@ -6,12 +6,6 @@ SET(MODEL_FILES
     SingleMove.cpp
 )
 
-if (EMSCRIPTEN) 
-else ()
-list(APPEND MODEL_FILES Serialize.cpp)
-endif(EMSCRIPTEN)
-
-
 add_library(model
    ${MODEL_FILES}
 )

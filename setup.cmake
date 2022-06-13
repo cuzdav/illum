@@ -99,7 +99,4 @@ endmacro()
 FetchContent_MakeAvailable(googletest)
 
 
-set(BOOST_REQUESTED_VERSION 1.71)
-find_package(Boost)
-
 

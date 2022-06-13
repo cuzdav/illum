@@ -30,6 +30,8 @@ public:
   BoardModel();
   BoardModel(std::unique_ptr<StateChangeHandler> handler);
 
+  BoardModel(BasicBoard const & board, std::unique_ptr<StateChangeHandler> handler = {});
+
   BoardModel(BoardModel const &)             = delete;
   BoardModel & operator=(BoardModel const &) = delete;
 
@@ -70,6 +72,7 @@ public:
   void for_each_move(MoveHandlerT && handler) const;
 
   StateChangeHandler const * get_handler() const;
+
 
   void set_state_change_handler(std::unique_ptr<StateChangeHandler> handler);
 
